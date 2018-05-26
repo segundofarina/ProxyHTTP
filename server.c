@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -8,11 +9,15 @@
 #include <netinet/tcp.h>
 
 #include "utils/selector/selector.h"
+#include "serverComponents/proxyPassiveHandlers.h"
 
 typedef enum {FALSE, TRUE} Bool;
 
 #define MAX_CLIENTS 10
 #define SELECTOR_SIZE 1024
+
+int createProxyPassiveSock(const int port, char ** errMsg);
+
 
 int main(const int argc, const char * argv[]) {
 
@@ -57,7 +62,7 @@ int main(const int argc, const char * argv[]) {
         errMsg = "Unable to register passive socket fd";
 		//handler error
     }
-	
+
     while(TRUE) {
         selectorStatus = selector_select(selector);
         if(selectorStatus != SELECTOR_SUCCESS) {
