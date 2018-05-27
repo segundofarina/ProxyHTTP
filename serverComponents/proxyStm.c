@@ -1,6 +1,6 @@
 #include "proxyStm.h"
 
-static const struct state_definition proxyStatesHandlers[] = {
+const struct state_definition proxyStatesHandlers[] = {
     {
         .state            = OBTAIN_ORIGIN,
         /*.on_arrival       = hello_read_init,
@@ -21,5 +21,5 @@ static const struct state_definition proxyStatesHandlers[] = {
 };
 
 struct state_definition * getProxyStates() {
-	return proxyStatesHandlers;
+	return (struct state_definition *) proxyStatesHandlers;
 }

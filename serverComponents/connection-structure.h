@@ -28,7 +28,7 @@ struct Connection {
     unsigned references;
 
     /* next element in the pool, just using it when the struct is empty */
-    struct socks5 *next;
+    struct Connection *next;
 
 };
 

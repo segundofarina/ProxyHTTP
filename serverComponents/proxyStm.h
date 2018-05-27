@@ -59,7 +59,7 @@ enum proxyStates {
 */
 	DONE,
 	ERROR
-}
+};
 
 struct state_definition * getProxyStates();
 

@@ -1,17 +1,18 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <arpa/inet.h>
 
 #include "proxyPassiveHandlers.h"
 #include "connection-structure.h"
+#include "proxyActiveHandlers.h"
+#include "proxyStm.h"
+
+#include "../utils/buffer/buffer.h"
 
 #define MAX_POOL 50
 
 /* Handlers of fd from an established connection */
-static void connection_read   (struct selector_key *key);
-static void connection_write  (struct selector_key *key);
-static void connection_close  (struct selector_key *key);
-static void connection_block  (struct selector_key *key);
-
 static const struct fd_handler connectionHandler = {
 	.handle_read   = connection_read,
     .handle_write  = connection_write,
@@ -45,9 +46,9 @@ struct Connection * new_connection(const int clientFd) {
 	connection->clientFd = clientFd;
 	connection->originFd = -1;
 
-	//connection->stm.initial = ;
-	//connection->stm.max_state = ;
-	//connection->stm.states = ;
+	connection->stm.initial = OBTAIN_ORIGIN;
+	connection->stm.max_state = ERROR;
+	connection->stm.states = getProxyStates();
 	stm_init(&connection->stm);
 
 	buffer_init(&connection->readBuffer,  N(connection->rawBuff_a), connection->rawBuff_a);

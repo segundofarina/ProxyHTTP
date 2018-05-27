@@ -145,5 +145,7 @@ buffer_can_read(buffer *b);
 bool
 buffer_can_write(buffer *b);
 
+#define N(x) (sizeof(x)/sizeof(x[0]))
+
 
 #endif
