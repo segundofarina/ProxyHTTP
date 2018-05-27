@@ -57,9 +57,13 @@ enum proxyStates {
 	READ_RESP,
 	WRITE_RESP,
 */
+	/* Just for testing */ANSWER,
+
 	DONE,
 	ERROR
 };
+
+
 
 struct state_definition * getProxyStates();
 
