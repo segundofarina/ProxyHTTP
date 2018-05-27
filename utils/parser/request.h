@@ -6,6 +6,7 @@
 
 #include <sys/socket.h>
 
+#include "requestLine.h"
 #include "../buffer/buffer.h"
 
 enum request_state {
@@ -32,8 +33,6 @@ void request_init(struct request_parser *p);
 enum request_state request_feed (struct request_parser *p, const uint8_t c);
 
 enum request_state request_consume(struct request_parser *p, buffer * b);
-
-enum request_state requestLine(struct request_parser *p, const uint8_t c);
 
 enum request_state requestHeaders(struct request_parser *p, const uint8_t c);
 

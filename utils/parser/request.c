@@ -20,16 +20,16 @@ enum request_state request_feed (struct request_parser *p, const uint8_t c){
 
     switch(p->state) {
         case request_line:
-            next = requestLine(p,c);
+            next = requestLine_feed(p,c);
             break;
         case headers:
-            next = requestHeaders(p,c);
+            next = requestHeaders_feed(p,c);
             break;
         case body:
-            next = requestBody(p,c);
+            next = requestBody_feed(p,c);
             break;
         case done:
-            next = requestDone(p,c);
+            next = done;
             break;
         default:
             next = error;
