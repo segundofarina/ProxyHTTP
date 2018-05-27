@@ -14,11 +14,11 @@ bool shouldTransform(char const * * mediaRange, int size , char const * mediaTyp
 
 bool isContained(char const *mt1, char const *mt2);
 
-//int main(int argc, char * argv[]) {
-//    char ** mediaRange = (char *[]){"lala/*"};
-//    char * mediaType = "audio/aac";
-//    printf("%s",shouldTransform(mediaRange,1,mediaType)?"True":"False");
-//}
+int main(int argc, char * argv[]) {
+    char ** mediaRange = (char *[]){"lala/*"};
+    char * mediaType = "audio/aac";
+    printf("%s",shouldTransform(mediaRange,1,mediaType)?"True":"False");
+}
 
 
 
