@@ -8,4 +8,6 @@ void connection_write  (struct selector_key *key);
 void connection_close  (struct selector_key *key);
 void connection_block  (struct selector_key *key);
 
+void connection_close  (struct selector_key *key);
+
 #endif

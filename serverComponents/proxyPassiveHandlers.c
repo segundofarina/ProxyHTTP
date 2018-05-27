@@ -4,7 +4,6 @@
 #include <arpa/inet.h>
 
 #include "proxyPassiveHandlers.h"
-#include "connection-structure.h"
 #include "proxyActiveHandlers.h"
 #include "proxyStm.h"
 
@@ -92,22 +91,22 @@ void proxyPassiveAccept(struct selector_key *key) {
 
 	const int clientFd = accept(key->fd, (struct sockaddr*) &clientAddr, &clientAddrLen);
     if(clientFd == -1) {
-        // handle error
+        goto handle_errors;
     }
     if(selector_fd_set_nio(clientFd) == -1) {
-        // handle error
+        goto handle_errors;
     }
 
 	connection = new_connection(clientFd);
 	if(connection == NULL) {
-		//handle error
+		goto handle_errors;
 	}
 	memcpy(&connection->clientAddr, &clientAddr, clientAddrLen);
     connection->clientAddrLen = clientAddrLen;
 
 	/* register client fd in selector */
 	if(selector_register(key->s, clientFd, &connectionHandler, OP_READ, connection) != SELECTOR_SUCCESS) {
-		//handle error
+		goto handle_errors;
 	}
 
 	return;

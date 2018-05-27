@@ -1,6 +1,7 @@
 #ifndef _CONNECTION_STRUCTURE_
 #define _CONNECTION_STRUCTURE_
 
+#include <stdint.h>
 #include <sys/socket.h>
 #include "../utils/buffer/buffer.h"
 #include "../utils/stm/stm.h"
@@ -33,6 +34,6 @@ struct Connection {
 };
 
 /* cast void * data to struct Connection */
-#define DATATOCONN(key) ( (struct Connection *)(key)->data )
+#define DATA_TO_CONN(key) ( (struct Connection *)(key)->data )
 
 #endif
