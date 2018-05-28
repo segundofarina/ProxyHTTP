@@ -27,35 +27,138 @@ typedef enum {START, HTTP, SLASH, HOST, DOUBLE_DOT, PORT} validHostState;
  *	|	:1080						|			EMPTY		|  1080
 */
 hostData processHost(char * fqdn, char * result, uint16_t resultLen, uint16_t * port) {
-	int i = 0, j = 0;
+	int i = 0, j = 0, k = 0, ipv6Found = 0;
 	hostData ans = EMPTY;
 	*port = (uint16_t) 80;
 	int port = 0;
+	char http[] = "http";
 	validHostState state = HTTP;
-	while(fqdn[i] != 0 && j < resultLen) {
+	while(fqdn[i] != 0 && j < resultLen && state != PORT) {
 		switch(state) {
 			case START:
 				switch(tolower(fqdn[i])) {
 					case 'h':
+						ans = DOMAIN_HOST;
 						state = HTTP;
-						result[j++] = fqdn[i];
+						k++;
+						// result[j++] = fqdn[i];
 						break;
 					case '/':
 						return ans;
 						break;
+					case '[':
+						ans = IPV6;
+						state = HOST;
+						j = -1;
+						break;
 					default:
+						state = HOST;
 						if(isdigit(fqdn[i])) {
-							state = HOST;
+							ans = IPV4;
+						} else {
+							ans = DOMAIN_HOST;
 						}
-						result[j++] = fqdn[i];
+						// result[j++] = fqdn[i];
+				}
+				break;
+			case HTTP:
+				if(k > 4) {
+					if(fqdn[i] == ':') {
+						state = DOUBLE_DOT;
+					} else {
+						state = HOST;
+					}
+				}
+				if(fqdn[i] == http[k]) {
+					k++;
+				}
+				break;
+			case DOUBLE_DOT:
+				if(fqdn[i] == '/') {
+					state = SLASH;
+				} else if(isdigit(fqdn[i])) {
+					state = PORT;
+					port = port*10 + fqdn[i] - '0';
+					j = -1;
+				} else {
+					return ERROR;
+				}
+				break;
+			case SLASH:
+				if(fqdn[i] == '/') {
+					j = -1;
+					state = HOST;
+				} else {
+					return ans;
+				}
+				break;
+			case HOST:
+				if(fqdn[i] == '/') {
+					return ans;
+				}
+				if(fqdn[i] != ':') {
+					switch(ans) {
+						case DOMAIN_HOST:
+							break;
+						case IPV4:
+							if(!isdigit(fqdn[i])) {
+								ans = DOMAIN_HOST;
+							}
+							break;
+						case IPV6:
+							if(!isdigit(fqdn[i]) && fqdn[i] != ']') {
+								ans = DOMAIN_HOST;
+							} else if(fqdn[i] == ']') {
+								ipv6Found = 1;
+								j = -1;
+							}
+							break;
+						default:
+							// code
+					}
+				} else {
+					if(ans != IPV6) {
+						state = DOUBLE_DOT;
+						if(ans == IPV4) {
+							ans = IPV4_PORT;
+						} else if(ans == DOMAIN_HOST) {
+							ans = DOMAIN_HOST_PORT;
+						} else {
+							ans = ERROR;
+						}
+					} else {
+						if(ipv6Found) {
+							state = DOUBLE_DOT;
+							ans = IPV6_PORT;
+						}
+					}
 				}
 				break;
 			default:
 				return ERROR;
 		}
+		if(j >= 0 && j < resultLen) {
+			result[j] = fqdn[i];
+		}
+		i++;
+		j++;
+	}
+
+	// Now the port
+	while(fqdn[i] != 0 && state == PORT) {
+		if(isdigit(fqdn[i])) {
+			port = port*10 + fqdn[i] - '0';
+		} else if(fqdn[i] == '/') {
+			state = SLASH;
+		}
 		i++;
 	}
-	return ;
+
+	if(j >= resultLen) {
+		return ERROR;
+	} else {
+		return ans;
+	}
 }
 
 /**
