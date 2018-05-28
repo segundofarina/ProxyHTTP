@@ -12,6 +12,7 @@
  */
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 /**
  * Evento que retorna el parser.

@@ -3,6 +3,9 @@
 #define PC_2018_04_METHOD_H
 
 #include <stdint.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include "method.h"
 
 enum requestLine_state {
     rl_method,
@@ -18,7 +21,9 @@ struct requestLine_parser {
     enum requestLine_state state;
     struct method_parser * methodparser;
 
-    char fqdn [0xFF];
+    char uri [0xFF];
+
+    enum method_type method;
 
     u_int16_t index;
 
@@ -41,7 +46,7 @@ requestLine_parser_feed (struct requestLine_parser *p, const uint8_t c);
  *   si el parsing se debió a una condición de error
  */
 enum requestLine_state
-requestLine_parser_consume(buffer *b, struct requestLine_parser *p, bool *errored);
+requestLine_parser_consume(char *buffer,size_t len, struct requestLine_parser *p, bool *errored);
 
 /**
  * Permite distinguir a quien usa socks_hello_parser_feed si debe seguir
@@ -50,10 +55,13 @@ requestLine_parser_consume(buffer *b, struct requestLine_parser *p, bool *errore
  * En caso de haber terminado permite tambien saber si se debe a un error
  */
 bool
-requestLine_is_done(const enum requestLine_parser st, bool *errored);
+requestLine_is_done(const enum requestLine_state st, bool *errored);
 
 void
-requestLine_close(struct request_parser *p);
+requestLine_close(struct requestLine_parser *p);
+
+char *
+requestLine_state_toString(const enum requestLine_state st);
 
 
 #endif //PC_2018_04_METHOD_H
