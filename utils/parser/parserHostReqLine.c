@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "parserHostReqLine.h"
 
 /**
@@ -18,12 +19,12 @@
  *	|	:1080						|			EMPTY		|  1080
 */
 hostData processHost(char * fqdn, char * result, uint16_t resultLen, uint16_t * port) {
-	int i = 0, j = 0, k = 0, ipv6Found = 0;
+	int i = 0, j = 0, k = 0, ipv6Found = 0, l = 0;
 	hostData ans = EMPTY;
 	*port = (uint16_t) 80;
 	int portAux = 0;
 	char http[] = "http";
-	validHostState state = HTTP;
+	validHostState state = START;
 	while(fqdn[i] != 0 && j < resultLen && state != PORT) {
 		switch(state) {
 			case START:
@@ -32,11 +33,9 @@ hostData processHost(char * fqdn, char * result, uint16_t resultLen, uint16_t * 
 						ans = DOMAIN_HOST;
 						state = HTTP;
 						k++;
-						// result[j++] = fqdn[i];
 						break;
 					case '/':
 						return ans;
-						break;
 					case '[':
 						ans = IPV6;
 						state = HOST;
@@ -49,11 +48,10 @@ hostData processHost(char * fqdn, char * result, uint16_t resultLen, uint16_t * 
 						} else {
 							ans = DOMAIN_HOST;
 						}
-						// result[j++] = fqdn[i];
 				}
 				break;
 			case HTTP:
-				if(k > 4) {
+				if(k == 4) {
 					if(fqdn[i] == ':') {
 						state = DOUBLE_DOT;
 					} else {
@@ -72,6 +70,7 @@ hostData processHost(char * fqdn, char * result, uint16_t resultLen, uint16_t * 
 					portAux = portAux*10 + fqdn[i] - '0';
 					j = -1;
 				} else {
+				    printf("DOUBLE_DOT ERROR\n");
 					return ERROR;
 				}
 				break;
@@ -79,6 +78,9 @@ hostData processHost(char * fqdn, char * result, uint16_t resultLen, uint16_t * 
 				if(fqdn[i] == '/') {
 					j = -1;
 					state = HOST;
+					for(l = 0; l < resultLen; l++) {
+					    result[l] = 0;
+					}
 				} else {
 					return ans;
 				}
@@ -105,6 +107,7 @@ hostData processHost(char * fqdn, char * result, uint16_t resultLen, uint16_t * 
 							}
 							break;
 						default:
+						    printf("HOST ERROR");
 							return ERROR;
 					}
 				} else {
@@ -114,7 +117,9 @@ hostData processHost(char * fqdn, char * result, uint16_t resultLen, uint16_t * 
 							ans = IPV4_PORT;
 						} else if(ans == DOMAIN_HOST) {
 							ans = DOMAIN_HOST_PORT;
+							j = -1;
 						} else {
+						    printf("IPV6 ERROR\n");
 							ans = ERROR;
 						}
 					} else {
@@ -125,8 +130,6 @@ hostData processHost(char * fqdn, char * result, uint16_t resultLen, uint16_t * 
 					}
 				}
 				break;
-			default:
-				return ERROR;
 		}
 		if(j >= 0 && j < resultLen) {
 			result[j] = fqdn[i];
@@ -154,6 +157,8 @@ hostData processHost(char * fqdn, char * result, uint16_t resultLen, uint16_t * 
 }
 
 /**
+ * @param buffer Must begin with METHOD and end in CRLF (inclusive).
+ *
  *	The return value is as follows:
  *	ERROR: Code 400 (bad request)
  *	EMPTY: host not found, only request-target present
@@ -166,46 +171,63 @@ hostData processHost(char * fqdn, char * result, uint16_t resultLen, uint16_t * 
  */
 hostData requestTarget_marshall(char * buffer, char * result, uint16_t resultLen, uint16_t * port) {
 	hostData ret = EMPTY;
-	reqLineState state = METHOD;
-	char fqdn[0xFF] = {0};
-	char c = 0;
-	int i = 0, j = 0;
 
-	while((c = (char)buffer[i]) != 0) {
-		switch(state) {
-			case METHOD:
-				if(c == ' ') {
-					state = SP1;
-				}
-				break;
-			case SP1:
-				if(c == ' ') {
-					return ERROR;
-				} else {
-					fqdn[j] = c;
-					j++;
-					state = REQ_TAR;
-				}
-			case REQ_TAR:
-				if(c == ' ') {
-					state = SP2;
-					ret = processHost(fqdn, result, resultLen, port);
-				} else {
-					fqdn[j] = c;
-					j++;
-				}
-			case HTTPV:
-				if(c == '\r') {
-					state = CRLF;
-				}
-			case CRLF:
-				if(c != '\n') {
-					return ERROR;
-				}
-			default:
-				return ERROR;
-		}
+	ret = processHost(buffer, result, resultLen, port);
+
+	if(result[0] == 0) {
+	    ret = EMPTY;
 	}
 
-	return ret;
+    return ret;
+
+//    reqLineState state = METHOD;
+//    char c = 0;
+//    int i = 0, j = 0;
+//
+//	while((c = buffer[i]) != 0) {
+//		switch(state) {
+//			case METHOD:
+//				if(c == ' ') {
+//					state = SP1;
+//				}
+//				break;
+//			case SP1:
+//				if(c == ' ') {
+//					return ERROR;
+//				} else {
+//					fqdn[j] = c;
+//					j++;
+//					state = REQ_TAR;
+//				}
+//				break;
+//			case REQ_TAR:
+//				if(c == ' ') {
+//					state = SP2;
+//					ret = processHost(fqdn, result, resultLen, port);
+//				} else {
+//					fqdn[j] = c;
+//					j++;
+//				}
+//				break;
+//            case SP2:
+//                if(c == ' ') {
+//                    return ERROR;
+//                } else {
+//                    fqdn[j] = c;
+//                    j++;
+//                    state = HTTPV;
+//                }
+//                break;
+//			case HTTPV:
+//				if(c == '\r') {
+//					state = CRLF;
+//				}
+//				break;
+//			case CRLF:
+//				if(c != '\n')
+//					return ERROR;
+//				break;
+//		}
+//		i++;
+//	}
 }

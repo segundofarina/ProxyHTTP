@@ -13,13 +13,14 @@ typedef enum {METHOD, SP1, REQ_TAR, SP2, HTTPV, CRLF} reqLineState;
 
 typedef enum {START, HTTP, SLASH, HOST, DOUBLE_DOT, PORT} validHostState;
 
+
 /**
  *	|	Valid hosts:				|			Host		|  port
  *	-----------------------------------------------------------------
  *	|	/ 							|			EMPTY		|	80
  *	|	/background.png				|			EMPTY		|	80
  *	|	/test.html?query=alibaba	|			EMPTY		|	80
- *	|	/anypage.html				|			EMPTY		|	80
+ *	|	/anypage.html				|		    EMPTY		|	80
  *	|	http://google.com/docs		|		google.com		|	80
  *	|	google.com:1080				|		google.com		|  1080
  *	|	127.0.0.1					|		127.0.0.1		|	80
