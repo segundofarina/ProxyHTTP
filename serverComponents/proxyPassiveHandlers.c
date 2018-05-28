@@ -11,14 +11,6 @@
 
 #define MAX_POOL 50
 
-/* Handlers of fd from an established connection */
-static const struct fd_handler connectionHandler = {
-	.handle_read   = connection_read,
-    .handle_write  = connection_write,
-    .handle_close  = connection_close,
-    .handle_block  = connection_block
-};
-
 static int poolSize = 0;
 static struct Connection * pool = NULL;
 
@@ -45,7 +37,7 @@ struct Connection * new_connection(const int clientFd) {
 	connection->clientFd = clientFd;
 	connection->originFd = -1;
 
-	connection->stm.initial = OBTAIN_ORIGIN;
+	connection->stm.initial = REQUEST;
 	connection->stm.max_state = ERROR;
 	connection->stm.states = getProxyStates();
 	stm_init(&connection->stm);

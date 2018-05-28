@@ -64,6 +64,7 @@ int main(const int argc, const char * argv[]) {
     }
 
     while(TRUE) {
+		printf("Waiting in select\n");
         selectorStatus = selector_select(selector);
         if(selectorStatus != SELECTOR_SUCCESS) {
             //handle error
@@ -87,7 +88,7 @@ int createProxyPassiveSock(const int port, char ** errMsg) {
 		return -1;
 	}
 
-	//setsockopt(server, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int));
+	setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int));
 
 	if(bind(serverFd, (struct sockaddr*) &addr, sizeof(addr)) < 0) {
 		*errMsg = "Unable to bind socket";

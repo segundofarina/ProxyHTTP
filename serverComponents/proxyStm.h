@@ -16,7 +16,7 @@ enum proxyStates {
 	 * 		- CONNECT if the parser has a ip
 	 * 		- ERROR if io buffer overflow
 	 */
-	OBTAIN_ORIGIN,
+	//OBTAIN_ORIGIN,
 
 	/*
 	 * Process the dns request
@@ -29,7 +29,7 @@ enum proxyStates {
 	 * 		- CONNECT if it got the dns resolution
 	 * 		- ERROR in any other case
 	 */
-	SOLVE_DOMAIN,
+	//SOLVE_DOMAIN,
 
 	/*
 	 * Connects to the origin server
@@ -41,7 +41,7 @@ enum proxyStates {
 	 * 		- WRITE_REQ if it connected to the origin server
 	 * 		- ERROR in any other case
 	 */
-	CONNECT,
+	//CONNECT,
 
 	/*
 	 * Send already bufferd request to the origin server
@@ -57,7 +57,10 @@ enum proxyStates {
 	READ_RESP,
 	WRITE_RESP,
 */
-	/* Just for testing */ANSWER,
+	
+	REQUEST,
+	RESPONSE,
+
 
 	DONE,
 	ERROR

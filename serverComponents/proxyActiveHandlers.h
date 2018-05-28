@@ -10,4 +10,13 @@ void connection_block  (struct selector_key *key);
 
 void connection_close  (struct selector_key *key);
 
+
+/* Handlers of fd from an established connection */
+static const struct fd_handler connectionHandler = {
+	.handle_read   = connection_read,
+    .handle_write  = connection_write,
+    .handle_close  = connection_close,
+    .handle_block  = connection_block
+};
+
 #endif
