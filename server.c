@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
+#include <signal.h>
 
 #include "utils/selector/selector.h"
 #include "serverComponents/proxyPassiveHandlers.h"

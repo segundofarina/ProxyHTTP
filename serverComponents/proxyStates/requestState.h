@@ -1,6 +1,8 @@
 #ifndef _REQUEST_STATE_H_
 #define _REQUEST_STATE_H_
 
+#include <sys/types.h>
+
 #include "../../utils/selector/selector.h"
 
 unsigned requestRead(struct selector_key * key);

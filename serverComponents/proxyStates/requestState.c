@@ -2,7 +2,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <pthread.h>
 #include <errno.h>
@@ -35,7 +34,7 @@ int connectToOrigin(struct selector_key * key) {
         goto handle_errors;
     }
 
-    setsockopt(conn->originFd, SOL_SOCKET, SO_NOSIGPIPE, &(int){ 1 }, sizeof(int));
+    //setsockopt(conn->originFd, SOL_SOCKET, SO_NOSIGPIPE, &(int){ 1 }, sizeof(int));
 
     if(selector_fd_set_nio(conn->originFd) == -1) {
         // handle error
@@ -169,7 +168,7 @@ conn->requestParser.requestData.destAddrType = DOMAIN;
 //conn->requestParser.requestData.destAddr.fqdn;
 strncpy(conn->requestParser.requestData.destAddr.fqdn, "google.com", strlen("google.com")+1);
 printf("FQDN is: %s\n", conn->requestParser.requestData.destAddr.fqdn);
-conn->requestParser.requestData.destPort = 80;
+conn->requestParser.requestData.destPort = htons(80);
 hasOrigin = 1;
 
 
@@ -272,7 +271,7 @@ printf("request write called\n");
     //send data from buff
     ptr = buffer_read_ptr(&conn->readBuffer, &count);
     printf("get ptr\n");
-	n = send(conn->originFd, ptr, count, 0);
+	n = send(conn->originFd, ptr, count, MSG_NOSIGNAL);
     printf("send %d\n", (int)n);
 	if(n <= 0) { // origin closed connection
         printf("origin closed connection\n");
