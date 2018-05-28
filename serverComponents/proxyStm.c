@@ -1,6 +1,7 @@
 #include "proxyStm.h"
 
 #include "proxyStates/requestState.h"
+#include "proxyStates/responseState.h"
 
 const struct state_definition proxyStatesHandlers[] = {
     {
@@ -14,6 +15,8 @@ const struct state_definition proxyStatesHandlers[] = {
 		.on_block_ready = requestBlockReady
     },{
         .state            = RESPONSE,
+        .on_read_ready = responseRead,
+        .on_write_ready = responseWrite
         //.on_block_ready   = request_resolv_done,
     },/*{
         //.state            = CONNECT,

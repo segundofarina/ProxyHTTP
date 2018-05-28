@@ -148,11 +148,11 @@ int startOriginConnection(struct selector_key * key) {
 
 unsigned requestRead(struct selector_key * key) {
 	struct Connection * conn = DATA_TO_CONN(key);
-	//unsigned ret = REQUEST;
 	uint8_t *ptr;
 	size_t count;
 	ssize_t  n;
 
+    /* Read request and keep it in readBuffer */
 	ptr = buffer_write_ptr(&conn->readBuffer, &count);
 	n = recv(key->fd, ptr, count, 0);
 	if(n <= 0) { // client closed connection
@@ -162,6 +162,7 @@ unsigned requestRead(struct selector_key * key) {
     buffer_write_adv(&conn->readBuffer, n);
     //parseRequest(ptr, n);
 
+/* DEBUGING */
 ptr[n] = 0;
 printf("read from client:%s \n", ptr);
 conn->requestParser.requestData.destAddrType = DOMAIN;
@@ -170,11 +171,14 @@ strncpy(conn->requestParser.requestData.destAddr.fqdn, "google.com", strlen("goo
 printf("FQDN is: %s\n", conn->requestParser.requestData.destAddr.fqdn);
 conn->requestParser.requestData.destPort = htons(80);
 hasOrigin = 1;
-
-
-    //recibo datos y los guardo en el read buffer
+if(strstr(ptr, "\r\n\r\n") != NULL) {
+    printf("found end of request\n");
+    isDone = 1;
+}
+/* END DEBUGING */
 
     if(!parserHasOrigin()) { // si no tengo el origin y no lo puedo tener de la request
+        printf("Parser needs origin\n");
         if(buffer_can_write(&conn->readBuffer)) {
             return REQUEST;
         } else {
@@ -186,22 +190,48 @@ hasOrigin = 1;
     printf("attempt connection to the origin server\n");
         /* New thread to solve DNS */
         if(startOriginConnection(key) == 0) {
+            printf("[ERROR] failed to connect to origin server\n");
             return ERROR;
         }
-
+/*
         fd_interest interest = OP_NOOP;
         printf("check if client can continue sending\n");
-        if(buffer_can_write(&conn->readBuffer)) { // buffer is not empty
+        if(buffer_can_write(&conn->readBuffer) && !parserIsRequestDone()) { // buffer is not empty
             interest = OP_READ; // keep reading from client
             printf("read from client\n");
         }
 
         if(selector_set_interest_key(key, interest) != SELECTOR_SUCCESS) {
+            printf("[ERROR] failed to set interest\n");
 			return ERROR;
 		}
 
         return REQUEST;
+        */
     }
+
+    /* Check if I should still listen to the client. Only if buffer is not full and the request is not done */
+    fd_interest cliInterest = OP_NOOP;
+    if(buffer_can_write(&conn->readBuffer) && !parserIsRequestDone()) {
+        cliInterest = OP_READ;
+    }
+
+    /* Set client interest */
+    if(selector_set_interest_key(key, cliInterest) != SELECTOR_SUCCESS) { 
+        return ERROR;
+    }
+
+    /* Set origin interest */
+    if(conn->originFd != -1) {
+        if(selector_set_interest(key->s, conn->originFd, OP_WRITE) != SELECTOR_SUCCESS) { 
+            return ERROR;
+        }
+    }
+
+
+
+
+/*
 
     if(parserIsRequestDone()) { // if the client send the full request
         if(selector_set_interest_key(key, OP_NOOP) != SELECTOR_SUCCESS) { // stop listenting to client
@@ -209,6 +239,7 @@ hasOrigin = 1;
 		}
 
         if(conn->originFd != -1) { // if I have origin connected
+            // ESTO NO PASA NUNCA, ACABO DE ESCRIBIR EL BUFFER 
             if(!buffer_can_read(&conn->readBuffer)) { // buffer is empty
                 if(selector_set_interest(key->s, conn->originFd, OP_READ) != SELECTOR_SUCCESS) { // prepare to read response from origin
                     return ERROR;
@@ -225,7 +256,8 @@ hasOrigin = 1;
     }
 
     printf("request is not done\n");
-    /* If request is not done */
+    // If request is not done //
+    // ESTO NO PASA NUNCA, ACABO DE ESCRIBIR EL BUFFER //
     if(!buffer_can_read(&conn->readBuffer)) { //buffer is empty
         if(selector_set_interest_key(key, OP_READ) != SELECTOR_SUCCESS) { // read from client
 			return ERROR;
@@ -254,7 +286,7 @@ printf("check if client can continue sending\n");
             return ERROR;
         }
     }
-
+*/
 	return REQUEST;
 }
 
@@ -265,14 +297,15 @@ unsigned requestWrite(struct selector_key * key) {
 	uint8_t *ptr;
 	size_t count;
 	ssize_t  n;
+    unsigned ret = REQUEST;
 
 printf("request write called\n");
 
-    //send data from buff
+    /* Send bufferd data to the origin server */
     ptr = buffer_read_ptr(&conn->readBuffer, &count);
-    printf("get ptr\n");
 	n = send(conn->originFd, ptr, count, MSG_NOSIGNAL);
     printf("send %d\n", (int)n);
+
 	if(n <= 0) { // origin closed connection
         printf("origin closed connection\n");
         return ERROR;
@@ -280,14 +313,42 @@ printf("request write called\n");
 
     buffer_read_adv(&conn->readBuffer, n);
 
-    printf("[SERVER] writing to origin server");
+    printf("[SERVER] writing to origin server\n");
 
+
+    /* If the request is not done enable client to read */
+    if(!parserIsRequestDone()) {
+        if(selector_set_interest(key->s, conn->clientFd, OP_READ) != SELECTOR_SUCCESS) { 
+            return ERROR;
+        }
+    }
+
+    /* If the buffer is not empty continue writing */
+    fd_interest originInterst = OP_NOOP;
+    if(buffer_can_read(&conn->readBuffer)) {
+        originInterst = OP_WRITE;
+    }
+
+    /* If the buffer is empty and the request is done move to response state */
+    if(!buffer_can_read(&conn->readBuffer) && parserIsRequestDone()) {
+        originInterst = OP_READ;
+        ret = RESPONSE;
+    }
+
+    /* Set origin fd interests */
+    if(selector_set_interest_key(key, originInterst) != SELECTOR_SUCCESS) { 
+        return ERROR;
+    }
+
+    return ret;
+/*
 
     if(!buffer_can_read(&conn->readBuffer)) { //buffer is empty
         if(parserIsRequestDone()) {
             if(selector_set_interest(key->s, conn->originFd, OP_READ) != SELECTOR_SUCCESS) { // prepare to read response from origin
                 return ERROR;
             }
+            printf("[STATE] change to response\n");
             return RESPONSE; // change state
         }
         
@@ -314,7 +375,7 @@ printf("request write called\n");
         }
     }
 
-    return REQUEST;
+    return REQUEST;*/
 }
 
 unsigned requestBlockReady(struct selector_key * key) {
@@ -324,6 +385,7 @@ unsigned requestBlockReady(struct selector_key * key) {
 
     if(conn->origin_resolution == 0) {
         // resolution failed
+        printf("DNS failed\n");
         return ERROR;
     }
 
@@ -337,16 +399,18 @@ unsigned requestBlockReady(struct selector_key * key) {
 printf("attempt connect to origin\n");
 
     if( !connectToOrigin(key) ) {
+        printf("[ERROR] connection to origin failed\n");
         return ERROR;
     }
     
     /* What to do next? */
 
     /* Write buffered request to the origin server */
-/*    if(selector_set_interest(key->s, conn->originFd, OP_WRITE) != SELECTOR_SUCCESS) {
+    if(selector_set_interest(key->s, conn->originFd, OP_WRITE) != SELECTOR_SUCCESS) {
+        printf("[ERROR] failed to set interest to origin fd\n");
         return ERROR;
     }
-*/
+
     /* If there is more request to read from the client, and I have space */
 /*    if(!parserIsRequestDone() && buffer_can_write(&conn->readBuffer)) {
         if(selector_set_interest(key->s, conn->clientFd, OP_READ) != SELECTOR_SUCCESS) {
