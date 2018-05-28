@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-hostData requestTarget_marshall(char * buffer, char * result, uint16_t len);
+#include "parserHostReqLine.h"
 
 int main(void) {
 	char * test1 = "http://itba.edu.ar/foo?bar";
@@ -11,45 +11,52 @@ int main(void) {
 	char * test3 = "example.com:9090/hola";
 	char * test4 = "http://itba.edu.ar/foo?barhttp://itba";
 	char * test5 = "example.com/.../hola";
-	char * valid;
+	char * test6 = "127.0.0.1:8080";
+	char * test7 = "[0:0:0:0]:8080";
+	char * test8 = "[:::1]:80";
+	int port = 0;
+	hostData valid;
+	char result[0xFF] = {0};
 
-	valid = parseReqTarget(test1);
+	valid = requestTarget_marshall(test1, result, 0xFF, &port);
 	if(valid != NULL) {
-		printf("1: %s\n", valid);
+		printf("State 1: %d\n", valid);
 	}
-	free(valid);
 	// printf("%s\n", valid);
-	valid = parseReqTarget(test2);
+	valid = requestTarget_marshall(test2, result, 0xFF, &port);
 	if(valid != NULL) {
-		printf("2: %s\n", valid);
+		printf("State 2: %d\n", valid);
 	}
-	free(valid);
 	// printf("%s\n", valid);
-	valid = parseReqTarget(test2a);
+	valid = requestTarget_marshall(test2a, result, 0xFF, &port);
 	if(valid != NULL) {
-		printf("2a: %s\n", valid);
+		printf("State 2a: %d\n", valid);
 	}
-	free(valid);
 	// printf("%s\n", valid);
-	valid = parseReqTarget(test3);
+	valid = requestTarget_marshall(test3, result, 0xFF, &port);
 	if(valid != NULL) {
-		printf("3: %s\n", valid);
+		printf("State 3: %d\n", valid);
 	}
-	free(valid);
-	// printf("%s\n", valid);
-	valid = parseReqTarget(test4);
-	printf("4: ");
-	if(valid == NULL) {
-		printf("NULL\n");
+	valid = requestTarget_marshall(test4, result, 0xFF, &port);
+	if(valid != NULL) {
+		printf("State 4: %d\n", valid);
 	}
-	free(valid);
-	// printf("%s\n", valid);
-	valid = parseReqTarget(test5);
-	printf("5: ");
-	if(valid == NULL) {
-		printf("NULL");
+	valid = requestTarget_marshall(test5, result, 0xFF, &port);
+	if(valid != NULL) {
+		printf("State 5: %d\n", valid);
 	}
-	free(valid);
-	// printf("%s\n", valid);
+	valid = requestTarget_marshall(test6, result, 0xFF, &port);
+	if(valid != NULL) {
+		printf("State 6: %d\n", valid);
+	}
+	valid = requestTarget_marshall(test7, result, 0xFF, &port);
+	if(valid != NULL) {
+		printf("State 7: %d\n", valid);
+	}
+	valid = requestTarget_marshall(test8, result, 0xFF, &port);
+	if(valid != NULL) {
+		printf("State 8: %d\n", valid);
+	}
+
 	printf("\n");
 }

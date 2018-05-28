@@ -1,13 +1,4 @@
-#include <stdlib.h>
-#include <ctype.h>
-
-typedef enum {ERROR = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT} hostData;
-
-//	As per RFC:7230
-//	request-line = method SP request-target SP HTTP-version CRLF
-typedef enum {METHOD, SP1, REQ_TAR, SP2, HTTPV, CRLF} reqLineState;
-
-typedef enum {START, HTTP, SLASH, HOST, DOUBLE_DOT, PORT} validHostState;
+#include "parserHostReqLine.h"
 
 /**
  *	|	Valid hosts:				|			Host		|  port
@@ -30,7 +21,7 @@ hostData processHost(char * fqdn, char * result, uint16_t resultLen, uint16_t * 
 	int i = 0, j = 0, k = 0, ipv6Found = 0;
 	hostData ans = EMPTY;
 	*port = (uint16_t) 80;
-	int port = 0;
+	int portAux = 0;
 	char http[] = "http";
 	validHostState state = HTTP;
 	while(fqdn[i] != 0 && j < resultLen && state != PORT) {
@@ -78,7 +69,7 @@ hostData processHost(char * fqdn, char * result, uint16_t resultLen, uint16_t * 
 					state = SLASH;
 				} else if(isdigit(fqdn[i])) {
 					state = PORT;
-					port = port*10 + fqdn[i] - '0';
+					portAux = portAux*10 + fqdn[i] - '0';
 					j = -1;
 				} else {
 					return ERROR;
@@ -114,7 +105,7 @@ hostData processHost(char * fqdn, char * result, uint16_t resultLen, uint16_t * 
 							}
 							break;
 						default:
-							// code
+							return ERROR;
 					}
 				} else {
 					if(ans != IPV6) {
@@ -147,12 +138,13 @@ hostData processHost(char * fqdn, char * result, uint16_t resultLen, uint16_t * 
 	// Now the port
 	while(fqdn[i] != 0 && state == PORT) {
 		if(isdigit(fqdn[i])) {
-			port = port*10 + fqdn[i] - '0';
+			portAux = portAux*10 + fqdn[i] - '0';
 		} else if(fqdn[i] == '/') {
 			state = SLASH;
 		}
 		i++;
 	}
+	*port = portAux;
 
 	if(j >= resultLen) {
 		return ERROR;
