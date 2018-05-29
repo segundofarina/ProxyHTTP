@@ -11,6 +11,8 @@
 #include <netinet/in.h>
 #include <inttypes.h>
 
+#define DEFAULT_HTTP_PORT (80)
+
 typedef enum {ERROR = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT} hostData;
 
 //	As per RFC:7230
@@ -70,5 +72,14 @@ hostData processHost(char * fqdn, char * result, uint16_t resultLen, uint16_t * 
  *	IPV6_PORT: host found as IPv6 with port
  */
 hostData requestTarget_marshall(char * buffer, char * result, uint16_t resultLen, uint16_t * port);
+
+/**
+ * Fills the Request Data struct with the available data. If there's no specified
+ * port, the default port for HTTP is port 80.
+ * Returns TRUE or FALSE depending on whether the request had ERRORs or not.
+ * Note: a request-line with a request-target that does not contain the host
+ * qualifies as EMPTY and is a successful request.
+**/
+int fillRequestData_marshall(hostData addressType, char * host, uint16_t * port, struct requestData * rdStruct);
 
 #endif

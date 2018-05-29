@@ -266,3 +266,53 @@ hostData requestTarget_marshall(char * buffer, char * result, uint16_t resultLen
 //		i++;
 //	}
 }
+
+int fillRequestData_marshall(hostData addressType, char * host, uint16_t * port, struct requestData * rdStruct) {
+	int i;
+	switch(addressType) {
+		case ERROR:
+			return 0;
+			break;
+		case EMPTY:
+			if(*port != (uint16_t)DEFAULT_HTTP_PORT) {
+				rdStruct->destPort = (uint16_t)(*port);
+			}
+			rdStruct->destAddrType = DOMAIN;
+			break;
+		case DOMAIN_HOST:
+			rdStruct->destAddrType = DOMAIN;
+			for(i = 0; host[i] != 0; i++) {
+				rdStruct->destAddr->fqdn[i] = host[i];
+			}
+			rdStruct->destPort = (uint16_t)DEFAULT_HTTP_PORT;
+			break;
+		case DOMAIN_HOST_PORT:
+			rdStruct->destAddrType = DOMAIN;
+			for(i = 0; host[i] != 0; i++) {
+				rdStruct->destAddr->fqdn[i] = host[i];
+			}
+			rdStruct->destPort = (uint16_t)(*port);
+			break;
+		case IPV4:
+			rdStruct->destAddrType = IPv4;
+			// ip passage to sockaddr_in
+			rdStruct->destPort = (uint16_t)DEFAULT_HTTP_PORT;
+			break;
+		case IPV4_PORT:
+			rdStruct->destAddrType = IPv4;
+			//
+			rdStruct->destPort = (uint16_t)(*port);
+			break;
+		case IPV6:
+			rdStruct->destAddrType = IPv6;
+			//
+			rdStruct->destPort = (uint16_t)DEFAULT_HTTP_PORT;
+			break;
+		case IPV6_PORT:
+			rdStruct->destAddrType = IPv6;
+			//
+			rdStruct->destPort = (uint16_t)(*port);
+			break;
+	}
+	return 1;
+}
