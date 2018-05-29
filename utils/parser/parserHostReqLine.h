@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <stdint.h>
+#include <netinet/in.h>
+#include <inttypes.h>
 
 typedef enum {ERROR = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT} hostData;
 
@@ -16,6 +18,25 @@ typedef enum {ERROR = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, 
 typedef enum {METHOD, SP1, REQ_TAR, SP2, HTTPV, CRLF} reqLineState;
 
 typedef enum {START, HTTP, SLASH, HOST, DOUBLE_DOT, PORT} validHostState;
+
+/* Parte del request parser */
+enum addrType {
+    IPv4, IPv6, DOMAIN
+};
+
+union socks_addr {
+    char fqdn[0xff];
+    struct sockaddr_in  ipv4;
+    struct sockaddr_in6 ipv6;
+};
+
+struct requestData {
+    enum addrType destAddrType;
+    union socks_addr destAddr;
+    /** port in network byte order */
+    in_port_t destPort;
+};
+/* end */
 
 
 /**
