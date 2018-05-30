@@ -301,7 +301,7 @@ hostData requestTarget_marshall(char * buffer, char * result, uint16_t resultLen
  *	fillRequestData_marshall takes into account only the first answer of the linked list.
  */
 int fillRequestData_marshall(hostData addressType, char * host, uint16_t * port, struct requestData * rdStruct) {
-	int i, int errCode;
+	int i, errCode;
 	struct addrinfo **res;
 	struct sockaddr_in aux4;
 	struct sockaddr_in6 aux6;
@@ -322,14 +322,14 @@ int fillRequestData_marshall(hostData addressType, char * host, uint16_t * port,
 		case DOMAIN_HOST:
 			rdStruct->destAddrType = DOMAIN;
 			for(i = 0; host[i] != 0; i++) {
-				rdStruct->destAddr->fqdn[i] = host[i];
+				rdStruct->destAddr.fqdn[i] = host[i];
 			}
 			rdStruct->destPort = (uint16_t)DEFAULT_HTTP_PORT;
 			break;
 		case DOMAIN_HOST_PORT:
 			rdStruct->destAddrType = DOMAIN;
 			for(i = 0; host[i] != 0; i++) {
-				rdStruct->destAddr->fqdn[i] = host[i];
+				rdStruct->destAddr.fqdn[i] = host[i];
 			}
 			rdStruct->destPort = (uint16_t)(*port);
 			break;
@@ -358,12 +358,12 @@ int fillRequestData_marshall(hostData addressType, char * host, uint16_t * port,
 	if(addressType == IPV4 || addressType == IPV4_PORT) {
 		// aux4 = (sockaddr_in)((*res)->ai_addr);
 		// memmove(&aux4,);
-		rdStruct->destAddr->ipv4 = (sockaddr_in)((*res)->ai_addr);
+		rdStruct->destAddr->ipv4 = (struct sockaddr_in *)((*res)->ai_addr);
 	}
 	if(addressType == IPV6 || addressType == IPV6_PORT) {
-		rdStruct->destAddr->ipv6 = (sockaddr_in6)((*res)->ai_addr);
+		rdStruct->destAddr->ipv6 = (struct sockaddr_in6 *)((*res)->ai_addr);
 	}
 	// (*res)->ai_addr
-	freeaddrinfo(res);	// TODO: check if it makes errors/conflicts with these casts
+	freeaddrinfo(*res);	// TODO: check if it makes errors/conflicts with these casts
 	return errCode;
 }
