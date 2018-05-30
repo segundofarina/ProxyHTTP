@@ -5,6 +5,19 @@
 #include "multi_parser.h"
 #include <stdio.h>
 
+
+struct parser_data_list {
+
+    struct parser * p;
+
+    struct parser_definition def;
+
+    u_int32_t match;
+
+    struct parser_data_list * next;
+};
+
+
 extern u_int32_t
 multi_parser_feed(const uint8_t c, struct multi_parser* p){
 
@@ -12,7 +25,6 @@ multi_parser_feed(const uint8_t c, struct multi_parser* p){
 
     p->currentMatch = p->notMatch;
 
-    struct parser_data_list * prev= NULL;
 
     while (current != NULL) {
         const struct parser_event *e = parser_feed(current->p, c);
@@ -22,24 +34,6 @@ multi_parser_feed(const uint8_t c, struct multi_parser* p){
         if (e->type == STRING_CMP_EQ) {
             p->currentMatch = current->match;
 
-        } else if (e->type == STRING_CMP_NEQ) {
-            /* Procedemos a borrar la maquina de estado actual ya que no sera posible llegar a un match*/
-
-            if(prev == NULL){
-                /* el elemento era el primero de la lista*/
-                p->list = next;
-            } else{
-                prev->next = next;
-            };
-
-
-
-            parser_destroy(current->p);
-            parser_utils_strcmpi_destroy((&current->def));
-            free(current);
-
-        }else{
-            prev = current;
         }
 
         current = next;
@@ -80,7 +74,7 @@ multi_parser_init (struct multi_parser* p,  const int notMatch, char ** strings,
 }
 
 extern void
-method_parser_close(struct multi_parser* p){
+multi_parser_close(struct multi_parser* p){
 
     if( p != NULL){
 
@@ -116,5 +110,22 @@ void parser_list_destroy( struct parser_data_list * list){
     parser_list_destroy(list->next);
     free(list);
 
+}
+
+static void
+parser_list_reset( struct parser_data_list * list){
+
+    if(list == NULL){
+        return;
+    }
+    parser_reset(list->p);
+    parser_list_reset(list->next);
+
+}
+
+void
+multi_parser_reset (struct multi_parser *p){
+    p->currentMatch = p->notMatch;
+    parser_list_reset(p->list);
 }
 
