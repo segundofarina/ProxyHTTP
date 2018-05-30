@@ -13,18 +13,19 @@ void request_init(struct request_parser *p) {
     p->state = request_line;
 }
 
-enum request_state request_feed (struct request_parser *p, const uint8_t c){
+enum request_state
+request_feed (struct request_parser *p, const uint8_t c){
     enum request_state next;
 
     switch(p->state) {
         case request_line:
-            next = requestLine_feed(p,c);
+            next = requestLine(p,c);
             break;
         case headers:
-            next = requestHeaders_feed(p,c);
+            next = headers(p,c);
             break;
         case body:
-            next = requestBody_feed(p,c);
+            next = body(p,c);
             break;
         case done:
             next = done;
@@ -36,7 +37,21 @@ enum request_state request_feed (struct request_parser *p, const uint8_t c){
     return p->state = next;
 }
 
-enum request_state request_consume(struct request_parser *p, buffer * b){
+
+
+enum request_state
+headers(const uint8_t c,struct request_parser *p){
+    enum request_state next;
+    switch (c) {
+        case '\r':
+            break;
+    }
+
+    return next;
+}
+
+enum request_state
+request_consume(struct request_parser *p, buffer * b){
     enum request_state st = p->state;
     while(buffer_can_read(b)) {
         const uint8_t c = buffer_read(b);

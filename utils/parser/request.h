@@ -8,6 +8,7 @@
 
 #include "requestLine.h"
 #include "../buffer/buffer.h"
+#include "header.h"
 
 enum request_state {
     request_line,
@@ -21,6 +22,8 @@ struct request_parser {
     struct socks_addr * origin_dest;
     enum request_state state;
 };
+
+
 
 struct socks_addr {
     char fqdn[0xff];
@@ -40,6 +43,8 @@ enum request_state requestBody(struct request_parser *p, const uint8_t c);
 
 enum request_state requestDone(struct request_parser *p, const uint8_t c);
 
-#endif //PC_2018_04_HTTPREQUEST_H
+
+
+ //PC_2018_04_HTTPREQUEST_H
 
 
