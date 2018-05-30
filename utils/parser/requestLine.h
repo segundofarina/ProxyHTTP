@@ -19,13 +19,13 @@ enum requestLine_state {
 
 struct requestLine_parser {
     enum requestLine_state state;
-    struct method_parser * methodparser;
+    struct method_parser * methodParser;
 
     char uri [0xFF];
 
-    enum method_type method;
+    enum request_method method;
 
-    u_int16_t index;
+    u_int16_t len;
 
 
 };
@@ -36,7 +36,7 @@ requestLine_parser_init (struct requestLine_parser *p);
 
 /** entrega un byte al parser. retorna true si se llego al final  */
 enum requestLine_state
-requestLine_parser_feed (struct requestLine_parser *p, const uint8_t c);
+requestLine_parser_feed ( const uint8_t c,struct requestLine_parser *p);
 
 /**
  * por cada elemento del buffer llama a `request_parser_feed' hasta que
@@ -58,7 +58,7 @@ bool
 requestLine_is_done(const enum requestLine_state st, bool *errored);
 
 void
-requestLine_close(struct requestLine_parser *p);
+requestLine_parser_close(struct requestLine_parser *p);
 
 char *
 requestLine_state_toString(const enum requestLine_state st);

@@ -7,44 +7,49 @@
 #include <sys/socket.h>
 
 #include "requestLine.h"
-#include "../buffer/buffer.h"
-#include "header.h"
+
 
 enum request_state {
-    request_line,
-    headers,
-    body,
-    done,
-    error
+    request_requestLine,
+    request_headers,
+    request_body,
+    request_done,
+    request_error
 };
 
 struct request_parser {
-    struct socks_addr * origin_dest;
     enum request_state state;
+
+    struct requestLine_parser *requestLineParser;
+    struct headerGroup_parser *headerParser;
+
+    struct header_list * headerList;
+
+    enum request_method method;
+    char  requestURI[0xFF];
+
+
 };
 
 
 
-struct socks_addr {
-    char fqdn[0xff];
-    struct sockaddr_in  ipv4;
-    struct sockaddr_in6 ipv6;
-};
 
-void request_init(struct request_parser *p);
+void
+request_parser_init(struct request_parser *p);
 
-enum request_state request_feed (struct request_parser *p, const uint8_t c);
-
-enum request_state request_consume(struct request_parser *p, buffer * b);
-
-enum request_state requestHeaders(struct request_parser *p, const uint8_t c);
-
-enum request_state requestBody(struct request_parser *p, const uint8_t c);
-
-enum request_state requestDone(struct request_parser *p, const uint8_t c);
+enum request_state
+request_parser_feed (const uint8_t c,struct request_parser *p);
 
 
+enum request_state
+request_parser_consume(struct request_parser *p, char * b,int len);
 
- //PC_2018_04_HTTPREQUEST_H
+void
+request_parser_close(struct request_parser *p);
+
+char *
+request_state_string(enum request_state state);
+
+#endif //PC_2018_04_HTTPREQUEST_H
 
 

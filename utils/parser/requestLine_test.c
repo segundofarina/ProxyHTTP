@@ -18,4 +18,6 @@ int main(){
     enum requestLine_state state =requestLine_parser_consume(string,strlen(string),p,NULL);
 
     printf("state: %s method: %s uri: %s",requestLine_state_toString(state),methodToString(p->method),p->uri);
+    
+    requestLine_parser_close(p);
 }

@@ -48,7 +48,6 @@ enum headerGroup_state init(const uint8_t c, struct headerGroup_parser *p) {
 enum headerGroup_state header(const uint8_t c, struct headerGroup_parser *p) {
     enum headerGroup_state next;
     enum header_state state= header_parser_feed(c,p->headerParser);
-    printf("header parser state %s\n",header_state_string(state));
     switch(state){
         case header_end:
             if(p->headerParser->name != p->headerParser->nameParser->notMatch){
@@ -131,7 +130,7 @@ headerGroup_parser_feed(const uint8_t c,struct headerGroup_parser* p){
 
 extern void
 headerGroup_parser_close(struct headerGroup_parser* p){
-     header_list_destroy(p->list);
+    // header_list_destroy(p->list);
 }
 
 char *
@@ -160,7 +159,8 @@ headerGroup_state_string(enum headerGroup_state st){
     return resp;
 }
 
-void header_list_destroy(struct header_list *pList) {
+void
+header_list_destroy(struct header_list *pList) {
     if(pList == NULL){
         return;
     }else{
@@ -177,6 +177,7 @@ header_list_add(struct header_list * list , u_int32_t name, char * value, int le
         list->value = malloc(sizeof(char)*(len+1));
         memcpy(list->value,value,len);
         list->value[len]=0;
+        list->next=NULL;
         return list;
     }
     list->next =header_list_add(list->next,name,value,len);

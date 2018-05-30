@@ -51,5 +51,7 @@ headerGroup_state_string(enum headerGroup_state st);
 void
 header_list_print(struct header_list * list);
 
+void
+header_list_destroy(struct header_list *pList);
 
 #endif //PC_2018_04_HEADERGROUP_H

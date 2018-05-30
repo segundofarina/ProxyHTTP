@@ -8,14 +8,15 @@ method(const uint8_t c, struct requestLine_parser* p) {
     switch (c) {
         case ' ':
             // Guardar el method que quedo en p->method_parser.method
-            p->method=p->methodparser->method;
+            p->method=p->methodParser->method;
 
             //No se si hacerlo aca  o hacer una buena maquina de estdos con un on deprature
-            method_parser_close(p->methodparser);
+            method_parser_close(p->methodParser);
+            p->methodParser=NULL;
             next = rl_target;
             break;
         default:
-            method_parser_feed(c,p->methodparser);
+            method_parser_feed(c,p->methodParser);
             next = rl_method;
             break;
     }
@@ -28,13 +29,13 @@ target(const uint8_t c, struct requestLine_parser* p) {
     enum requestLine_state next;
     switch (c) {
         case ' ':
-            p->uri[p->index] = 0;
+            p->uri[p->len] = 0;
             next = rl_extra;
             break;
         default:
             //guardar el target en estructura
-            if(p->index <0xFF){
-                p->uri[p->index++] = c;
+            if(p->len <0xFF){
+                p->uri[p->len++] = c;
                 next = rl_target;
             }else{
                 next = rl_error;
@@ -89,7 +90,7 @@ end(const uint8_t c, struct requestLine_parser* p){
 
 
         extern enum requestLine_state
-requestLine_parser_feed (struct requestLine_parser* p, const uint8_t c) {
+requestLine_parser_feed ( const uint8_t c,struct requestLine_parser* p) {
     enum requestLine_state next;
 
     switch(p->state) {
@@ -119,18 +120,18 @@ requestLine_parser_feed (struct requestLine_parser* p, const uint8_t c) {
 void
 requestLine_parser_init (struct requestLine_parser *p){
     p->state = rl_method;
-    p->index =0;
-    p->methodparser = malloc(sizeof(struct method_parser));
+    p->len =0;
+    p->methodParser = malloc(sizeof(struct method_parser));
 
-    method_parser_init(p->methodparser);
+    method_parser_init(p->methodParser);
 
 }
 
 
 void
-requestLine_close(struct requestLine_parser *p){
+requestLine_parser_close(struct requestLine_parser *p){
     if(p != NULL){
-        method_parser_close(p->methodparser);
+        method_parser_close(p->methodParser);
         free(p);
     }
 
@@ -149,14 +150,13 @@ requestLine_parser_consume(char *buffer,size_t len, struct requestLine_parser *p
     size_t i;
     enum requestLine_state state;
     for(i =0 ; i< len ;i++){
-       state = requestLine_parser_feed(p,buffer[i]);
+       state = requestLine_parser_feed(buffer[i],p);
         char letter = buffer[i];
         if(letter == '\n'){
             letter = 'N';
         }else if (letter == '\r'){
             letter = 'R';
         }
-       printf("feeded %c state now is %s\n",letter,requestLine_state_toString(state));
     }
     if( errored != NULL) {
         if (state == rl_error) {
