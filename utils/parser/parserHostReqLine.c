@@ -2,7 +2,6 @@
 //  Created by Nicolas Paganini on 5/27/18
 //
 
-#include <stdio.h>
 #include "parserHostReqLine.h"
 
 /**
@@ -267,11 +266,52 @@ hostData requestTarget_marshall(char * buffer, char * result, uint16_t resultLen
 //	}
 }
 
+/**
+ *	Uses the function getaddrinfo to set the sockaddr data into the struct.
+ *
+ *	The getaddrinfo() function allocates and initializes a linked list of
+ *  	addrinfo structures, one for each network address that matches node
+ *      and service, subject to any restrictions imposed by hints, and
+ *      returns a pointer to the start of the list in res.  The items in the
+ *      linked list are linked by the ai_next field.
+ *
+ *  Either node or service, but not both, may be NULL.
+ *
+ *	struct addrinfo {
+ *		int              ai_flags;
+ *		int              ai_family;
+ *		int              ai_socktype;
+ *		int              ai_protocol;
+ *		socklen_t        ai_addrlen;
+ *		struct sockaddr *ai_addr;
+ *		char            *ai_canonname;
+ *		struct addrinfo *ai_next;
+ *	};
+ *
+ *	There are several reasons why the linked list may have more than one
+ *      addrinfo structure, including: the network host is multihomed, acces‐
+ *      sible over multiple protocols (e.g., both AF_INET and AF_INET6); or
+ *      the same service is available from multiple socket types (one
+ *      SOCK_STREAM address and another SOCK_DGRAM address, for example).
+ *      Normally, the application should try using the addresses in the order
+ *      in which they are returned.  The sorting function used within getad‐
+ *      drinfo() is defined in RFC 3484; the order can be tweaked for a par‐
+ *      ticular system by editing /etc/gai.conf (available since glibc 2.5).
+ *
+ *	fillRequestData_marshall takes into account only the first answer of the linked list.
+ */
 int fillRequestData_marshall(hostData addressType, char * host, uint16_t * port, struct requestData * rdStruct) {
-	int i;
+	int i, int errCode;
+	struct addrinfo **res;
+	struct sockaddr_in aux4;
+	struct sockaddr_in6 aux6;
+
+	if(addressType == ERROR) {
+		return EAI_FAIL;
+	}
 	switch(addressType) {
 		case ERROR:
-			return 0;
+			// unreachable
 			break;
 		case EMPTY:
 			if(*port != (uint16_t)DEFAULT_HTTP_PORT) {
@@ -314,5 +354,16 @@ int fillRequestData_marshall(hostData addressType, char * host, uint16_t * port,
 			rdStruct->destPort = (uint16_t)(*port);
 			break;
 	}
-	return 1;
+	errCode = getaddrinfo(host, NULL, NULL, res);
+	if(addressType == IPV4 || addressType == IPV4_PORT) {
+		// aux4 = (sockaddr_in)((*res)->ai_addr);
+		// memmove(&aux4,);
+		rdStruct->destAddr->ipv4 = (sockaddr_in)((*res)->ai_addr);
+	}
+	if(addressType == IPV6 || addressType == IPV6_PORT) {
+		rdStruct->destAddr->ipv6 = (sockaddr_in6)((*res)->ai_addr);
+	}
+	// (*res)->ai_addr
+	freeaddrinfo(res);	// TODO: check if it makes errors/conflicts with these casts
+	return errCode;
 }
