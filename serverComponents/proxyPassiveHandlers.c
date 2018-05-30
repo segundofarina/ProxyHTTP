@@ -14,6 +14,8 @@
 static int poolSize = 0;
 static struct Connection * pool = NULL;
 
+static enum TransformationType transformationType = NO_TRANSFORM;
+
 
 struct Connection * new_connection(const int clientFd) {
 	struct Connection * connection;
@@ -44,6 +46,16 @@ struct Connection * new_connection(const int clientFd) {
 
 	buffer_init(&connection->readBuffer,  N(connection->rawBuff_a), connection->rawBuff_a);
     buffer_init(&connection->writeBuffer, N(connection->rawBuff_b), connection->rawBuff_b);
+
+	buffer_init(&connection->respTempBuffer, N(connection->rawBuff_c), connection->rawBuff_c);
+	buffer_init(&connection->inTransformBuffer, N(connection->rawBuff_d), connection->rawBuff_d);
+	buffer_init(&connection->outTransformBuffer, N(connection->rawBuff_e), connection->rawBuff_e);
+
+	/* transformation */
+	//fork process and set fd
+	// add fd to selector
+	connection->trasformationType = transformationType;
+
 
 	connection->references = 1;
 
