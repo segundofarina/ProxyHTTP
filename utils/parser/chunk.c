@@ -20,7 +20,7 @@ void chunk_stateToString(enum chunk_state state){
 }
 
 void chunk_parser_init (struct chunk_parser * p){
-    p->bytes_declared = 0;
+    p->bytes_declared = -1;
     p->bytes_read = 0;
     p->state = chunk_bytes;
     p->last = false;
@@ -90,7 +90,7 @@ void bytesDeclared(const char c, struct chunk_parser* p){
         p->state = chunk_extension;
         return;
     }
-    if(c == '\r'){
+    if(c == '\r' && p->bytes_declared != -1){
         p->prev = chunk_bytes;
         p->state = chunk_crlf;
         return;
@@ -98,6 +98,7 @@ void bytesDeclared(const char c, struct chunk_parser* p){
     p->state = chunk_error;
 }
 int sum(int declared, const char c) {
+
     int aux=-1;
 
     if(c >= 'A' && c <= 'F'){
@@ -108,22 +109,30 @@ int sum(int declared, const char c) {
         aux = c - '0';
     }
 
+    if(aux == -1){
+        return -1;
+    }
+
+    if(declared == -1){
+        declared = 0;
+    }
+
     return declared*16 + aux;
 }
 
 enum chunk_state chunk_parser_consume(const char *b, struct chunk_parser *p){
     int i = 0;
     while(b[i]!= 0) {
-//        if(b[i] == '\n'){
-//            printf("   c = \\n");
-//        }else if(b[i] == '\r'){
-//            printf("   c = \\r");
-//        }else {
-//            printf("   c = %c", b[i]);
-//        }
+        if(b[i] == '\n'){
+            printf("   c = \\n");
+        }else if(b[i] == '\r'){
+            printf("   c = \\r");
+        }else {
+            printf("   c = %c", b[i]);
+        }
         chunk_parser_feed(b[i],p);
-//        chunk_stateToString(p->state);
-//        printf("%d\n",p->last);
+        chunk_stateToString(p->state);
+        printf("%d\n",p->last);
         if(p->state == chunk_done || p->state == chunk_error){
             break;
         }
@@ -139,10 +148,4 @@ void chunk_parser_close(struct chunk_parser* p){
 
 
 
-//
-//int main(void){
-//    struct chunk_parser *  p = chunk_parser_init();
-//    const char * b = "F;asdfgh asdfghj sdfghjm\r\n<!doctype html>\r\n";
-//               //      "0\r\n\r\n";
-//    chunk_parser_consume(b,p);
-//}
+

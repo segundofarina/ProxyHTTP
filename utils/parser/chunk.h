@@ -43,5 +43,8 @@ enum chunk_state chunk_parser_consume(const char *b,struct chunk_parser *p);
 
 void chunk_parser_close(struct chunk_parser* p);
 
+void chunk_stateToString(enum chunk_state state);
+
+
 
 #endif //PC_2018_04_CHUNK_H
