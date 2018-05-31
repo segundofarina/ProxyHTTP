@@ -266,56 +266,19 @@ hostData requestTarget_marshall(char * buffer, char * result, uint16_t resultLen
 //	}
 }
 
-/**
- *	Uses the function getaddrinfo to set the sockaddr data into the struct.
- *
- *	The getaddrinfo() function allocates and initializes a linked list of
- *  	addrinfo structures, one for each network address that matches node
- *      and service, subject to any restrictions imposed by hints, and
- *      returns a pointer to the start of the list in res.  The items in the
- *      linked list are linked by the ai_next field.
- *
- *  Either node or service, but not both, may be NULL.
- *
- *	struct addrinfo {
- *		int              ai_flags;
- *		int              ai_family;
- *		int              ai_socktype;
- *		int              ai_protocol;
- *		socklen_t        ai_addrlen;
- *		struct sockaddr *ai_addr;
- *		char            *ai_canonname;
- *		struct addrinfo *ai_next;
- *	};
- *
- *	There are several reasons why the linked list may have more than one
- *      addrinfo structure, including: the network host is multihomed, acces‐
- *      sible over multiple protocols (e.g., both AF_INET and AF_INET6); or
- *      the same service is available from multiple socket types (one
- *      SOCK_STREAM address and another SOCK_DGRAM address, for example).
- *      Normally, the application should try using the addresses in the order
- *      in which they are returned.  The sorting function used within getad‐
- *      drinfo() is defined in RFC 3484; the order can be tweaked for a par‐
- *      ticular system by editing /etc/gai.conf (available since glibc 2.5).
- *
- *	fillRequestData_marshall takes into account only the first answer of the linked list.
- */
-int fillRequestData_marshall(hostData addressType, char * host, uint16_t * port, struct requestData * rdStruct) {
+int fillRequestData_marshall(hostData addressType, char * host, uint16_t port, struct requestData * rdStruct) {
 	int i, errCode;
-	struct addrinfo **res;
-	struct sockaddr_in aux4;
-	struct sockaddr_in6 aux6;
+	// struct sockaddr_in aux4;
+	// struct sockaddr_in6 aux6;
+	void * aux;
 
-	if(addressType == ERROR) {
-		return EAI_FAIL;
-	}
 	switch(addressType) {
 		case ERROR:
-			// unreachable
+			return -1;
 			break;
 		case EMPTY:
-			if(*port != (uint16_t)DEFAULT_HTTP_PORT) {
-				rdStruct->destPort = (uint16_t)(*port);
+			if(port != (uint16_t)DEFAULT_HTTP_PORT) {
+				rdStruct->destPort = port;
 			}
 			rdStruct->destAddrType = DOMAIN;
 			break;
@@ -331,39 +294,48 @@ int fillRequestData_marshall(hostData addressType, char * host, uint16_t * port,
 			for(i = 0; host[i] != 0; i++) {
 				rdStruct->destAddr.fqdn[i] = host[i];
 			}
-			rdStruct->destPort = (uint16_t)(*port);
+			rdStruct->destPort = port;
 			break;
 		case IPV4:
 			rdStruct->destAddrType = IPv4;
-			// ip passage to sockaddr_in
 			rdStruct->destPort = (uint16_t)DEFAULT_HTTP_PORT;
 			break;
 		case IPV4_PORT:
 			rdStruct->destAddrType = IPv4;
-			//
-			rdStruct->destPort = (uint16_t)(*port);
+			rdStruct->destPort = port;
 			break;
 		case IPV6:
 			rdStruct->destAddrType = IPv6;
-			//
 			rdStruct->destPort = (uint16_t)DEFAULT_HTTP_PORT;
 			break;
 		case IPV6_PORT:
 			rdStruct->destAddrType = IPv6;
-			//
-			rdStruct->destPort = (uint16_t)(*port);
+			rdStruct->destPort = port;
 			break;
 	}
-	errCode = getaddrinfo(host, NULL, NULL, res);
+	// errCode = getaddrinfo(host, NULL, NULL, res);
 	if(addressType == IPV4 || addressType == IPV4_PORT) {
-		// aux4 = (sockaddr_in)((*res)->ai_addr);
-		// memmove(&aux4,);
-		rdStruct->destAddr->ipv4 = (struct sockaddr_in *)((*res)->ai_addr);
+		// aux4 = malloc();	//	TODO
+		// aux4.sin_family = AF_INET;
+		// aux4.sin_port = htons(port);
+		// errCode = inet_pton(AF_INET, host, &(aux4.sin_addr.s_addr));
+		// rdStruct.destAddr.ipv4 = aux4;
+		rdStruct->destAddr.ipv4.sin_family = AF_INET;
+		rdStruct->destAddr.ipv4.sin_port = htons(port);
+		errCode = inet_pton(AF_INET, host, aux);
+		memcpy(aux, rdStruct->destAddr.ipv4.sin_addr, sizeof(struct in_addr));
 	}
 	if(addressType == IPV6 || addressType == IPV6_PORT) {
-		rdStruct->destAddr->ipv6 = (struct sockaddr_in6 *)((*res)->ai_addr);
+		// rdStruct->destAddr->ipv6 = (struct sockaddr_in6 *)((*res)->ai_addr);	// makes errors/conflicts with these casts
+		// aux6 = malloc();
+		// aux6.sin_family = AF_INET6;
+		// aux6.sin_port = htons(port);
+		rdStruct->destAddr.ipv6.sin6_family = AF_INET6;
+		rdStruct->destAddr.ipv6.sin6_port = htons(port);
+		rdStruct->destAddr.ipv6.sin6_flowinfo = (uint32_t) 0;	// IPv6 flow information
+		errCode = inet_pton(AF_INET6, host, aux);
+		rdStruct->destAddr.ipv6.sin6_scope_id = (uint32_t) 0;
+		memcpy(aux, rdStruct->destAddr.ipv6.sin6_addr, sizeof(struct in6_addr));
 	}
-	// (*res)->ai_addr
-	freeaddrinfo(*res);	// TODO: check if it makes errors/conflicts with these casts
 	return errCode;
 }

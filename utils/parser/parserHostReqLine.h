@@ -8,11 +8,13 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <stdint.h>
-#include <netinet/in.h>
-#include <inttypes.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
+#include <string.h>
+// #include <netinet/in.h>
+// #include <inttypes.h>
+// #include <sys/types.h>
+// #include <sys/socket.h>
+// #include <netdb.h>
+#include <arpa/inet.h>
 
 #define DEFAULT_HTTP_PORT (80)
 
@@ -75,33 +77,16 @@ hostData processHost(char * fqdn, char * result, uint16_t resultLen, uint16_t * 
 hostData requestTarget_marshall(char * buffer, char * result, uint16_t resultLen, uint16_t * port);
 
 /**
- * Fills the Request Data struct with the available data. If there's no specified
- * port, the default port for HTTP is port 80.
- * Note: a request-line with a request-target that does not contain the host
- * qualifies as EMPTY and is a successful request.
+ *	Fills the Request Data struct with the available data. If there's no specified
+ *	port, the default port for HTTP is port 80.
+ *	Note: a request-line with a request-target that does not contain the host
+ *	qualifies as EMPTY and is a successful request.
  *
- *
- * Returns zero on success or non-zero for the error code:
- * (as taken from http://man7.org/linux/man-pages/man3/getaddrinfo.3.html)
- *
- * EAI_ADDRFAMILY: The specified network host does not have any network addresses in the requested address family.
- * EAI_AGAIN: The name server returned a temporary failure indication.  Try again later.
- * EAI_BADFLAGS: hints.ai_flags contains invalid flags; or, hints.ai_flags included AI_CANONNAME and name was NULL.
- * EAI_FAIL: The name server returned a permanent failure indication.
- * EAI_FAMILY: The requested address family is not supported.
- * EAI_MEMORY: Out of memory.
- * EAI_NODATA: The specified network host exists, but does not have any network addresses defined.
- * EAI_NONAME: The node or service is not known; or both node and service are NULL; or AI_NUMERICSERV was specified
- *			in hints.ai_flags and service was not a numeric port-number string.
- * EAI_SERVICE: The requested service is not available for the requested socket type.  It may be available through
- *			another socket type. For example, this error could occur if service was "shell" (a service available
- *			only on stream sockets), and either hints.ai_protocol was IPPROTO_UDP, or hints.ai_socktype was SOCK_DGRAM;
- *			or the error could occur if service was not NULL, and hints.ai_socktype was SOCK_RAW (a socket type that
- *			does not support the concept of services).
- * EAI_SOCKTYPE: The requested socket type is not supported.  This could occur, for example, if hints.ai_socktype
- *			and hints.ai_protocol are inconsistent (e.g., SOCK_DGRAM and IPPROTO_TCP, respectively).
- * EAI_SYSTEM: Other system error, check errno for details.
+ *	Returns:
+ *		1 on success
+ *		0 if parameter host does not contain a valid IPv4 or IPv6 address
+ *	   -1 is returned if parameter addressType isn't a valid address type
 **/
-int fillRequestData_marshall(hostData addressType, char * host, uint16_t * port, struct requestData * rdStruct);
+int fillRequestData_marshall(hostData addressType, char * host, uint16_t port, struct requestData * rdStruct);
 
 #endif
