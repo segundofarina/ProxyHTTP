@@ -61,13 +61,13 @@ void breakLine(const char c, struct chunk_parser *p){
 }
 
 void countData(const char c, struct chunk_parser *p) {
+    if(p->bytes_read < p->bytes_declared) {
+        p->bytes_read++;
+        return;
+    }
     if(c == '\r'){
         p->prev = chunk_data;
         p->state = chunk_crlf;
-        return;
-    }
-    if(p->bytes_read < p->bytes_declared) {
-        p->bytes_read++;
         return;
     }
     p->state = chunk_error;
@@ -77,6 +77,10 @@ void bytesDeclared(const char c, struct chunk_parser* p){
 
     if(isalnum(c)){
         p->bytes_declared = sum(p->bytes_declared,c);
+        if(p->bytes_declared == -1){
+            p->state = chunk_error;
+            return;
+        }
         if(p->bytes_declared == 0){
             p->last = true;
         }
@@ -94,7 +98,7 @@ void bytesDeclared(const char c, struct chunk_parser* p){
     p->state = chunk_error;
 }
 int sum(int declared, const char c) {
-    int aux;
+    int aux=-1;
 
     if(c >= 'A' && c <= 'F'){
         aux = c - 'A' + 10;

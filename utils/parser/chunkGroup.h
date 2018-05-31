@@ -19,6 +19,7 @@ struct chunkGroup_parser {
     int bytes_read;
     int chunk_quantity;
     enum chunk_group_state state;
+    struct chunk_parser * cp;
 };
 
 void chunkGroup_parser_init (struct chunkGroup_parser*  p);
@@ -28,5 +29,7 @@ void chunkGroup_parser_consume(const char *b,struct chunkGroup_parser *p);
 void chunkGroup_parser_close(struct chunkGroup_parser* p);
 
 void chunkGroup_stateToString(enum chunk_group_state state);
+
+void chunkGroup_parser_feed(const char c,struct chunkGroup_parser *p);
 
 #endif //PC_2018_04_chunk_group_H
