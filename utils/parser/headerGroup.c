@@ -29,7 +29,8 @@ struct header_list *
 header_list_add(struct header_list * list , u_int32_t name, char * value, int len);
 
 
-enum headerGroup_state init(const uint8_t c, struct headerGroup_parser *p) {
+enum headerGroup_state
+init(const uint8_t c, struct headerGroup_parser *p) {
     enum headerGroup_state next;
     switch(c){
         case '\r':
@@ -45,7 +46,8 @@ enum headerGroup_state init(const uint8_t c, struct headerGroup_parser *p) {
     return next;
 }
 
-enum headerGroup_state header(const uint8_t c, struct headerGroup_parser *p) {
+enum headerGroup_state
+header(const uint8_t c, struct headerGroup_parser *p) {
     enum headerGroup_state next;
     enum header_state state= header_parser_feed(c,p->headerParser);
     switch(state){
@@ -65,7 +67,8 @@ enum headerGroup_state header(const uint8_t c, struct headerGroup_parser *p) {
     return next;
 }
 
-enum headerGroup_state crlf(const uint8_t c, struct headerGroup_parser *p) {
+enum headerGroup_state
+crlf(const uint8_t c, struct headerGroup_parser *p) {
     enum headerGroup_state next;
     switch (c) {
         case '\n':
@@ -78,7 +81,8 @@ enum headerGroup_state crlf(const uint8_t c, struct headerGroup_parser *p) {
     return next;
 }
 
-enum headerGroup_state end(const uint8_t c, struct headerGroup_parser *p) {
+enum headerGroup_state
+end(const uint8_t c, struct headerGroup_parser *p) {
     enum headerGroup_state next;
     switch (c) {
         default:

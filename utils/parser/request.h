@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 
 #include "requestLine.h"
+#include "body.h"
 
 
 enum request_state {
@@ -20,10 +21,11 @@ enum request_state {
 struct request_parser {
     enum request_state state;
 
-    struct requestLine_parser *requestLineParser;
-    struct headerGroup_parser *headerParser;
+    struct requestLine_parser * requestLineParser;
+    struct headerGroup_parser * headerParser;
+    struct body_parser        * bodyParser;
 
-    struct header_list * headerList;
+    struct header_list        * headerList;
 
     enum request_method method;
     char  requestURI[0xFF];
@@ -50,6 +52,9 @@ request_parser_close(struct request_parser *p);
 char *
 request_state_string(enum request_state state);
 
+
+enum body_type
+getTransfEncoding(char * value);
 #endif //PC_2018_04_HTTPREQUEST_H
 
 
