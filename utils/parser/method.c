@@ -65,7 +65,7 @@ methodd_parser_reset(struct method_parser *p) {
 }
 
 
-char * methodToString(enum method_type type){
+char * methodToString(enum request_method type){
     char * resp;
     switch(type) {
         case METHOD_GET:
@@ -87,7 +87,7 @@ char * methodToString(enum method_type type){
     return resp;
 }
 
-enum method_type
+enum request_method
 method_parser_consume(const char *b,size_t len ,struct method_parser *p){
     for (size_t i = 0; i<len; ++i)
    {

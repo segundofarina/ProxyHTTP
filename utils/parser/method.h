@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 
-enum method_type{
+enum request_method{
     METHOD_GET,
     METHOD_HEAD,
     METHOD_POST,
@@ -23,7 +23,7 @@ struct method_parser {
     struct parser_definition dGet;
     struct parser_definition dPost;
 
-    enum method_type method;
+    enum request_method method;
 
 
 };
@@ -37,9 +37,9 @@ method_parser_feed(const uint8_t c, struct method_parser* p);
 void
 methodd_parser_reset(struct method_parser *p);
 
-char * methodToString(enum method_type type);
+char * methodToString(enum request_method type);
 
-enum method_type
+enum request_method
 method_parser_consume(const char *b,size_t len ,struct method_parser *p);
 
 extern void

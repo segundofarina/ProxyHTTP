@@ -3,6 +3,9 @@
 #define PC_2018_04_METHOD_H
 
 #include <stdint.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include "method.h"
 
 enum requestLine_state {
     rl_method,
@@ -16,11 +19,13 @@ enum requestLine_state {
 
 struct requestLine_parser {
     enum requestLine_state state;
-    struct method_parser * methodparser;
+    struct method_parser * methodParser;
 
-    char fqdn [0xFF];
+    char uri [0xFF];
 
-    u_int16_t index;
+    enum request_method method;
+
+    u_int16_t len;
 
 
 };
@@ -31,7 +36,7 @@ requestLine_parser_init (struct requestLine_parser *p);
 
 /** entrega un byte al parser. retorna true si se llego al final  */
 enum requestLine_state
-requestLine_parser_feed (struct requestLine_parser *p, const uint8_t c);
+requestLine_parser_feed ( const uint8_t c,struct requestLine_parser *p);
 
 /**
  * por cada elemento del buffer llama a `request_parser_feed' hasta que
@@ -41,7 +46,7 @@ requestLine_parser_feed (struct requestLine_parser *p, const uint8_t c);
  *   si el parsing se debió a una condición de error
  */
 enum requestLine_state
-requestLine_parser_consume(buffer *b, struct requestLine_parser *p, bool *errored);
+requestLine_parser_consume(char *buffer,size_t len, struct requestLine_parser *p, bool *errored);
 
 /**
  * Permite distinguir a quien usa socks_hello_parser_feed si debe seguir
@@ -50,10 +55,13 @@ requestLine_parser_consume(buffer *b, struct requestLine_parser *p, bool *errore
  * En caso de haber terminado permite tambien saber si se debe a un error
  */
 bool
-requestLine_is_done(const enum requestLine_parser st, bool *errored);
+requestLine_is_done(const enum requestLine_state st, bool *errored);
 
 void
-requestLine_close(struct request_parser *p);
+requestLine_parser_close(struct requestLine_parser *p);
+
+char *
+requestLine_state_toString(const enum requestLine_state st);
 
 
 #endif //PC_2018_04_METHOD_H
