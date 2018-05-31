@@ -75,6 +75,7 @@ struct Connection {
     /* transformation details */
     int writeTransformFd, readTransformFd;
     enum TransformationType trasformationType;
+    int transformationPid;
     
     /* amount of references to this struct, if 1 it should be destroyed */
     unsigned references;
