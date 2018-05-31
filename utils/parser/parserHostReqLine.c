@@ -148,6 +148,8 @@ hostData processHost(char * fqdn, char * result, uint16_t resultLen, uint16_t * 
 					}
 				}
 				break;
+			default:
+				break;
 		}
 		if(j >= 0 && j < resultLen && !ipv6Found) {
 			result[j] = fqdn[i];
@@ -268,9 +270,9 @@ hostData requestTarget_marshall(char * buffer, char * result, uint16_t resultLen
 
 int fillRequestData_marshall(hostData addressType, char * host, uint16_t port, struct requestData * rdStruct) {
 	int i, errCode;
-	// struct sockaddr_in aux4;
-	// struct sockaddr_in6 aux6;
-	void * aux;
+//	 struct sockaddr_in aux4;
+//	 struct sockaddr_in6 aux6;
+	//void * aux;
 
 	switch(addressType) {
 		case ERROR:
@@ -322,8 +324,9 @@ int fillRequestData_marshall(hostData addressType, char * host, uint16_t port, s
 		// rdStruct.destAddr.ipv4 = aux4;
 		rdStruct->destAddr.ipv4.sin_family = AF_INET;
 		rdStruct->destAddr.ipv4.sin_port = htons(port);
-		errCode = inet_pton(AF_INET, host, aux);
-		memcpy(aux, rdStruct->destAddr.ipv4.sin_addr, sizeof(struct in_addr));
+		//errCode = inet_pton(AF_INET, host, &aux4);
+		errCode=inet_pton(AF_INET, host, &(rdStruct->destAddr.ipv4.sin_addr.s_addr));
+		//memcpy(&aux4, rdStruct->destAddr.ipv4.sin_addr, sizeof(struct in_addr));
 	}
 	if(addressType == IPV6 || addressType == IPV6_PORT) {
 		// rdStruct->destAddr->ipv6 = (struct sockaddr_in6 *)((*res)->ai_addr);	// makes errors/conflicts with these casts
@@ -332,10 +335,12 @@ int fillRequestData_marshall(hostData addressType, char * host, uint16_t port, s
 		// aux6.sin_port = htons(port);
 		rdStruct->destAddr.ipv6.sin6_family = AF_INET6;
 		rdStruct->destAddr.ipv6.sin6_port = htons(port);
-		rdStruct->destAddr.ipv6.sin6_flowinfo = (uint32_t) 0;	// IPv6 flow information
-		errCode = inet_pton(AF_INET6, host, aux);
-		rdStruct->destAddr.ipv6.sin6_scope_id = (uint32_t) 0;
-		memcpy(aux, rdStruct->destAddr.ipv6.sin6_addr, sizeof(struct in6_addr));
+		errCode=inet_pton(AF_INET, host, &(rdStruct->destAddr.ipv6.sin6_addr.__u6_addr));
+//		rdStruct->destAddr.ipv6.sin6_flowinfo = (uint32_t) 0;	// IPv6 flow information
+//		errCode = inet_pton(AF_INET6, host, &aux6);
+//		rdStruct->destAddr.ipv6.sin6_scope_id = (uint32_t) 0;
+//
+//		memcpy(&aux6, rdStruct->destAddr.ipv6.sin6_addr, sizeof(struct in6_addr));
 	}
 	return errCode;
 }
