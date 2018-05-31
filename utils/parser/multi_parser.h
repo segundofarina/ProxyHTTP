@@ -22,6 +22,9 @@ struct multi_parser{
 extern u_int32_t
 multi_parser_feed(const uint8_t c, struct multi_parser* p);
 
+extern u_int32_t
+multi_parser_consume(char * string, struct multi_parser* p);
+
 extern void
 multi_parser_init (struct multi_parser* p,  const int notMatch, char ** strings, const int * matches,const int len);
 
