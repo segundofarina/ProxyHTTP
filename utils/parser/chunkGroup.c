@@ -27,7 +27,6 @@ void chunkGroup_parser_feed(const char c,struct chunkGroup_parser *p){
 
     if(p->cp->state == chunk_error){
         p->state = chunk_group_error;
-        chunk_parser_close(p->cp);
         return;
     }else if(p->cp->state == chunk_done) {
 
@@ -35,7 +34,6 @@ void chunkGroup_parser_feed(const char c,struct chunkGroup_parser *p){
 
         if (p->cp->last) {
             p->state = chunk_group_done;
-            chunk_parser_close(p->cp);
             return;
         }
         p->chunk_quantity++;
@@ -47,13 +45,15 @@ void chunkGroup_parser_feed(const char c,struct chunkGroup_parser *p){
 void chunkGroup_parser_consume(const char *b,struct chunkGroup_parser *p){
     int i = 0;
     while(b[i]!= 0) {
-
         printf("   c = %c", b[i]);
+        chunkGroup_parser_feed(b[i],p);
         chunkGroup_stateToString(p->state);
         printf("%d",p->bytes_read);
         printf(" %d\n",p->chunk_quantity);
+        if(p->state == chunk_group_error){
+            break;
+        }
 
-        chunkGroup_parser_feed(b[i],p);
         i++;
     }
 }
@@ -62,21 +62,4 @@ void chunkGroup_parser_close(struct chunkGroup_parser* p){
     free(p);
 }
 
-int main(void){
-    struct chunkGroup_parser *  p = malloc(sizeof(struct chunkGroup_parser));
-    chunkGroup_parser_init(p);
-//    const char * b = "0\r\n"
-//                     "\r\n";
-    const char * b = "4\r\n"
-                     "Wiki\r\n"
-                     "5\r\n"
-                     "pedia\r\n"
-                     "E\r\n"
-                     " in\r\n"
-                     "\r\n"
-                     "chunks.\r\n"
-                     "0\r\n"
-                     "\r\n";
-    chunkGroup_parser_consume(b,p);
-    chunkGroup_parser_close(p);
-}
+
