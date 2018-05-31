@@ -7,6 +7,7 @@
 #include "request.h"
 #include <string.h>
 #include "headerGroup.h"
+#include "body.h"
 
 void consume(char * string, struct request_parser * p){
     size_t i;
@@ -34,7 +35,14 @@ void consume(char * string, struct request_parser * p){
 }
 
 
+
 int main(){
+
+    char * encoding = "         chUnKed";
+
+    enum body_type type =getTransfEncoding(encoding);
+
+    printf("Encoding %d\n",type);
 
 
     char * request =
