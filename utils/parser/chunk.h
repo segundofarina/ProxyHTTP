@@ -5,7 +5,6 @@
 #ifndef PC_2018_04_CHUNK_H
 #define PC_2018_04_CHUNK_H
 
-#include <unitypes.h>
 #include <stdbool.h>
 
 enum chunk_state {

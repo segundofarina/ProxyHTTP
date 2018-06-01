@@ -1,16 +1,21 @@
 //
 // Created by Segundo Fariña on 30/5/18.
 //
-#include <MacTypes.h>
+
+#include <stdlib.h>
 #include "body.h"
-#include "identity.h"
 
 extern void
-body_parser_init (struct body_parser* p,enum body_type type){
-    if(type == body_type_identity){
+body_parser_init (struct body_parser* p,enum body_type type, int len){
+    if(type == body_type_chunked){
+        p->state = body_chunked;
+        p->chunkGroupParser = malloc(sizeof(struct chunkGroup_parser));
+        chunkGroup_parser_init(p->chunkGroupParser);
+    } else{
         p->state = body_identity;
+        p->identityParser = malloc(sizeof(struct identity_parser));
         //init body parser
-
+        identity_parser_init(p->identityParser,len);
     }
 }
 
@@ -19,25 +24,43 @@ body_parser_close(struct body_parser* p){
 
 }
 
-enum body_state
-initBody(const uint8_t c, struct body_parser *p) {
-    //enum body_state next;
-
-    return body_init;
-}
 
 enum body_state
 chunked(const uint8_t c, struct body_parser *p) {
-    //enum body_state next;
 
-    return body_chunked;
+    enum body_state next;
+     chunkGroup_parser_feed(c,p->chunkGroupParser);
+    enum chunk_group_state state = p->chunkGroupParser->state;
+    switch(state){
+        case chunk_group_done:
+            next = body_end;
+            break;
+        case chunk_group_error:
+            next = body_error;
+            break;
+        default:
+            next = body_chunked;
+            break;
+    }
+    return next;
 }
 
 enum body_state
 identity(const uint8_t c, struct body_parser *p) {
-    //enum body_state next;
-
-    return body_init;
+    enum body_state next;
+    enum identity_state state = identity_parser_feed(c,p->identityParser);
+    switch(state){
+        case identity_end:
+            next = body_end;
+            break;
+        case identity_error:
+            next = body_error;
+            break;
+        default:
+            next = body_identity;
+            break;
+    }
+    return next;
 }
 
 enum body_state
@@ -54,9 +77,6 @@ enum body_state
 body_parser_feed(const uint8_t c,struct body_parser* p){
     enum body_state next;
     switch(p->state) {
-        case body_init:
-            next = initBody(c ,p);
-            break;
         case body_chunked:
             next = chunked(c,p);
             break;

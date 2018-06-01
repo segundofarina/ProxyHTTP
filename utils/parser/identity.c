@@ -13,11 +13,11 @@ identity_parser_init(struct identity_parser* p, int endLen){
 enum identity_state
 identityData(const uint8_t c, struct identity_parser *p){
     enum identity_state next;
-
+    p->currentLen++;
     if(p->currentLen == p->endLen){
         next = identity_end;
     }else{
-        p->currentLen++;
+
         if(p->currentLen>p->endLen) {
             next = identity_error;
         }else {

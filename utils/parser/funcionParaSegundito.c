@@ -15,7 +15,7 @@ int main(void){
     printf("%i\n",parseInt("     34   "));
     printf("%i\n",parseInt("  ;   34"));
     printf("%i\n",parseInt("  ;  calita 34"));
-    printf("%i\n",parseInt("4"));
+    printf("%i\n",parseInt("4      "));
     printf("%i\n",parseInt("florci"));
 
 

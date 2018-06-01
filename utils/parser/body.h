@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 #include "identity.h"
+#include "chunkGroup.h"
 
 enum body_state{
     body_init,
@@ -26,14 +27,14 @@ enum body_type{
 struct body_parser{
     enum body_state state;
 
-    //struct chunkGroup_parser;
-    struct identity_parser identityParser;
+    struct identity_parser *identityParser;
+    struct chunkGroup_parser * chunkGroupParser;
 
 };
 
 
 extern void
-body_parser_init (struct body_parser* p,enum body_type type);
+body_parser_init (struct body_parser* p,enum body_type type,int len);
 
 extern void
 body_parser_close(struct body_parser* p);
