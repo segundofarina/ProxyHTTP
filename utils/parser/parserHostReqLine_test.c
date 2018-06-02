@@ -10,8 +10,9 @@
 
 int main(void) {
 
-    int i;
-	char * test1 = "http://itba.edu.ar/foo?bar";
+    int i, errCode;
+	// char * test1 = "http://itba.edu.ar/foo?bar";
+    char * test1 = "10.0.0.2";
 	char * test2 = "itba.edu.ar/./hello///";
 	char * test2a = "http://itba.edu.ar/./hello/../";
 	char * test3 = "example.com:9090/hola";
@@ -35,6 +36,8 @@ int main(void) {
     char * test18 = "[:8080/";
     char * test19 = "[:::0]::8080/";
     char * test20 = "google.com::";
+    char * test21 = "192.37.188.2";
+    char * test22 = "192.37.188.2.2";
 	int port = 80;
 	hostData valid;
 	char result[0xFF];
@@ -77,6 +80,10 @@ int main(void) {
     for(i = 0; i < 0xFF; i++) {
         result[i] = 0;
     }
+    // errCode = fillRequestData_marshall(hostData addressType, char * host, uint16_t port, struct requestData * rdStruct);
+    // if(errCode == 1) {
+    //     printf("Host ");
+    // }
 
 	valid = requestTarget_marshall(test2, result, (uint16_t)0xFF, (uint16_t*)&port);
 	printf("State 2: ");
@@ -764,6 +771,73 @@ int main(void) {
         //  ERROR = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
         case ERROR:
             printf("Error in test 20.\n");
+            break;
+        case EMPTY:
+            printf("EMPTY\n");
+            break;
+        case DOMAIN_HOST:
+            printf("DOMAIN_HOST\n");
+            break;
+        case DOMAIN_HOST_PORT:
+            printf("DOMAIN_HOST_PORT\n");
+            break;
+        case IPV4:
+            printf("IPV4\n");
+            break;
+        case IPV4_PORT:
+            printf("IPV4_PORT\n");
+            break;
+        case IPV6:
+            printf("IPV6\n");
+            break;
+        case IPV6_PORT:
+            printf("IPV6_PORT\n");
+            break;
+    }
+    printf("Host: %s\tPort: %d\n\n", result, port);
+    for(i = 0; i < 0xFF; i++) {
+        result[i] = 0;
+    }
+
+    valid = requestTarget_marshall(test21, result, (uint16_t)0xFF, (uint16_t*)&port);
+    printf("State 21: ");
+    switch(valid) {
+        //  ERROR = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
+        case ERROR:
+            printf("Error in test 21.\n");
+            break;
+        case EMPTY:
+            printf("EMPTY\n");
+            break;
+        case DOMAIN_HOST:
+            printf("DOMAIN_HOST\n");
+            break;
+        case DOMAIN_HOST_PORT:
+            printf("DOMAIN_HOST_PORT\n");
+            break;
+        case IPV4:
+            printf("IPV4\n");
+            break;
+        case IPV4_PORT:
+            printf("IPV4_PORT\n");
+            break;
+        case IPV6:
+            printf("IPV6\n");
+            break;
+        case IPV6_PORT:
+            printf("IPV6_PORT\n");
+            break;
+    }
+    printf("Host: %s\tPort: %d\n\n", result, port);
+    for(i = 0; i < 0xFF; i++) {
+        result[i] = 0;
+    }
+    valid = requestTarget_marshall(test22, result, (uint16_t)0xFF, (uint16_t*)&port);
+    printf("State 22: ");
+    switch(valid) {
+        //  ERROR = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
+        case ERROR:
+            printf("Error in test 22.\n");
             break;
         case EMPTY:
             printf("EMPTY\n");

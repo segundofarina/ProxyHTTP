@@ -2,6 +2,7 @@
 //  Created by Nicolas Paganini on 5/27/18
 //
 
+// #include <stdio.h>
 #include "parserHostReqLine.h"
 
 /**
@@ -112,7 +113,7 @@ hostData processHost(char * fqdn, char * result, uint16_t resultLen, uint16_t * 
 						    }
 							break;
 						case IPV4:
-							if(!isdigit(fqdn[i])) {
+							if(!isdigit(fqdn[i]) && fqdn[i] != '.') {
 								ans = DOMAIN_HOST;
 							}
 							break;
@@ -205,7 +206,10 @@ hostData requestTarget_marshall(char * buffer, char * result, uint16_t resultLen
 	    result[i] = 0;
 	}
 
-	R
+	i = 0;
+	while(i < resultLen && buffer[i] == ' ') {
+		i++;
+	}
 
 	ret = processHost(buffer+i, result, resultLen, port);
 
