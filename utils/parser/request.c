@@ -99,7 +99,16 @@ getContentLength(struct header_list *list){
     return getContentLength(list->next);
 }
 
-
+char *
+getHeaderValue(struct header_list * list, enum header_name name){
+    if(list == NULL){
+        return NULL;
+    }
+    if(list->name == name){
+        return list->value;
+    }
+    return getHeaderValue(list->next,name);
+}
 
 enum request_state
 requestLine(const uint8_t c,struct request_parser *p) {
@@ -109,6 +118,16 @@ requestLine(const uint8_t c,struct request_parser *p) {
         case rl_end:
             p->method = p->requestLineParser->method;
             strcpy(p->requestURI,p->requestLineParser->uri);
+
+            hostData result = requestTarget_marshall(p->requestURI,p->fqdn,0xFF,&(p->port));
+
+            if(result == ERROR || result == EMPTY){
+                p->hasDestination = false;
+            }else{
+                p->hasDestination = true;
+                fillRequestData_marshall(result,p->fqdn,p->port,&p->destintation);
+            };
+
             requestLine_parser_close(p->requestLineParser);
             headerGroup_parser_init(p->headerParser,HEADER_NOT_INTERESTED,headerNames,types,HEADERS_AMOUNT);
             next = request_headers;
@@ -129,12 +148,23 @@ headers(const uint8_t c,struct request_parser *p){
             p->headerList=p->headerParser->list;
             headerGroup_parser_close(p->headerParser);
             if(p->method == METHOD_POST){
-                
+
                 int type = getBodyType(p->headerList);
                 int len = getContentLength(p->headerList);
+
+                if(!p->hasDestination){
+                    char * value = getHeaderValue(p->headerList,HEADER_HOST);
+                    hostData result = requestTarget_marshall(value,p->fqdn,0xFF,&(p->port));
+
+                    if(result == ERROR){
+                        p->hasDestination = false;
+                    }else{
+                        p->hasDestination = true;
+                    };
+                }
                 p->bodyParser = malloc(sizeof (struct body_parser));
                 body_parser_init(p->bodyParser,type,len);
-                
+
                 next = request_body;
             }else{
                 next = request_done;
@@ -144,6 +174,20 @@ headers(const uint8_t c,struct request_parser *p){
             next = request_error;
             break;
         default:
+            if(!p->hasDestination){
+                p->headerList=p->headerParser->list;
+                char * value = getHeaderValue(p->headerList,HEADER_HOST);
+                if(value!=NULL) {
+                    hostData result = requestTarget_marshall(value, p->fqdn, 0xFF, &(p->port));
+
+                    if (result == ERROR) {
+                        p->hasDestination = false;
+                    } else {
+                        p->hasDestination = true;
+                        fillRequestData_marshall(result,p->fqdn,p->port,&p->destintation);
+                    };
+                }
+            }
             next = request_headers;
             break;
     }
@@ -156,7 +200,7 @@ enum request_state
 body(const uint8_t c,struct request_parser *p) {
     enum request_state next;
     enum body_state state= body_parser_feed(c,p->bodyParser);
-    
+
     switch(state){
         case body_end:
             body_parser_close(p->bodyParser);
@@ -169,7 +213,7 @@ body(const uint8_t c,struct request_parser *p) {
             next = request_body;
             break;
     }
-    
+
     return next;
 }
 
@@ -187,6 +231,7 @@ request_parser_init(struct request_parser *p) {
     p->state = request_requestLine;
     p->requestLineParser = malloc(sizeof(struct requestLine_parser));
     p->headerParser = malloc(sizeof(struct headerGroup_parser));
+    p->hasDestination =false;
 
     requestLine_parser_init(p->requestLineParser);
 }

@@ -8,6 +8,7 @@
 
 #include "requestLine.h"
 #include "body.h"
+#include "parserHostReqLine.h"
 
 
 enum request_state {
@@ -29,6 +30,13 @@ struct request_parser {
 
     enum request_method method;
     char  requestURI[0xFF];
+    char fqdn[0xFF];
+    uint16_t port;
+    bool hasDestination;
+
+
+    struct requestData destintation;
+
 
 
 };

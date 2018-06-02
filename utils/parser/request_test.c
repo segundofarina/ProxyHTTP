@@ -23,7 +23,6 @@ void consume(char * string, struct request_parser * p){
         printf("feeded %c state now is %s\n",letter,request_state_string(state));
     }
 
-    //printf("Header value is %s",p->value);
     printf("Printing list....\n");
     if(p->headerList == NULL){
         printf("LIST IS NULL\n");
@@ -31,7 +30,26 @@ void consume(char * string, struct request_parser * p){
     header_list_print(p->headerList);
 
     printf("Method: %d\n",p->method);
-    printf("request Uri :%s",p->requestURI);
+    printf("request Uri :%s\n",p->requestURI);
+    printf("FQDN:'%s'\n",p->fqdn);
+    printf("port: %d\n",p->port);
+
+    printf("Host type:%d\n",p->destintation.destAddrType);
+    printf("Host port:%d\n",p->destintation.destPort);
+    switch (p->destintation.destAddrType){
+        case IPv4:
+            //printf("Host address:%d\n",(int )p->destintation.destAddr.ipv4);
+            break;
+        case IPv6:
+            //printf("Host address:%d\n",p->destintation.destAddr.ipv6);
+            break;
+        case DOMAIN:
+            printf("Host address:%s\n",p->destintation.destAddr.fqdn);
+            break;
+        default:
+            break;
+    }
+
 }
 
 

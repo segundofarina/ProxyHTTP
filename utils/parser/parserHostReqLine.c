@@ -205,7 +205,9 @@ hostData requestTarget_marshall(char * buffer, char * result, uint16_t resultLen
 	    result[i] = 0;
 	}
 
-	ret = processHost(buffer, result, resultLen, port);
+	R
+
+	ret = processHost(buffer+i, result, resultLen, port);
 
 //	if(result[0] == 0) {
 //	    ret = EMPTY;
