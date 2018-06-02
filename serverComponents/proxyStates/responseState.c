@@ -29,25 +29,56 @@ int pareserResponseIsDone() {
     return 0;
 }
 
+enum parserState parser_consume(char * ptrToParse, int * bytesToParse, char * ptrFromParse, int * parsedBytes) {
+    memcpy(ptrFromParse, ptrToParse, *bytesToParse);
+    *parsedBytes = *bytesToParse;
+
+    printf("parser_consume()\n");
+    
+    return BODY;
+}
+
+void chunkBytes(char * ptrToChunk, int * bytesToChunk, char * ptrFromChunk, int * chunkedBytes) {
+    memcpy(ptrFromChunk, ptrToChunk, *bytesToChunk);
+    *chunkedBytes = * bytesToChunk;
+
+    printf("chunking bytes\n");
+
+}
+
+int min(int val1, int val2) {
+    if(val1 < val2) {
+        return val1;
+    }
+    return val2;
+}
+
 enum parserState copyTempToWriteBuff(struct selector_key * key) {
     struct Connection * conn = DATA_TO_CONN(key);
 	uint8_t * ptrToParse, * ptrFromParse;
 	size_t maxTempBuffSize, maxWriteBuffSize;
-	int  parsedBytes;
+	int  parsedBytes = 0, bytesToParse = 0;
     enum parserState state;
 
     /* parse string from buffer_read_ptr(&conn->respTempBuffer, &maxTempBuffSize) */
     ptrToParse = buffer_read_ptr(&conn->respTempBuffer, &maxTempBuffSize);
+    printf("maxTempBuffSize: %d\n", (int) maxTempBuffSize);
 
     /* leave parsed data in buffer_write_ptr(&conn->writeBuffer, &maxWriteBuffSize) */
     ptrFromParse = buffer_write_ptr(&conn->writeBuffer, &maxWriteBuffSize);
+    printf("maxWriteBuffSize: %d\n", (int) maxWriteBuffSize);
 
     /* parse string size is min(maxWriteBuffSize, maxTempBuffSize) */
     /* leave bytes parsed in parsedBytes */
-    //state = parser_consume(parser, ptrToParse, min(), ptrFromParse, &parsedBytes);
+    bytesToParse = min(maxWriteBuffSize, maxTempBuffSize);
+    printf("min: %d\n", bytesToParse);
+    state = parser_consume(ptrToParse, &bytesToParse, ptrFromParse, &parsedBytes);
+
+    printf("parsedBytes: %d\n", parsedBytes);
+    printf("bytesToParse: %d\n", bytesToParse);
 
     /* move temp buffer pointer accoring to parsedBytes */
-    buffer_read_adv(&conn->respTempBuffer, parsedBytes);
+    buffer_read_adv(&conn->respTempBuffer, bytesToParse);
 
     /* move write buffer pointer according to parsedBytes */
     buffer_write_adv(&conn->writeBuffer, parsedBytes);
@@ -55,7 +86,8 @@ enum parserState copyTempToWriteBuff(struct selector_key * key) {
     /* set interest */
     /* If I wrote to writeBuffer, clientFd OP_WRITE */
     fd_interest interest = OP_NOOP;
-    if(parsedBytes > 1) {
+    if(buffer_can_read(&conn->writeBuffer)) {
+        printf("Set OP_WRITE to client\n");
         /* Write response to client */
         interest = OP_WRITE;
     }
@@ -66,7 +98,8 @@ enum parserState copyTempToWriteBuff(struct selector_key * key) {
         
     /* If respTempBuffer is not full and response is not done originFd OP_READ */
     interest = OP_NOOP;
-    if(buffer_can_read(&conn->respTempBuffer) && !pareserResponseIsDone()) {
+    if(buffer_can_write(&conn->respTempBuffer) && !pareserResponseIsDone()) {
+        printf("Set OP_READ to origin\n");
         interest = OP_READ;
     }
     if(selector_set_interest(key->s, conn->originFd, interest) != SELECTOR_SUCCESS) {
@@ -81,21 +114,27 @@ enum parserState copyTempToTransformBuff(struct selector_key * key) {
     struct Connection * conn = DATA_TO_CONN(key);
 	uint8_t * ptrToParse, * ptrFromParse;
 	size_t maxTempBuffSize, maxWriteBuffSize;
-	int  parsedBytes;
+	int  parsedBytes = 0, bytesToParse = 0;
     enum parserState state;
+
+    printf("copyTempToTransformBuff()\n");
 
     /* parse string from buffer_read_ptr(&conn->respTempBuffer, &maxTempBuffSize) */
     ptrToParse = buffer_read_ptr(&conn->respTempBuffer, &maxTempBuffSize);
+    printf("maxTempBuffSize: %d\n", (int) maxTempBuffSize);
 
     /* leave parsed data in buffer_write_ptr(&conn->inTransformBuffer, &maxWriteBuffSize) */
     ptrFromParse = buffer_write_ptr(&conn->inTransformBuffer, &maxWriteBuffSize);
+    printf("maxWriteBuffSize: %d\n", (int) maxWriteBuffSize);
 
     /* parse string size is min(maxWriteBuffSize, maxTempBuffSize) */
     /* leave bytes parsed in parsedBytes */
-    //state = parser_consume(parser, ptrToParse, min(), ptrFromParse, &parsedBytes);
+    bytesToParse = min(maxTempBuffSize, maxWriteBuffSize);
+    printf("min: %d\n", bytesToParse);
+    state = parser_consume(ptrToParse, &bytesToParse, ptrFromParse, &parsedBytes);
 
     /* move temp buffer pointer accoring to parsedBytes */
-    buffer_read_adv(&conn->respTempBuffer, parsedBytes);
+    buffer_read_adv(&conn->respTempBuffer, bytesToParse);
 
     /* move transform buffer pointer according to parsedBytes */
     buffer_write_adv(&conn->inTransformBuffer, parsedBytes);
@@ -103,7 +142,8 @@ enum parserState copyTempToTransformBuff(struct selector_key * key) {
     /* set interest */
     /* If I wrote to transformBuffer, writeTransformFd OP_WRITE */
     fd_interest interest = OP_NOOP;
-    if(parsedBytes > 1) {
+    if(buffer_can_read(&conn->inTransformBuffer)) {
+        printf("parsed bytes > 1, set OP_WRITE to writeTransformFd\n");
         /* Write response to transform */
         interest = OP_WRITE;
     }
@@ -113,7 +153,8 @@ enum parserState copyTempToTransformBuff(struct selector_key * key) {
         
     /* If respTempBuffer is not full and response is not done originFd OP_READ */
     interest = OP_NOOP;
-    if(buffer_can_read(&conn->respTempBuffer) && !pareserResponseIsDone()) {
+    if(buffer_can_write(&conn->respTempBuffer) && !pareserResponseIsDone()) {
+        printf("respTempBuff not full, set OP_READ to originFd\n");
         interest = OP_READ;
     }
     if(selector_set_interest(key->s, conn->originFd, interest) != SELECTOR_SUCCESS) {
@@ -129,7 +170,9 @@ int copyTransformToWriteBuffer(struct selector_key * key) {
     struct Connection * conn = DATA_TO_CONN(key);
 	uint8_t * ptrToChunk, * ptrFromChunk;
 	size_t maxTransformBuffSize, maxWriteBuffSize;
-	int  chunkedBytes;
+	int  chunkedBytes = 0, bytesToChunk = 0;
+
+    printf("copyTransformToWriteBuffer()\n");
 
     /* chunk string from buffer_read_ptr(&conn->outTransformBuff, &maxTransformBuffSize) */
     ptrToChunk = buffer_read_ptr(&conn->outTransformBuffer, &maxTransformBuffSize);
@@ -137,12 +180,13 @@ int copyTransformToWriteBuffer(struct selector_key * key) {
     /* leave chunked data in buffer_write_ptr(&conn->writeBuffer, &maxWriteBuffSize) */
     ptrFromChunk = buffer_write_ptr(&conn->writeBuffer, &maxWriteBuffSize);
 
-    /* chunk string size is min(maxTransformBuffSize, maxTempBuffSize) */
+    /* chunk string size is min(maxTransformBuffSize, maxWriteBuffSize) */
     /* leave amount of bytes chunked in chunkedBytes */
-    //chunkBytes(ptrToChunk, min(), ptrFromChunk, &chunkedBytes);
+    bytesToChunk = min(maxTransformBuffSize, maxWriteBuffSize);
+    chunkBytes(ptrToChunk, &bytesToChunk, ptrFromChunk, &chunkedBytes);
 
     /* move temp buffer pointer accoring to chunkedBytes */
-    buffer_read_adv(&conn->outTransformBuffer, chunkedBytes);
+    buffer_read_adv(&conn->outTransformBuffer, bytesToChunk);
 
     /* move transform buffer pointer according to chunkedBytes */
     buffer_write_adv(&conn->writeBuffer, chunkedBytes);
@@ -150,8 +194,9 @@ int copyTransformToWriteBuffer(struct selector_key * key) {
     /* set interest */
     /* If I wrote to writeBuffer, clientFd OP_WRITE */
     fd_interest interest = OP_NOOP;
-    if(chunkedBytes > 1) {
+    if(buffer_can_read(&conn->writeBuffer)) {
         /* Write response to transform */
+        printf("Write transform to response: set clientFd OP_WRITE\n");
         interest = OP_WRITE;
     }
     if(selector_set_interest(key->s, conn->clientFd, interest) != SELECTOR_SUCCESS) {
@@ -160,7 +205,8 @@ int copyTransformToWriteBuffer(struct selector_key * key) {
         
     /* If outTransformBuffer is not full and missing bytes readTransformFd OP_READ */
     interest = OP_NOOP;
-    if(buffer_can_read(&conn->outTransformBuffer) && conn->readTransformFd != -1) {
+    if(buffer_can_write(&conn->outTransformBuffer) && conn->readTransformFd != -1) {
+        printf("set readTransformFd OP_READ\n");
         interest = OP_READ;
     }
     if(selector_set_interest(key->s, conn->readTransformFd, interest) != SELECTOR_SUCCESS) {
@@ -175,7 +221,7 @@ unsigned readFromOrigin(struct selector_key * key) {
 	uint8_t *ptr;
 	size_t count;
 	ssize_t  n;
-    enum parserState state = HEADERS;// buscarlo con funcion del parser
+    enum parserState state = BODY;// buscarlo con funcion del parser
     
     /* Read from origin and save in temp buffer */
 	ptr = buffer_write_ptr(&conn->respTempBuffer, &count);
@@ -192,6 +238,7 @@ unsigned readFromOrigin(struct selector_key * key) {
     /* If im not in body write to writeBuffer */
     /* Always write to writeBuffer if there is no transformation */
     if(conn->trasformationType == NO_TRANSFORM || state == METHOD || state == HEADERS) {
+        printf("NO_TRANSFROM -> copyTempToWrite()\n");
         state = copyTempToWriteBuff(key);
         if(state == PARSER_ERROR) {
             return ERROR;
@@ -209,6 +256,7 @@ unsigned readFromOrigin(struct selector_key * key) {
             return ERROR;
         }
     }
+    printf("Done origin read\n");
 
     return RESPONSE;
 }
@@ -218,7 +266,9 @@ unsigned readFromTranformation(struct selector_key * key) {
 	uint8_t *ptr;
 	size_t count;
 	ssize_t  n;
-    
+
+    printf("start read from transformation\n");
+
     /* Read from transformation and save in out transform buffer */
 	ptr = buffer_write_ptr(&conn->outTransformBuffer, &count);
 	n = read(key->fd, ptr, count);
@@ -233,6 +283,8 @@ unsigned readFromTranformation(struct selector_key * key) {
 	}
     buffer_write_adv(&conn->outTransformBuffer, n);
 
+    printf("read from transformation %d bytes\n", (int) n);
+
     printf("[RESPONSE] got response from origin. Size: %d\n", (int) n);
 
     if(!copyTransformToWriteBuffer(key)) {
@@ -244,6 +296,8 @@ unsigned readFromTranformation(struct selector_key * key) {
 
 unsigned responseRead(struct selector_key * key) {
     struct Connection * conn = DATA_TO_CONN(key);
+
+    printf("RESPONSE READ\n");
 
     /* Check which fd is ready to read (originFd, readTransformFd) */
     if(key->fd == conn->originFd) {
@@ -266,6 +320,8 @@ unsigned writeToClient(struct selector_key * key) {
     enum parserState state = HEADERS;// buscarlo con funcion del parser
     enum parserState originalState = state;
 
+    printf("Write to client\n");
+
     /* Send bufferd data to the client */
 	ptr = buffer_read_ptr(&conn->writeBuffer, &count);
 	n = send(key->fd, ptr, count, MSG_NOSIGNAL);
@@ -275,8 +331,13 @@ unsigned writeToClient(struct selector_key * key) {
 	}
     buffer_read_adv(&conn->writeBuffer, n);
 
+    printf("%d bytes send to client\n", (int) n);
+
     /* Copy from temp if it's on headers or no transformation */
     if(conn->trasformationType == NO_TRANSFORM || state == HEADERS || state == METHOD) {
+
+        printf("CopyTempToWriteBuff()\n");
+
         state = copyTempToWriteBuff(key);
         if(state == PARSER_ERROR) {
             return PARSER_ERROR;
@@ -285,6 +346,7 @@ unsigned writeToClient(struct selector_key * key) {
 
     /* I have not enterd in the above if and I'm in the body */
     if(conn->trasformationType != NO_TRANSFORM && originalState == BODY) {
+        printf("copyTransformToWriteBuffer() since im in body\n");
         if(!copyTransformToWriteBuffer(key)) {
             return ERROR;
         }
@@ -299,6 +361,7 @@ unsigned writeToClient(struct selector_key * key) {
 
     /* Fix parser stop reading when changing to body */
     if(conn->trasformationType == NO_TRANSFORM && state == BODY) {
+        printf("fix parser stop when changing to body \n");
         if(copyTempToWriteBuff(key) == PARSER_ERROR) {
             return ERROR;
         }
@@ -308,7 +371,8 @@ unsigned writeToClient(struct selector_key * key) {
     /* If writeBuffer is not empty set me on WRITE */
     fd_interest interest = OP_NOOP;
     if(buffer_can_read(&conn->writeBuffer)) {
-        interest = OP_READ;
+        printf("writeBuff is not empty set OP_WRITE to client\n");
+        interest = OP_WRITE;
     }
     if(selector_set_interest_key(key, interest) != SELECTOR_SUCCESS) {
         return ERROR;
@@ -328,14 +392,25 @@ unsigned writeToTransformation(struct selector_key * key) {
 	size_t count;
 	ssize_t  n;
 
+    printf("write to transformation\n");
+
     /* Send bufferd data to the client */
-	ptr = buffer_read_ptr(&conn->outTransformBuffer, &count);
-	n = send(key->fd, ptr, count, MSG_NOSIGNAL);
+	ptr = buffer_read_ptr(&conn->inTransformBuffer, &count);
+	//n = send(key->fd, ptr, count, MSG_NOSIGNAL);
+    printf("count is: %d\n", (int) count);
+    if(count == 0) {
+        //abort();
+        printf("ACAAAA\n");
+        //exit(0);
+    }
+    n = write(key->fd, ptr, count);
 	if(n <= 0) { // transformation closed connection
         printf("[ERROR] {response} send got 0 bytes\n");
         return ERROR;
 	}
-    buffer_read_adv(&conn->outTransformBuffer, n);
+    buffer_read_adv(&conn->inTransformBuffer, n);
+
+    printf("%d bytes sent to transformation\n", (int) n);
 
     /* I have free space in buffer, copy tempBuffer if it's not empty */
     if(copyTempToTransformBuff(key) == PARSER_ERROR) {
@@ -343,7 +418,7 @@ unsigned writeToTransformation(struct selector_key * key) {
     }
 
     /* If response is done and buffer is empty close writeTransformFd */
-    if(pareserResponseIsDone() && !buffer_can_read(&conn->outTransformBuffer)) {
+    if(pareserResponseIsDone() && !buffer_can_read(&conn->inTransformBuffer)) {
         close(conn->writeTransformFd);
         conn->writeTransformFd = -1;
     }
@@ -356,17 +431,21 @@ unsigned writeToTransformation(struct selector_key * key) {
 
     /* if buffer is not empty I can write to transform */
     fd_interest interest = OP_NOOP;
-    if(buffer_can_read(&conn->outTransformBuffer)) {
+    if(buffer_can_read(&conn->inTransformBuffer)) {
+        printf("set OP_WRITE if outTransformBuffer is not empty\n");
         interest = OP_WRITE;
     }
     if(selector_set_interest_key(key, interest) != SELECTOR_SUCCESS) {
         return ERROR;
     }
 
+    return RESPONSE;
 }
 
 unsigned responseWrite(struct selector_key * key) {
     struct Connection * conn = DATA_TO_CONN(key);
+
+    printf("RESPONSE WRITE\n");
 
     /* Check wich f I'm writing to */
     if(key->fd == conn->clientFd) {

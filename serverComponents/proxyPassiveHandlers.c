@@ -17,7 +17,7 @@
 static int poolSize = 0;
 static struct Connection * pool = NULL;
 
-static enum TransformationType transformationType = NO_TRANSFORM;
+static enum TransformationType transformationType = TRANSFORM_CAT;
 
 struct Connection * new_connection(const int clientFd) {
 	struct Connection * connection;
@@ -148,10 +148,10 @@ void proxyPassiveAccept(struct selector_key *key) {
 		if(selector_fd_set_nio(connection->readTransformFd) == -1 || selector_fd_set_nio(connection->writeTransformFd) == -1) {
 			goto handle_errors;
 		}
-		if(selector_register(key->s, connection->readTransformFd, &connectionHandler, OP_READ, connection) != SELECTOR_SUCCESS) {
+		if(selector_register(key->s, connection->readTransformFd, &connectionHandler, OP_NOOP, connection) != SELECTOR_SUCCESS) {
 			goto handle_errors;
 		}
-		if(selector_register(key->s, connection->writeTransformFd, &connectionHandler, OP_WRITE, connection) != SELECTOR_SUCCESS) {
+		if(selector_register(key->s, connection->writeTransformFd, &connectionHandler, OP_NOOP, connection) != SELECTOR_SUCCESS) {
 			goto handle_errors;
 		}
 	}
