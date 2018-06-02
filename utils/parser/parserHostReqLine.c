@@ -23,7 +23,7 @@
  *	|	:1080						|			EMPTY		|  1080
 */
 hostData processHost(char * fqdn, char * result, uint16_t resultLen, uint16_t * port) {
-	int i = 0, j = 0, k = 0, ipv6Found = 0, httpFound = 0, l = 0;
+	int i = 0, j = 0, k = 0, ipv6Found = 0, httpFound = 0, l = 0, ipv4DotCounter = 0;
 	hostData ans = EMPTY;
 	*port = (uint16_t) 80;
 	int portAux = 0;
@@ -115,6 +115,11 @@ hostData processHost(char * fqdn, char * result, uint16_t resultLen, uint16_t * 
 						case IPV4:
 							if(!isdigit(fqdn[i]) && fqdn[i] != '.') {
 								ans = DOMAIN_HOST;
+							} else if(fqdn[i] == '.') {
+								ipv4DotCounter++;
+								if(ipv4DotCounter == 4) {
+									return ERROR;
+								}
 							}
 							break;
 						case IPV6:
