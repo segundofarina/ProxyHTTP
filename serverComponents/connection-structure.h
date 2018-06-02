@@ -10,6 +10,10 @@
 #include "../utils/buffer/buffer.h"
 #include "../utils/stm/stm.h"
 
+enum TransformationType {
+    NO_TRANSFORM,
+    TRANSFORM_CAT
+};
 
 /* Parte del request parser */
 enum addrType {
@@ -50,20 +54,28 @@ struct Connection {
     /* origin server resolution */
     struct addrinfo *origin_resolution;
 
-    /* status info */
+    /* connection status info */
     int isConnectingOrigin;
 
 	/* state machine */
 	struct state_machine stm;
 
-
     /* parsers */
     struct httpRequestParser requestParser;
 
 
-	/* general io buffers */
+	/* general io buffers for client */
 	uint8_t rawBuff_a[2048], rawBuff_b[2048];
     buffer readBuffer, writeBuffer;
+
+    /* response buffers */
+    uint8_t rawBuff_c[2048], rawBuff_d[2048], rawBuff_e[2048];
+    buffer respTempBuffer, inTransformBuffer, outTransformBuffer;
+
+    /* transformation details */
+    int writeTransformFd, readTransformFd;
+    enum TransformationType trasformationType;
+    int transformationPid;
     
     /* amount of references to this struct, if 1 it should be destroyed */
     unsigned references;
