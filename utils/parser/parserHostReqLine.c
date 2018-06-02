@@ -205,7 +205,7 @@ hostData requestTarget_marshall(char * buffer, char * result, uint16_t resultLen
 	    result[i] = 0;
 	}
 
-	R
+	for(i=0;i<resultLen && buffer[i]==' ';i++);
 
 	ret = processHost(buffer+i, result, resultLen, port);
 
