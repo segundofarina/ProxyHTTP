@@ -71,7 +71,7 @@ multi_parser_init (struct multi_parser* p,  const int notMatch, char ** strings,
         }
         current->next=NULL;
 
-        current->def =parser_utils_strcmpi(strings[i]);
+        current->def = parser_utils_strcmpi(strings[i]);
         current->p = parser_init(parser_no_classes(), &(current->def));
         current->match = matches[i];
 

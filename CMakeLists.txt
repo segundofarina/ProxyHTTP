@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.5)
 project(pc_2018_04 C)
 
 set(CMAKE_C_STANDARD 11)
@@ -9,7 +9,7 @@ set(CMAKE_C_STANDARD 11)
 #
 
 
-set(CMAKE_C_FLAGS    "--std=c99 -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-unused-parameter -Wno-implicit-fallthrough -D_POSIX_C_SOURCE=200112L ")
+#set(CMAKE_C_FLAGS    "--std=c99 -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-unused-parameter -Wno-implicit-fallthrough -D_POSIX_C_SOURCE=200112L ")
 
 if(CMAKE_C_COMPILER_ID MATCHES "Clang")
     find_program(CLANGTIDY NAMES clang-tidy)
@@ -21,85 +21,34 @@ if(CMAKE_C_COMPILER_ID MATCHES "Clang")
                 -fix)
     endif()
 endif()
-set(CMAKE_C_FLAGS, "${CMAKE_C_FLAGS} -pedantic -pedantic-errors -Wall -Wextra
--Werror -Wno-unused-parameter -D_POSIX_C_SOURCE=200112L")
+#set(CMAKE_C_FLAGS, "${CMAKE_C_FLAGS} -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-unused-parameter -D_POSIX_C_SOURCE=200112L -lpthread")
+
+set(CMAKE_C_FLAGS, "-lpthread")
 
 #add_subdirectory(utils)
 
-add_executable(requestLine
-        utils/parser/method.c
-        utils/parser/parser.c
-        utils/parser/parser_utils.c
-        utils/parser/requestLine.c
-        utils/parser/requestLine_test.c)
-
-add_executable(multiParser
-        utils/parser/parser.c
-        utils/parser/parser_utils.c
-        utils/parser/multi_parser.c
-        utils/parser/multi_parser_test.c)
-
-add_executable(header
-        utils/parser/parser.c
-        utils/parser/parser_utils.c
-        utils/parser/multi_parser.c
-        utils/parser/header.c
-        utils/parser/header_test.c)
-
-add_executable(headerGroup
-        utils/parser/parser.c
-        utils/parser/parser_utils.c
-        utils/parser/multi_parser.c
-        utils/parser/header.c
-        utils/parser/headerGroup.c
-        utils/parser/headerGroup_test.c)
-
-add_executable(body
-        utils/parser/body.c
-        utils/parser/body_test.c
-        utils/parser/identity.c
-        utils/parser/chunkGroup.c
-        utils/parser/chunk.c)
-
-add_executable(request
-        utils/parser/parserHostReqLine.c
-        utils/parser/parser.c
-        utils/parser/parser_utils.c
-        utils/parser/multi_parser.c
-        utils/parser/header.c
-        utils/parser/headerGroup.c
-        utils/parser/body.c
-        utils/parser/method.c
-        utils/parser/requestLine.c
-        utils/parser/request.c
-        utils/parser/request_test.c
-        utils/parser/identity.c
-        utils/parser/chunkGroup.c
-        utils/parser/chunk.c)
-
-add_executable(response
-        utils/parser/parser.c
-        utils/parser/parser_utils.c
-        utils/parser/multi_parser.c
-        utils/parser/header.c
-        utils/parser/headerGroup.c
-        utils/parser/body.c
-        utils/parser/method.c
-        utils/parser/statusLine.c
-        utils/parser/response.c
-        utils/parser/response_test.c
-        utils/parser/identity.c
-        utils/parser/chunkGroup.c
-        utils/parser/chunk.c)
-
-
-add_executable(identity
-        utils/parser/identity.c)
-
-add_executable(parserHostreqline
-        utils/parser/parserHostReqLine.c
-        utils/parser/parserHostReqLine_test.c)
-
-add_executable(parseint
-        utils/parser/funcionParaSegundito.c)
-
+add_executable(proxy
+        parser/parserHostReqLine.c
+        parser/parser.c
+        parser/parser_utils.c
+        parser/multi_parser.c
+        parser/header.c
+        parser/headerGroup.c
+        parser/body.c
+        parser/method.c
+        parser/requestLine.c
+        parser/request.c
+        parser/request_test.c
+        parser/identity.c
+        parser/chunkGroup.c
+        parser/chunk.c
+        server.c
+        serverComponents/proxyActiveHandlers.c
+        serverComponents/proxyPassiveHandlers.c
+        serverComponents/proxyStm.c
+        utils/buffer/buffer.c
+        utils/selector/selector.c
+        utils/stm/stm.c
+        serverComponents/proxyStates/requestState.c
+        serverComponents/proxyStates/responseState.c
+        serverComponents/transformationFork.c)

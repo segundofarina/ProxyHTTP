@@ -32,12 +32,10 @@ struct request_parser {
     char  requestURI[0xFF];
     char fqdn[0xFF];
     uint16_t port;
+
+
     bool hasDestination;
-
-
     struct requestData destintation;
-
-
 
 };
 

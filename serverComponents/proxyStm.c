@@ -12,7 +12,9 @@ const struct state_definition proxyStatesHandlers[] = {
 		//.on_read_ready    = obtainOriginRead
 		.on_read_ready = requestRead, 
 		.on_write_ready = requestWrite,
-		.on_block_ready = requestBlockReady
+		.on_block_ready = requestBlockReady,
+        .on_arrival = requestArrival,
+        .on_departure = requestDeparture
     },{
         .state            = RESPONSE,
         .on_read_ready = responseRead,

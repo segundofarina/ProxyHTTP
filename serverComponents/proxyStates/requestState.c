@@ -14,15 +14,16 @@
 #include "../proxyStm.h"
 #include "../proxyActiveHandlers.h"
 #include "../../utils/buffer/buffer.h"
+#include "../../parser/request.h"
 
-int hasOrigin = 0, isDone = 0; /* DEBBUGING */
+//int hasOrigin = 0, isDone = 0; /* DEBBUGING */
 
-int parserHasOrigin() {
-    return hasOrigin;
+int parserHasOrigin(struct request_parser parser) {
+    return parser.hasDestination;
 }
 
-int parserIsRequestDone() {
-    return isDone;
+int parserIsRequestDone(struct request_parser parser) {
+    return parser.state == request_done;
 }
 
 /* Returns 0 on error */
@@ -88,11 +89,11 @@ void * solveDNS(void * data) {
     };
 
     char buff[7];
-    snprintf(buff, sizeof(buff), "%d", ntohs(conn->requestParser.requestData.destPort));
+    snprintf(buff, sizeof(buff), "%d", ntohs(conn->requestParser.reqParser.requestData.destPort));
 
     printf("[NEW THREAD] getAddrInfo\n");
 
-    getaddrinfo(conn->requestParser.requestData.destAddr.fqdn, buff, &hints, &conn->origin_resolution);
+    getaddrinfo(conn->requestParser.reqParser.requestData.destAddr.fqdn, buff, &hints, &conn->origin_resolution);
 
 
     printf("[NEW THREAD] notify block");
@@ -107,7 +108,7 @@ void * solveDNS(void * data) {
 int startOriginConnection(struct selector_key * key) {
     pthread_t tid;
     struct Connection * conn = DATA_TO_CONN(key);
-    struct requestData * rData = &(conn->requestParser.requestData);
+    struct requestData * rData = &(conn->requestParser.reqParser.requestData);
     int ret = 0;
     struct selector_key * k;
 
@@ -160,9 +161,10 @@ unsigned requestRead(struct selector_key * key) {
 	}
 
     buffer_write_adv(&conn->readBuffer, n);
-    //parseRequest(ptr, n);
+    
+    request_parser_consume(&conn->requestParser.reqParser, ptr, n);
 
-/* DEBUGING */
+/* DEBUGING *
 ptr[n] = 0;
 printf("read from client:%s \n", ptr);
 conn->requestParser.requestData.destAddrType = DOMAIN;
@@ -177,7 +179,7 @@ if(strstr(ptr, "\r\n\r\n") != NULL) {
 }
 /* END DEBUGING */
 
-    if(!parserHasOrigin()) { // si no tengo el origin y no lo puedo tener de la request
+    if(!parserHasOrigin(conn->requestParser.reqParser)) { // si no tengo el origin y no lo puedo tener de la request
         printf("Parser needs origin\n");
         if(buffer_can_write(&conn->readBuffer)) {
             return REQUEST;
@@ -421,4 +423,14 @@ printf("attempt connect to origin\n");
 printf("still in request waiting to connect to origin server\n");
 
     return REQUEST;
+}
+
+void requestArrival(const unsigned state, struct selector_key * key) {
+    struct Connection * conn = DATA_TO_CONN(key);
+    request_parser_init(&conn->requestParser.reqParser);
+}
+
+void requestDeparture(const unsigned state, struct selector_key * key) {
+    struct Connection * conn = DATA_TO_CONN(key);
+    request_parser_close(&conn->requestParser.reqParser);
 }

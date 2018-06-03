@@ -9,13 +9,14 @@
 
 #include "../utils/buffer/buffer.h"
 #include "../utils/stm/stm.h"
+#include "../parser/request.h"
 
 enum TransformationType {
     NO_TRANSFORM,
     TRANSFORM_CAT
 };
 
-/* Parte del request parser */
+/* Parte del request parser *
 enum addrType {
     IPv4, IPv6, DOMAIN 
 };
@@ -29,13 +30,12 @@ union socks_addr {
 struct requestData {
     enum addrType destAddrType;
     union socks_addr destAddr;
-    /** port in network byte order */
     in_port_t destPort;
 };
 /* end */
 
 struct httpRequestParser {
-    //struct parser
+    struct request_parser reqParser;
     struct requestData requestData;
 };
 
