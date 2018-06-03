@@ -20,7 +20,8 @@ typedef enum {FALSE, TRUE} Bool;
 int createProxyPassiveSock(const int port, char ** errMsg);
 
 
-int main(const int argc, const char * argv[]) {
+//int main(const int argc, const char * argv[]) {
+int main() {
 
 	int port = 1080, serverFd;
 	char * errMsg = NULL;

@@ -46,12 +46,14 @@ void connection_block (struct selector_key *key) {
 }
 
 void connectionDone(struct selector_key * key) {
+    unsigned int i;
+
 	const int fds[] = {
         DATA_TO_CONN(key)->clientFd,
         DATA_TO_CONN(key)->originFd,
     };
 
-    for(int i = 0; i < N(fds); i++) {
+    for(i = 0; i < N(fds); i++) {
         if(fds[i] != -1) {
             if(selector_unregister_fd(key->s, fds[i]) != SELECTOR_SUCCESS) {
                 abort();

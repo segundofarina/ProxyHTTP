@@ -72,7 +72,7 @@ enum parserState copyTempToWriteBuff(struct selector_key * key) {
     /* leave bytes parsed in parsedBytes */
     bytesToParse = min(maxWriteBuffSize, maxTempBuffSize);
     printf("min: %d\n", bytesToParse);
-    state = parser_consume(ptrToParse, &bytesToParse, ptrFromParse, &parsedBytes);
+    state = parser_consume((char *)ptrToParse, &bytesToParse, (char *)ptrFromParse, &parsedBytes);
 
     printf("parsedBytes: %d\n", parsedBytes);
     printf("bytesToParse: %d\n", bytesToParse);
@@ -131,7 +131,7 @@ enum parserState copyTempToTransformBuff(struct selector_key * key) {
     /* leave bytes parsed in parsedBytes */
     bytesToParse = min(maxTempBuffSize, maxWriteBuffSize);
     printf("min: %d\n", bytesToParse);
-    state = parser_consume(ptrToParse, &bytesToParse, ptrFromParse, &parsedBytes);
+    state = parser_consume((char *)ptrToParse, &bytesToParse, (char *)ptrFromParse, &parsedBytes);
 
     /* move temp buffer pointer accoring to parsedBytes */
     buffer_read_adv(&conn->respTempBuffer, bytesToParse);
@@ -183,7 +183,7 @@ int copyTransformToWriteBuffer(struct selector_key * key) {
     /* chunk string size is min(maxTransformBuffSize, maxWriteBuffSize) */
     /* leave amount of bytes chunked in chunkedBytes */
     bytesToChunk = min(maxTransformBuffSize, maxWriteBuffSize);
-    chunkBytes(ptrToChunk, &bytesToChunk, ptrFromChunk, &chunkedBytes);
+    chunkBytes((char *)ptrToChunk, &bytesToChunk, (char *)ptrFromChunk, &chunkedBytes);
 
     /* move temp buffer pointer accoring to chunkedBytes */
     buffer_read_adv(&conn->outTransformBuffer, bytesToChunk);
