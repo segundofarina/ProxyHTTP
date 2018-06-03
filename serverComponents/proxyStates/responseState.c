@@ -163,6 +163,8 @@ enum response_state copyTempToTransformBuff(struct selector_key * key) {
     if(selector_set_interest(key->s, conn->originFd, interest) != SELECTOR_SUCCESS) {
         return response_error;
     }
+
+    printf("done copy temp to transform\n");
     
     /* save parser return status */
     return state;
@@ -284,7 +286,7 @@ unsigned readFromTranformation(struct selector_key * key) {
         if(selector_unregister_fd(key->s, key->fd) != SELECTOR_SUCCESS) {
             return ERROR;
         }
-        close(conn->readTransformFd);
+        //close(conn->readTransformFd);
         conn->readTransformFd = -1;
     }
 	if(n < 0) {
@@ -410,11 +412,6 @@ unsigned writeToTransformation(struct selector_key * key) {
 	ptr = buffer_read_ptr(&conn->inTransformBuffer, &count);
 	//n = send(key->fd, ptr, count, MSG_NOSIGNAL);
     printf("count is: %d\n", (int) count);
-    if(count == 0) {
-        //abort();
-        printf("ACAAAA\n");
-        //exit(0);
-    }
     n = write(key->fd, ptr, count);
 	if(n <= 0) { // transformation closed connection
         printf("[ERROR] {response} send got 0 bytes\n");
@@ -426,12 +423,18 @@ unsigned writeToTransformation(struct selector_key * key) {
 
     /* I have free space in buffer, copy tempBuffer if it's not empty */
     if(copyTempToTransformBuff(key) == response_error) {
+        printf("copy Temp to transform error\n");
         return ERROR;
     }
 
     /* If response is done and buffer is empty close writeTransformFd */
     if(pareserResponseIsDone(conn->responseParser) && !buffer_can_read(&conn->inTransformBuffer)) {
-        close(conn->writeTransformFd);
+        //close(conn->writeTransformFd);
+        printf("close write Transform fd\n");
+        if(selector_unregister_fd(key->s, conn->writeTransformFd) != SELECTOR_SUCCESS) {
+            printf("unregister error\n");
+            return ERROR;
+        }
         conn->writeTransformFd = -1;
     }
 
@@ -441,14 +444,18 @@ unsigned writeToTransformation(struct selector_key * key) {
         return ERROR;
     }
 
-    /* if buffer is not empty I can write to transform */
-    fd_interest interest = OP_NOOP;
-    if(buffer_can_read(&conn->inTransformBuffer)) {
-        printf("set OP_WRITE if outTransformBuffer is not empty\n");
-        interest = OP_WRITE;
-    }
-    if(selector_set_interest_key(key, interest) != SELECTOR_SUCCESS) {
-        return ERROR;
+    /* Avoid this if I have closed the fd */
+    if(conn->writeTransformFd != -1) {
+        /* if buffer is not empty I can write to transform */
+        fd_interest interest = OP_NOOP;
+        if(buffer_can_read(&conn->inTransformBuffer)) {
+            printf("set OP_WRITE if outTransformBuffer is not empty\n");
+            interest = OP_WRITE;
+        }
+        printf("set interest to fd: %d\n", key->fd);
+        if(selector_set_interest_key(key, interest) != SELECTOR_SUCCESS) {
+            return ERROR;
+        }
     }
 
     return RESPONSE;

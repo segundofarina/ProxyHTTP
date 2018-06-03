@@ -18,7 +18,7 @@
 static int poolSize = 0;
 static struct Connection * pool = NULL;
 
-static enum TransformationType transformationType = NO_TRANSFORM;
+static enum TransformationType transformationType = TRANSFORM_CAT;
 
 struct Connection * new_connection(const int clientFd) {
 	struct Connection * connection;
@@ -63,10 +63,12 @@ struct Connection * new_connection(const int clientFd) {
 		buffer_init(&connection->outTransformBuffer, N(connection->rawBuff_e), connection->rawBuff_e);
 
 		/* Fork transformation process and create pipes */
+		printf("Fork transformation process\n");
 		connection->transformationPid = forkTransformation(&connection->readTransformFd, &connection->writeTransformFd);
 		if(connection->transformationPid == -1) {
 			return NULL;
 		}
+		printf("Done fork\n");
 	}
 	
 	connection->references = 1;
@@ -88,6 +90,7 @@ void closeAndUnregister(struct selector_key * key, int fd) {
 void destroy_connection(struct selector_key * key) {
 	struct Connection * connection = DATA_TO_CONN(key);
 	if(connection == NULL) {
+		printf("connection is null\n");
 		return;
 	}
 
@@ -135,6 +138,7 @@ void proxyPassiveAccept(struct selector_key *key) {
 	struct sockaddr_storage clientAddr;
     socklen_t clientAddrLen = sizeof(clientAddr);
 	struct Connection * connection = NULL;
+	struct selector_key errorKey;
 
 	const int clientFd = accept(key->fd, (struct sockaddr*) &clientAddr, &clientAddrLen);
     if(clientFd == -1) {
@@ -152,18 +156,25 @@ void proxyPassiveAccept(struct selector_key *key) {
     connection->clientAddrLen = clientAddrLen;
 
 	/* register client fd in selector */
+	printf("Register clientFd\n");
 	if(selector_register(key->s, clientFd, &connectionHandler, OP_READ, connection) != SELECTOR_SUCCESS) {
 		goto handle_errors;
 	}
 	/* register transformation fds */
 	if(connection->trasformationType != NO_TRANSFORM) {
+		printf("Set readTransformFd to nio and writeTransformFd\n");
 		if(selector_fd_set_nio(connection->readTransformFd) == -1 || selector_fd_set_nio(connection->writeTransformFd) == -1) {
 			goto handle_errors;
 		}
+		printf("Register readTransformFd\n");
 		if(selector_register(key->s, connection->readTransformFd, &connectionHandler, OP_NOOP, connection) != SELECTOR_SUCCESS) {
 			goto handle_errors;
 		}
-		if(selector_register(key->s, connection->writeTransformFd, &connectionHandler, OP_NOOP, connection) != SELECTOR_SUCCESS) {
+		printf("Register writeTransformFd\n");
+		selector_status status;
+		if((status = selector_register(key->s, connection->writeTransformFd, &connectionHandler, OP_NOOP, connection)) != SELECTOR_SUCCESS) {
+			printf("writeTransformFdErr -> fd: %d\n", connection->writeTransformFd);
+			printf("ERROR: %s\n", selector_error(status));
 			goto handle_errors;
 		}
 	}
@@ -173,11 +184,9 @@ void proxyPassiveAccept(struct selector_key *key) {
 	/* Used only as exception handler */
 	handle_errors:
 
-		if(clientFd != -1) {
-			// send error to client
-			close(clientFd);
-		}
+		errorKey.s = key->s;
+		errorKey.fd = key->fd;
+		errorKey.data = connection;
 
-		destroy_connection(key);
-
+		destroy_connection(&errorKey);
 }
