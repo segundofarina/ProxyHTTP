@@ -3,17 +3,21 @@
 #include <string.h>
 #include <arpa/inet.h>
 
+#include <signal.h>
+
 #include "proxyPassiveHandlers.h"
 #include "proxyActiveHandlers.h"
 #include "proxyStm.h"
 
 #include "../utils/buffer/buffer.h"
+#include "transformationFork.h"
 
 #define MAX_POOL 50
 
 static int poolSize = 0;
 static struct Connection * pool = NULL;
 
+static enum TransformationType transformationType = TRANSFORM_CAT;
 
 struct Connection * new_connection(const int clientFd) {
 	struct Connection * connection;
@@ -45,6 +49,25 @@ struct Connection * new_connection(const int clientFd) {
 	buffer_init(&connection->readBuffer,  N(connection->rawBuff_a), connection->rawBuff_a);
     buffer_init(&connection->writeBuffer, N(connection->rawBuff_b), connection->rawBuff_b);
 
+	buffer_init(&connection->respTempBuffer, N(connection->rawBuff_c), connection->rawBuff_c);
+	
+	/* transformation */
+	connection->trasformationType = transformationType;
+	connection->transformationPid = -1;
+	connection->readTransformFd = -1;
+	connection->writeTransformFd = -1;
+
+	if(connection->trasformationType != NO_TRANSFORM) {
+		buffer_init(&connection->inTransformBuffer, N(connection->rawBuff_d), connection->rawBuff_d);
+		buffer_init(&connection->outTransformBuffer, N(connection->rawBuff_e), connection->rawBuff_e);
+
+		/* Fork transformation process and create pipes */
+		connection->transformationPid = forkTransformation(&connection->readTransformFd, &connection->writeTransformFd);
+		if(connection->transformationPid == -1) {
+			return NULL;
+		}
+	}
+	
 	connection->references = 1;
 
 	return connection;
@@ -59,6 +82,26 @@ void freeConnection(struct Connection * connection) {
 void destroy_connection(struct Connection * connection) {
 	if(connection == NULL) {
 		return;
+	}
+
+	if(connection->transformationPid != -1) {
+		kill(connection->transformationPid, SIGKILL);
+	}
+
+	if(connection->clientFd != -1) {
+		close(connection->clientFd);
+	}
+
+	if(connection->originFd != -1) {
+		close(connection->originFd);
+	}
+
+	if(connection->readTransformFd != -1) {
+		close(connection->readTransformFd);
+	}
+
+	if(connection->writeTransformFd != -1) {
+		close(connection->writeTransformFd);
 	}
 
 	if(connection->references > 1) {
@@ -100,6 +143,18 @@ void proxyPassiveAccept(struct selector_key *key) {
 	if(selector_register(key->s, clientFd, &connectionHandler, OP_READ, connection) != SELECTOR_SUCCESS) {
 		goto handle_errors;
 	}
+	/* register transformation fds */
+	if(connection->trasformationType != NO_TRANSFORM) {
+		if(selector_fd_set_nio(connection->readTransformFd) == -1 || selector_fd_set_nio(connection->writeTransformFd) == -1) {
+			goto handle_errors;
+		}
+		if(selector_register(key->s, connection->readTransformFd, &connectionHandler, OP_NOOP, connection) != SELECTOR_SUCCESS) {
+			goto handle_errors;
+		}
+		if(selector_register(key->s, connection->writeTransformFd, &connectionHandler, OP_NOOP, connection) != SELECTOR_SUCCESS) {
+			goto handle_errors;
+		}
+	}
 
 	return;
 
@@ -108,7 +163,7 @@ void proxyPassiveAccept(struct selector_key *key) {
 
 		if(clientFd != -1) {
 			// send error to client
-			//close(clientFd);
+			close(clientFd);
 		}
 
 		destroy_connection(connection);
