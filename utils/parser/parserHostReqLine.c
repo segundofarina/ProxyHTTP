@@ -74,8 +74,8 @@ hostData processHost(char * fqdn, char * result, uint16_t resultLen, uint16_t * 
 					portAux = portAux*10 + fqdn[i] - '0';
 					j = -1;
 				} else {
-//				    printf("DOUBLE_DOT ERROR\n");
-					return ERROR;
+//				    printf("DOUBLE_DOT ERROR_hostData\n");
+					return ERROR_hostData;
 				}
 				break;
 			case SLASH:
@@ -87,7 +87,7 @@ hostData processHost(char * fqdn, char * result, uint16_t resultLen, uint16_t * 
 					}
 					j = -1;
 				} else if(fqdn[i] == '/' && httpFound) {
-					return ERROR;
+					return ERROR_hostData;
                 } else {
 					return ans;
 				}
@@ -96,11 +96,11 @@ hostData processHost(char * fqdn, char * result, uint16_t resultLen, uint16_t * 
 				if(fqdn[i] == '/') {
 					if(i > 0) {
 						if(fqdn[i-1] == '/' && httpFound) {
-							ans = ERROR;
+							ans = ERROR_hostData;
 						}
 					}
 					if((ans == IPV6 || ans == IPV6_PORT) && !ipv6Found) {
-						ans = ERROR;
+						ans = ERROR_hostData;
 					}
 					return ans;
 				}
@@ -118,7 +118,7 @@ hostData processHost(char * fqdn, char * result, uint16_t resultLen, uint16_t * 
 							} else if(fqdn[i] == '.') {
 								ipv4DotCounter++;
 								if(ipv4DotCounter == 4) {
-									return ERROR;
+									return ERROR_hostData;
 								}
 							}
 							break;
@@ -131,8 +131,8 @@ hostData processHost(char * fqdn, char * result, uint16_t resultLen, uint16_t * 
 							}
 							break;
 						default:
-//						    printf("HOST ERROR");
-							return ERROR;
+//						    printf("HOST ERROR_hostData");
+							return ERROR_hostData;
 					}
 				} else {
 					if(ans != IPV6) {
@@ -143,8 +143,8 @@ hostData processHost(char * fqdn, char * result, uint16_t resultLen, uint16_t * 
 							ans = DOMAIN_HOST_PORT;
 							j = -1;
 						} else {
-//						    printf("IPV6 ERROR\n");
-							ans = ERROR;
+//						    printf("IPV6 ERROR_hostData\n");
+							ans = ERROR_hostData;
 						}
 					} else {
 						if(ipv6Found) {
@@ -166,7 +166,7 @@ hostData processHost(char * fqdn, char * result, uint16_t resultLen, uint16_t * 
 
 	// Now the port
     if(state == PORT && result[0] == 0) {
-        return ERROR;
+        return ERROR_hostData;
 	}
 	while(fqdn[i] != 0 && state == PORT) {
 		if(isdigit(fqdn[i])) {
@@ -179,11 +179,11 @@ hostData processHost(char * fqdn, char * result, uint16_t resultLen, uint16_t * 
 	*port = (uint16_t) portAux;
 
 	if((ans == IPV6 || ans == IPV6_PORT) && !ipv6Found) {
-		return ERROR;
+		return ERROR_hostData;
 	}
 
 	if(j >= resultLen) {
-		return ERROR;
+		return ERROR_hostData;
 	} else {
 		return ans;
 	}
@@ -240,7 +240,7 @@ hostData requestTarget_marshall(char * buffer, char * result, uint16_t resultLen
 //				break;
 //			case SP1:
 //				if(c == ' ') {
-//					return ERROR;
+//					return ERROR_hostData;
 //				} else {
 //					fqdn[j] = c;
 //					j++;
@@ -258,7 +258,7 @@ hostData requestTarget_marshall(char * buffer, char * result, uint16_t resultLen
 //				break;
 //            case SP2:
 //                if(c == ' ') {
-//                    return ERROR;
+//                    return ERROR_hostData;
 //                } else {
 //                    fqdn[j] = c;
 //                    j++;
@@ -272,7 +272,7 @@ hostData requestTarget_marshall(char * buffer, char * result, uint16_t resultLen
 //				break;
 //			case CRLF:
 //				if(c != '\n')
-//					return ERROR;
+//					return ERROR_hostData;
 //				break;
 //		}
 //		i++;
@@ -287,7 +287,7 @@ int fillRequestData_marshall(hostData addressType, char * host, uint16_t port, s
 	int i, errCode;
 
 	switch(addressType) {
-		case ERROR:
+		case ERROR_hostData:
 			return -1;
 			break;
 		case EMPTY:

@@ -50,8 +50,8 @@ int main(void) {
 	valid = requestTarget_marshall(test1, result, (uint16_t)0xFF, (uint16_t*)&port);
 	printf("State 1: ");
     switch(valid) {
-        //  ERROR = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
-        case ERROR:
+        //  ERROR_hostData = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
+        case ERROR_hostData:
             printf("Error in test 1.\n");
             break;
         case EMPTY:
@@ -88,8 +88,8 @@ int main(void) {
 	valid = requestTarget_marshall(test2, result, (uint16_t)0xFF, (uint16_t*)&port);
 	printf("State 2: ");
     switch(valid) {
-        //  ERROR = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
-        case ERROR:
+        //  ERROR_hostData = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
+        case ERROR_hostData:
             printf("Error in test 2.\n");
             break;
         case EMPTY:
@@ -122,8 +122,8 @@ int main(void) {
 	valid = requestTarget_marshall(test2a, result, (uint16_t)0xFF, (uint16_t*)&port);
     printf("State 2a: ");
     switch(valid) {
-        //  ERROR = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
-        case ERROR:
+        //  ERROR_hostData = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
+        case ERROR_hostData:
             printf("Error in test 2a.\n");
             break;
         case EMPTY:
@@ -156,8 +156,8 @@ int main(void) {
 	valid = requestTarget_marshall(test3, result, (uint16_t)0xFF, (uint16_t*)&port);
     printf("State 3: ");
     switch(valid) {
-        //  ERROR = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
-        case ERROR:
+        //  ERROR_hostData = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
+        case ERROR_hostData:
             printf("Error in test 3.\n");
             break;
         case EMPTY:
@@ -190,8 +190,8 @@ int main(void) {
 	valid = requestTarget_marshall(test4, result, (uint16_t)0xFF, (uint16_t*)&port);
     printf("State 4: ");
     switch(valid) {
-        //  ERROR = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
-        case ERROR:
+        //  ERROR_hostData = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
+        case ERROR_hostData:
             printf("Error in test 4.\n");
             break;
         case EMPTY:
@@ -224,8 +224,8 @@ int main(void) {
 	valid = requestTarget_marshall(test5, result, (uint16_t)0xFF, (uint16_t*)&port);
     printf("State 5: ");
     switch(valid) {
-        //  ERROR = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
-        case ERROR:
+        //  ERROR_hostData = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
+        case ERROR_hostData:
             printf("Error in test 5.\n");
             break;
         case EMPTY:
@@ -258,8 +258,8 @@ int main(void) {
 	valid = requestTarget_marshall(test6, result, (uint16_t)0xFF, (uint16_t*)&port);
     printf("State 6: ");
     switch(valid) {
-        //  ERROR = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
-        case ERROR:
+        //  ERROR_hostData = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
+        case ERROR_hostData:
             printf("Error in test 6.\n");
             break;
         case EMPTY:
@@ -292,8 +292,8 @@ int main(void) {
 	valid = requestTarget_marshall(test7, result, (uint16_t)0xFF, (uint16_t*)&port);
     printf("State 7: ");
     switch(valid) {
-        //  ERROR = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
-        case ERROR:
+        //  ERROR_hostData = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
+        case ERROR_hostData:
             printf("Error in test 7.\n");
             break;
         case EMPTY:
@@ -326,8 +326,8 @@ int main(void) {
 	valid = requestTarget_marshall(test7a, result, (uint16_t)0xFF, (uint16_t*)&port);
     printf("State 7a: ");
     switch(valid) {
-        //  ERROR = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
-        case ERROR:
+        //  ERROR_hostData = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
+        case ERROR_hostData:
             printf("Error in test 7a.\n");
             break;
         case EMPTY:
@@ -360,8 +360,8 @@ int main(void) {
 	valid = requestTarget_marshall(test8, result, (uint16_t)0xFF, (uint16_t*)&port);
     printf("State 8: ");
     switch(valid) {
-        //  ERROR = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
-        case ERROR:
+        //  ERROR_hostData = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
+        case ERROR_hostData:
             printf("Error in test 8.\n");
             break;
         case EMPTY:
@@ -394,8 +394,8 @@ int main(void) {
     valid = requestTarget_marshall(test9, result, (uint16_t)0xFF, (uint16_t*)&port);
     printf("State 9: ");
     switch(valid) {
-        //  ERROR = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
-        case ERROR:
+        //  ERROR_hostData = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
+        case ERROR_hostData:
             printf("Error in test 9.\n");
             break;
         case EMPTY:
@@ -428,8 +428,8 @@ int main(void) {
     valid = requestTarget_marshall(test10, result, (uint16_t)0xFF, (uint16_t*)&port);
     printf("State 10: ");
     switch(valid) {
-        //  ERROR = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
-        case ERROR:
+        //  ERROR_hostData = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
+        case ERROR_hostData:
             printf("Error in test 10.\n");
             break;
         case EMPTY:
@@ -462,8 +462,8 @@ int main(void) {
     valid = requestTarget_marshall(test11, result, (uint16_t)0xFF, (uint16_t*)&port);
     printf("State 11: ");
     switch(valid) {
-        //  ERROR = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
-        case ERROR:
+        //  ERROR_hostData = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
+        case ERROR_hostData:
             printf("Error in test 11.\n");
             break;
         case EMPTY:
@@ -496,8 +496,8 @@ int main(void) {
     valid = requestTarget_marshall(test12, result, (uint16_t)0xFF, (uint16_t*)&port);
     printf("State 12: ");
     switch(valid) {
-        //  ERROR = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
-        case ERROR:
+        //  ERROR_hostData = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
+        case ERROR_hostData:
             printf("Error in test 12.\n");
             break;
         case EMPTY:
@@ -530,8 +530,8 @@ int main(void) {
     valid = requestTarget_marshall(test13, result, (uint16_t)0xFF, (uint16_t*)&port);
     printf("State 13: ");
     switch(valid) {
-        //  ERROR = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
-        case ERROR:
+        //  ERROR_hostData = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
+        case ERROR_hostData:
             printf("Error in test 13.\n");
             break;
         case EMPTY:
@@ -564,8 +564,8 @@ int main(void) {
     valid = requestTarget_marshall(test14, result, (uint16_t)0xFF, (uint16_t*)&port);
     printf("State 14: ");
     switch(valid) {
-        //  ERROR = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
-        case ERROR:
+        //  ERROR_hostData = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
+        case ERROR_hostData:
             printf("Error in test 14.\n");
             break;
         case EMPTY:
@@ -598,8 +598,8 @@ int main(void) {
     valid = requestTarget_marshall(test15, result, (uint16_t)0xFF, (uint16_t*)&port);
     printf("State 15: ");
     switch(valid) {
-        //  ERROR = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
-        case ERROR:
+        //  ERROR_hostData = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
+        case ERROR_hostData:
             printf("Error in test 15.\n");
             break;
         case EMPTY:
@@ -632,8 +632,8 @@ int main(void) {
     valid = requestTarget_marshall(test16, result, (uint16_t)0xFF, (uint16_t*)&port);
     printf("State 16: ");
     switch(valid) {
-        //  ERROR = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
-        case ERROR:
+        //  ERROR_hostData = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
+        case ERROR_hostData:
             printf("Error in test 16.\n");
             break;
         case EMPTY:
@@ -666,8 +666,8 @@ int main(void) {
     valid = requestTarget_marshall(test17, result, (uint16_t)0xFF, (uint16_t*)&port);
     printf("State 17: ");
     switch(valid) {
-        //  ERROR = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
-        case ERROR:
+        //  ERROR_hostData = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
+        case ERROR_hostData:
             printf("Error in test 17.\n");
             break;
         case EMPTY:
@@ -700,8 +700,8 @@ int main(void) {
     valid = requestTarget_marshall(test18, result, (uint16_t)0xFF, (uint16_t*)&port);
     printf("State 18: ");
     switch(valid) {
-        //  ERROR = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
-        case ERROR:
+        //  ERROR_hostData = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
+        case ERROR_hostData:
             printf("Error in test 18.\n");
             break;
         case EMPTY:
@@ -734,8 +734,8 @@ int main(void) {
     valid = requestTarget_marshall(test19, result, (uint16_t)0xFF, (uint16_t*)&port);
     printf("State 19: ");
     switch(valid) {
-        //  ERROR = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
-        case ERROR:
+        //  ERROR_hostData = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
+        case ERROR_hostData:
             printf("Error in test 19.\n");
             break;
         case EMPTY:
@@ -768,8 +768,8 @@ int main(void) {
     valid = requestTarget_marshall(test20, result, (uint16_t)0xFF, (uint16_t*)&port);
     printf("State 20: ");
     switch(valid) {
-        //  ERROR = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
-        case ERROR:
+        //  ERROR_hostData = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
+        case ERROR_hostData:
             printf("Error in test 20.\n");
             break;
         case EMPTY:
@@ -802,8 +802,8 @@ int main(void) {
     valid = requestTarget_marshall(test21, result, (uint16_t)0xFF, (uint16_t*)&port);
     printf("State 21: ");
     switch(valid) {
-        //  ERROR = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
-        case ERROR:
+        //  ERROR_hostData = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
+        case ERROR_hostData:
             printf("Error in test 21.\n");
             break;
         case EMPTY:
@@ -835,8 +835,8 @@ int main(void) {
     valid = requestTarget_marshall(test22, result, (uint16_t)0xFF, (uint16_t*)&port);
     printf("State 22: ");
     switch(valid) {
-        //  ERROR = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
-        case ERROR:
+        //  ERROR_hostData = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT
+        case ERROR_hostData:
             printf("Error in test 22.\n");
             break;
         case EMPTY:

@@ -96,7 +96,7 @@ char * methodToString(enum request_method type){
             resp = "Method not supported";
             break;
         default:
-            resp = "ERROR";
+            resp = "ERROR_hostData";
             break;
     }
     return resp;
