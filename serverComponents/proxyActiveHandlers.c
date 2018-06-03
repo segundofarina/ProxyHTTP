@@ -31,8 +31,11 @@ void connection_write (struct selector_key *key) {
 
 }
 
+/* Called when unregistering a fd */
 void connection_close (struct selector_key *key) {
-	destroy_connection(DATA_TO_CONN(key));
+    if(key->fd != -1) {
+        close(key->fd);
+    }
 }
 
 void connection_block (struct selector_key *key) {
@@ -46,7 +49,7 @@ void connection_block (struct selector_key *key) {
 }
 
 void connectionDone(struct selector_key * key) {
-    unsigned int i;
+    /*unsigned int i;
 
 	const int fds[] = {
         DATA_TO_CONN(key)->clientFd,
@@ -57,11 +60,16 @@ void connectionDone(struct selector_key * key) {
 
     for(i = 0; i < N(fds); i++) {
         if(fds[i] != -1) {
+            printf("Unregister and close fd: %d\n", fds[i]);
             if(selector_unregister_fd(key->s, fds[i]) != SELECTOR_SUCCESS) {
                 abort();
 				//handle better this error
             }
             close(fds[i]);
         }
-    }
+    }*/
+
+    printf("destroyConnection()\n");
+
+    destroy_connection(key);
 }

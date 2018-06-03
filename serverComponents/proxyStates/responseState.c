@@ -364,6 +364,7 @@ unsigned writeToClient(struct selector_key * key) {
 
     /* If the parser changed state to body and there is no transformation */
     if(conn->trasformationType != NO_TRANSFORM && originalState != response_body && state == response_body) {
+        printf("NO_TRNSFROM -> copyTempToTransformBuff()\n");
         if(copyTempToTransformBuff(key) == response_error) {
             return ERROR;
         }
@@ -390,6 +391,7 @@ unsigned writeToClient(struct selector_key * key) {
 
     /* Check if it's done */
     if(pareserResponseIsDone(conn->responseParser) && !buffer_can_read(&conn->writeBuffer) && conn->readTransformFd == -1) {
+        printf("response is done\n");
         return DONE;
     }
     

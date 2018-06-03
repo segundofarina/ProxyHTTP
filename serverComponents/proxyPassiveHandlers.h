@@ -4,8 +4,8 @@
 #include "../utils/selector/selector.h"
 #include "connection-structure.h"
 
-void proxyPassiveAccept(struct selector_key *key);
+void proxyPassiveAccept(struct selector_key * key);
 
-void destroy_connection(struct Connection * connection);
+void destroy_connection(struct selector_key * key);
 
 #endif

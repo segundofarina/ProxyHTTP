@@ -18,7 +18,7 @@
 static int poolSize = 0;
 static struct Connection * pool = NULL;
 
-static enum TransformationType transformationType = TRANSFORM_CAT;
+static enum TransformationType transformationType = NO_TRANSFORM;
 
 struct Connection * new_connection(const int clientFd) {
 	struct Connection * connection;
@@ -79,30 +79,41 @@ void freeConnection(struct Connection * connection) {
 	free(connection);
 }
 
+void closeAndUnregister(struct selector_key * key, int fd) {
+	selector_unregister_fd(key->s, fd);
+	/* fd is closed by connection_close handler */
+}
+
 /* removes a connection, if there are < MAX_POOL its added to the pool, otherwise it frees the memory */
-void destroy_connection(struct Connection * connection) {
+void destroy_connection(struct selector_key * key) {
+	struct Connection * connection = DATA_TO_CONN(key);
 	if(connection == NULL) {
 		return;
 	}
 
+	// Close transformation process 
 	if(connection->transformationPid != -1) {
 		kill(connection->transformationPid, SIGKILL);
 	}
 
 	if(connection->clientFd != -1) {
-		close(connection->clientFd);
+		closeAndUnregister(key, connection->clientFd);
+		connection->clientFd = -1;
 	}
 
 	if(connection->originFd != -1) {
-		close(connection->originFd);
+		closeAndUnregister(key, connection->originFd);
+		connection->originFd = -1;
 	}
 
 	if(connection->readTransformFd != -1) {
-		close(connection->readTransformFd);
+		closeAndUnregister(key, connection->readTransformFd);
+		connection->readTransformFd = -1;
 	}
 
 	if(connection->writeTransformFd != -1) {
-		close(connection->writeTransformFd);
+		closeAndUnregister(key, connection->writeTransformFd);
+		connection->writeTransformFd = -1;
 	}
 
 	if(connection->references > 1) {
@@ -167,6 +178,6 @@ void proxyPassiveAccept(struct selector_key *key) {
 			close(clientFd);
 		}
 
-		destroy_connection(connection);
+		destroy_connection(key);
 
 }
