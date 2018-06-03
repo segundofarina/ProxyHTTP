@@ -121,7 +121,7 @@ requestLine(const uint8_t c,struct request_parser *p) {
 
             hostData result = requestTarget_marshall(p->requestURI,p->fqdn,0xFF,&(p->port));
 
-            if(result == ERROR || result == EMPTY){
+            if(result == ERROR_hostData || result == EMPTY){
                 p->hasDestination = false;
             }else{
                 p->hasDestination = true;
@@ -156,7 +156,7 @@ headers(const uint8_t c,struct request_parser *p){
                     char * value = getHeaderValue(p->headerList,HEADER_HOST);
                     hostData result = requestTarget_marshall(value,p->fqdn,0xFF,&(p->port));
 
-                    if(result == ERROR){
+                    if(result == ERROR_hostData){
                         p->hasDestination = false;
                     }else{
                         p->hasDestination = true;
@@ -180,7 +180,7 @@ headers(const uint8_t c,struct request_parser *p){
                 if(value!=NULL) {
                     hostData result = requestTarget_marshall(value, p->fqdn, 0xFF, &(p->port));
 
-                    if (result == ERROR) {
+                    if (result == ERROR_hostData) {
                         p->hasDestination = false;
                     } else {
                         p->hasDestination = true;

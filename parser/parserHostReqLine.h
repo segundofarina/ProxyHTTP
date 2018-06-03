@@ -18,7 +18,7 @@
 
 #define DEFAULT_HTTP_PORT (80)
 
-typedef enum {ERROR = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT} hostData;
+typedef enum {ERROR_hostData = 0, EMPTY, DOMAIN_HOST, DOMAIN_HOST_PORT, IPV4, IPV4_PORT, IPV6, IPV6_PORT} hostData;
 
 //	As per RFC:7230
 //	request-line = method SP request-target SP HTTP-version CRLF
