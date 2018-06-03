@@ -19,9 +19,9 @@ struct method_parser {
 
 
     /* Saving definitions so they can be destroyed later */
-    struct parser_definition dHead;
-    struct parser_definition dGet;
-    struct parser_definition dPost;
+    struct parser_definition *dHead;
+    struct parser_definition *dGet;
+    struct parser_definition *dPost;
 
     enum request_method method;
 

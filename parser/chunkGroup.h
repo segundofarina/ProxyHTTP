@@ -6,7 +6,6 @@
 #define PC_2018_04_chunk_group_H
 
 #include <stdint.h>
-#include <ntsid.h>
 
 enum chunk_group_state{
     chunk_group_chunk,

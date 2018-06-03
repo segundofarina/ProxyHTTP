@@ -1,3 +1,4 @@
+#include <string.h>
 #include "method.h"
 
 
@@ -26,14 +27,28 @@ extern void
 method_parser_init (struct method_parser* p) {
     p->method = METHOD_NOTSUPPORTED;
 
-    p->dHead = parser_utils_strcmpi("HEAD");
-    p->parserHead = parser_init(parser_no_classes(), &(p->dHead));
 
-    p->dGet = parser_utils_strcmpi("GET");
-    p->parserGet = parser_init(parser_no_classes(), &(p->dGet));
+    struct parser_definition def =parser_utils_strcmpi("HEAD");
+    p->dHead = malloc(sizeof(struct parser_definition));
+    memcpy(p->dHead,&def,sizeof(struct parser_definition));
+    p->parserHead = parser_init(parser_no_classes(), (p->dHead));
 
-    p->dPost = parser_utils_strcmpi("POST");
-    p->parserPost = parser_init(parser_no_classes(), &(p->dPost));
+
+
+    struct parser_definition def2 =parser_utils_strcmpi("GET");
+    p->dGet = malloc(sizeof(struct parser_definition));
+    memcpy(p->dGet,&def2,sizeof(struct parser_definition));
+    p->parserGet = parser_init(parser_no_classes(), (p->dGet));
+
+
+    struct parser_definition def3 =parser_utils_strcmpi("POST");
+    p->dPost = malloc(sizeof(struct parser_definition));
+    memcpy(p->dPost,&def3,sizeof(struct parser_definition));
+    p->parserPost = parser_init(parser_no_classes(), (p->dPost));
+
+
+//    p->dPost = parser_utils_strcmpi("POST");
+//    p->parserPost = parser_init(parser_no_classes(), &(p->dPost));
 }
 
 extern void
@@ -41,13 +56,13 @@ method_parser_close(struct method_parser* p){
 
     if( p != NULL){
         parser_destroy(p->parserGet);
-        parser_utils_strcmpi_destroy((&p->dGet));
+        parser_utils_strcmpi_destroy((p->dGet));
 
         parser_destroy(p->parserHead);
-        parser_utils_strcmpi_destroy((&p->dHead));
+        parser_utils_strcmpi_destroy((p->dHead));
 
         parser_destroy(p->parserPost);
-        parser_utils_strcmpi_destroy((&p->dPost));
+        parser_utils_strcmpi_destroy((p->dPost));
 
         free(p);
 
