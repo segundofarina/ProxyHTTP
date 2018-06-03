@@ -10,6 +10,8 @@
 #include "../utils/buffer/buffer.h"
 #include "../utils/stm/stm.h"
 #include "../parser/request.h"
+#include "../parser/response.h"
+
 
 enum TransformationType {
     NO_TRANSFORM,
@@ -62,6 +64,7 @@ struct Connection {
 
     /* parsers */
     struct httpRequestParser requestParser;
+    struct response_parser responseParser;
 
 
 	/* general io buffers for client */

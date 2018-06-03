@@ -51,6 +51,8 @@ void connectionDone(struct selector_key * key) {
 	const int fds[] = {
         DATA_TO_CONN(key)->clientFd,
         DATA_TO_CONN(key)->originFd,
+        DATA_TO_CONN(key)->writeTransformFd,
+        DATA_TO_CONN(key)->readTransformFd
     };
 
     for(i = 0; i < N(fds); i++) {

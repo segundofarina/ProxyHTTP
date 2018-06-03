@@ -7,9 +7,6 @@
 #include <memory.h>
 #include <ctype.h>
 
-
-
-
 #include "headerGroup.h"
 #include "multi_parser.h"
 #include "response.h"
@@ -24,12 +21,12 @@ enum header_name{
 };
 
 
-char * * headerNames  = ( char *[]){"Content-Length","Transfer-Encoding"};
-int      types[] = {          HEADER_CONT_LEN,HEADER_TRANSF_ENC};
+char ** headerNamesResponse  = ( char *[]){"Content-Length","Transfer-Encoding"};
+int      typesResponse[] = {          HEADER_CONT_LEN,HEADER_TRANSF_ENC};
 #define HEADERS_AMOUNT 2
 
 enum body_type
-getTransfEncoding(char * value){
+getTransfEncodingResponse(char * value){
 
     struct multi_parser p;
     enum transf_types{
@@ -49,11 +46,10 @@ getTransfEncoding(char * value){
     enum body_type result= multi_parser_consume(value+i,&p);
 
     return result;
-
 }
 
 
-int parseInt(const char * b){
+int parseIntResponse(const char * b){
     int num = -1;
     int i = 0;
 
@@ -78,28 +74,28 @@ int parseInt(const char * b){
 }
 
 enum body_type
-getBodyType(struct header_list * list){
+getBodyTypeResponse(struct header_list * list){
 
     if(list == NULL){
         return body_type_error;
     }
     if(list->name == HEADER_TRANSF_ENC ){
-        return getTransfEncoding(list->value);
+        return getTransfEncodingResponse(list->value);
     }
-    return getBodyType(list->next);
+    return getBodyTypeResponse(list->next);
 }
 
 /* Searches in header_list for header Content-Length
  * returns -1 if it's not present or it's value is in an incorrect format
  */
 int
-getContentLength(struct header_list *list){
+getContentLengthResponse(struct header_list *list){
     if(list == NULL){
         return -1;
     } else if(list->name == HEADER_CONT_LEN){
-        return parseInt(list->value);
+        return parseIntResponse(list->value);
     }
-    return getContentLength(list->next);
+    return getContentLengthResponse(list->next);
 }
 
 
@@ -112,7 +108,7 @@ statusLine(const uint8_t c,struct response_parser *p) {
         case sl_end:
 
             statusLine_parser_close(p->statusLineParser);
-            headerGroup_parser_init(p->headerParser,HEADER_NOT_INTERESTED,headerNames,types,HEADERS_AMOUNT);
+            headerGroup_parser_init(p->headerParser,HEADER_NOT_INTERESTED,headerNamesResponse,typesResponse,HEADERS_AMOUNT);
             next = response_headers;
             break;
         default:
@@ -123,15 +119,15 @@ statusLine(const uint8_t c,struct response_parser *p) {
 }
 
 enum response_state
-headers(const uint8_t c,struct response_parser *p){
+headersResponse(const uint8_t c,struct response_parser *p){
     enum response_state next;
     enum headerGroup_state state = headerGroup_parser_feed(c,p->headerParser);
     switch (state) {
         case headerGroup_end:
             p->headerList=p->headerParser->list;
             headerGroup_parser_close(p->headerParser);
-            int type = getBodyType(p->headerList);
-            int len = getContentLength(p->headerList);
+            int type = getBodyTypeResponse(p->headerList);
+            int len = getContentLengthResponse(p->headerList);
             if(type == body_type_chunked || len >0){
 
                 p->bodyParser = malloc(sizeof (struct body_parser));
@@ -155,7 +151,7 @@ headers(const uint8_t c,struct response_parser *p){
 
 
 enum response_state
-body(const uint8_t c,struct response_parser *p) {
+bodyResponse(const uint8_t c,struct response_parser *p) {
     enum response_state next;
     enum body_state state= body_parser_feed(c,p->bodyParser);
 
@@ -176,7 +172,7 @@ body(const uint8_t c,struct response_parser *p) {
 }
 
 enum response_state
-done( const uint8_t c,struct response_parser *p) {
+doneResponse( const uint8_t c,struct response_parser *p) {
     enum response_state next;
     next = response_error;
     return next;
@@ -204,13 +200,13 @@ response_parser_feed (const uint8_t c, struct response_parser *p){
             next = statusLine(c,p);
             break;
         case response_headers:
-            next = headers(c,p);
+            next = headersResponse(c,p);
             break;
         case response_body:
-            next = body(c,p);
+            next = bodyResponse(c,p);
             break;
         case response_done:
-            next = done(c,p);
+            next = doneResponse(c,p);
             break;
         default:
             next = response_error;
@@ -265,6 +261,7 @@ response_parser_consume(struct response_parser *p, char * b,int len, char * writ
         writebuff[i]=b[i];
         if(p->prevState == response_headers && p->state == response_body){
             // breaking so the proxy knows the header has begun
+            i++;
             break;
         }
     }

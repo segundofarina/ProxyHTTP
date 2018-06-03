@@ -44,6 +44,8 @@ add_executable(proxy
         parser/identity.c
         parser/chunkGroup.c
         parser/chunk.c
+        parser/statusLine.c
+        parser/response.c
         server.c
         serverComponents/proxyActiveHandlers.c
         serverComponents/proxyPassiveHandlers.c

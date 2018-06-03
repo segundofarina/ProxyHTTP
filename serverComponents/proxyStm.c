@@ -14,7 +14,9 @@ const struct state_definition proxyStatesHandlers[] = {
     },{
         .state = RESPONSE,
         .on_read_ready = responseRead,
-        .on_write_ready = responseWrite
+        .on_write_ready = responseWrite,
+        .on_arrival = responseArrival,
+        .on_departure = responseDeparture
     },{
         .state = DONE,
     },{
