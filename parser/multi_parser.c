@@ -13,15 +13,15 @@ struct parser_data_list {
 
     struct parser_definition * def;
 
-    u_int32_t match;
+    uint32_t match;
 
     struct parser_data_list * next;
 };
 
-extern u_int32_t
+extern uint32_t
 multi_parser_consume(char * string, struct multi_parser* p){
     int i=0;
-    u_int32_t state;
+    uint32_t state;
     while(string[i]){
         state = multi_parser_feed(string[i],p);
         i++;
@@ -29,7 +29,7 @@ multi_parser_consume(char * string, struct multi_parser* p){
     return state;
 }
 
-extern u_int32_t
+extern uint32_t
 multi_parser_feed(const uint8_t c, struct multi_parser* p){
 
     struct parser_data_list * current =p->list;

@@ -40,7 +40,7 @@ struct header_parser{
 
     enum header_state state;
 
-    u_int32_t name;
+    uint32_t name;
     char * value;
     int len;
     int value_max_len;

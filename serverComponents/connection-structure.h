@@ -32,7 +32,7 @@ struct requestData {
     union socks_addr destAddr;
     in_port_t destPort;
 };
-/* end */
+ end */
 
 struct httpRequestParser {
     struct request_parser reqParser;

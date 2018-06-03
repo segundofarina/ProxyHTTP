@@ -11,6 +11,8 @@ set(CMAKE_C_STANDARD 11)
 
 #set(CMAKE_C_FLAGS    "--std=c99 -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-unused-parameter -Wno-implicit-fallthrough -D_POSIX_C_SOURCE=200112L ")
 
+set(CMAKE_C_FLAGS "-pthread -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-unused-parameter -D_POSIX_C_SOURCE=200112L")
+
 if(CMAKE_C_COMPILER_ID MATCHES "Clang")
     find_program(CLANGTIDY NAMES clang-tidy)
     if(CLANGTIDY)
@@ -21,9 +23,10 @@ if(CMAKE_C_COMPILER_ID MATCHES "Clang")
                 -fix)
     endif()
 endif()
-#set(CMAKE_C_FLAGS, "${CMAKE_C_FLAGS} -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-unused-parameter -D_POSIX_C_SOURCE=200112L -lpthread")
 
-set(CMAKE_C_FLAGS, "-lpthread")
+set(CMAKE_C_FLAGS, "${CMAKE_C_FLAGS} -pthread -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-unused-parameter -D_POSIX_C_SOURCE=200112L")
+
+#set(CMAKE_C_FLAGS, "${CMAKE_C_FLAGS} -lpthread")
 
 #add_subdirectory(utils)
 
@@ -38,7 +41,6 @@ add_executable(proxy
         parser/method.c
         parser/requestLine.c
         parser/request.c
-        parser/request_test.c
         parser/identity.c
         parser/chunkGroup.c
         parser/chunk.c

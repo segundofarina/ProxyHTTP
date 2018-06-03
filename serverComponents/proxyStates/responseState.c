@@ -17,9 +17,9 @@
 
 /* Esto va en response parser */
 enum parserState {
-    METHOD,
-    HEADERS,
-    BODY,
+    METHOD_P,
+    HEADERS_P,
+    BODY_P,
     PARSER_DONE,
     PARSER_ERROR
 };
@@ -35,7 +35,7 @@ enum parserState parser_consume(char * ptrToParse, int * bytesToParse, char * pt
 
     printf("parser_consume()\n");
     
-    return BODY;
+    return BODY_P;
 }
 
 void chunkBytes(char * ptrToChunk, int * bytesToChunk, char * ptrFromChunk, int * chunkedBytes) {
@@ -221,7 +221,7 @@ unsigned readFromOrigin(struct selector_key * key) {
 	uint8_t *ptr;
 	size_t count;
 	ssize_t  n;
-    enum parserState state = BODY;// buscarlo con funcion del parser
+    enum parserState state = BODY_P;// buscarlo con funcion del parser
     
     /* Read from origin and save in temp buffer */
 	ptr = buffer_write_ptr(&conn->respTempBuffer, &count);
@@ -237,7 +237,7 @@ unsigned readFromOrigin(struct selector_key * key) {
 
     /* If im not in body write to writeBuffer */
     /* Always write to writeBuffer if there is no transformation */
-    if(conn->trasformationType == NO_TRANSFORM || state == METHOD || state == HEADERS) {
+    if(conn->trasformationType == NO_TRANSFORM || state == METHOD_P || state == HEADERS_P) {
         printf("NO_TRANSFROM -> copyTempToWrite()\n");
         state = copyTempToWriteBuff(key);
         if(state == PARSER_ERROR) {
@@ -246,7 +246,7 @@ unsigned readFromOrigin(struct selector_key * key) {
     }
 
     /* If im in body write to inTransformBuffer */
-    if(state == BODY) {
+    if(state == BODY_P) {
         if(conn->trasformationType == NO_TRANSFORM) {
             state = copyTempToWriteBuff(key);
         } else {
@@ -317,7 +317,7 @@ unsigned writeToClient(struct selector_key * key) {
 	uint8_t *ptr;
 	size_t count;
 	ssize_t  n;
-    enum parserState state = HEADERS;// buscarlo con funcion del parser
+    enum parserState state = METHOD_P;// buscarlo con funcion del parser
     enum parserState originalState = state;
 
     printf("Write to client\n");
@@ -334,7 +334,7 @@ unsigned writeToClient(struct selector_key * key) {
     printf("%d bytes send to client\n", (int) n);
 
     /* Copy from temp if it's on headers or no transformation */
-    if(conn->trasformationType == NO_TRANSFORM || state == HEADERS || state == METHOD) {
+    if(conn->trasformationType == NO_TRANSFORM || state == HEADERS_P || state == METHOD_P) {
 
         printf("CopyTempToWriteBuff()\n");
 
@@ -345,7 +345,7 @@ unsigned writeToClient(struct selector_key * key) {
     }
 
     /* I have not enterd in the above if and I'm in the body */
-    if(conn->trasformationType != NO_TRANSFORM && originalState == BODY) {
+    if(conn->trasformationType != NO_TRANSFORM && originalState == BODY_P) {
         printf("copyTransformToWriteBuffer() since im in body\n");
         if(!copyTransformToWriteBuffer(key)) {
             return ERROR;
@@ -353,14 +353,14 @@ unsigned writeToClient(struct selector_key * key) {
     }
 
     /* If the parser changed state to body and there is no transformation */
-    if(conn->trasformationType != NO_TRANSFORM && originalState != BODY && state == BODY) {
+    if(conn->trasformationType != NO_TRANSFORM && originalState != BODY_P && state == BODY_P) {
         if(copyTempToTransformBuff(key) == PARSER_ERROR) {
             return ERROR;
         }
     }
 
     /* Fix parser stop reading when changing to body */
-    if(conn->trasformationType == NO_TRANSFORM && state == BODY) {
+    if(conn->trasformationType == NO_TRANSFORM && state == BODY_P) {
         printf("fix parser stop when changing to body \n");
         if(copyTempToWriteBuff(key) == PARSER_ERROR) {
             return ERROR;

@@ -26,7 +26,7 @@ enum headerGroup_state
 end(const uint8_t c, struct headerGroup_parser *p);
 
 struct header_list *
-header_list_add(struct header_list * list , u_int32_t name, char * value, int len);
+header_list_add(struct header_list * list , uint32_t name, char * value, int len);
 
 
 enum headerGroup_state
@@ -174,7 +174,7 @@ header_list_destroy(struct header_list *pList) {
     }
 }
 struct header_list *
-header_list_add(struct header_list * list , u_int32_t name, char * value, int len){
+header_list_add(struct header_list * list , uint32_t name, char * value, int len){
     if(list == NULL){
         list = malloc(sizeof(struct header_list));
         list->name = name;

@@ -4,25 +4,25 @@
 
 #ifndef PC_2018_04_MULTI_PARSER_H
 #define PC_2018_04_MULTI_PARSER_H
-
-#include "parser_utils.h"
 #include <stdlib.h>
+#include <stdint.h>
+#include "parser_utils.h"
 
 
 struct multi_parser{
     struct parser_data_list * list;
-    u_int32_t currentMatch;
+    uint32_t currentMatch;
     
-    u_int32_t notMatch;
+    uint32_t notMatch;
 };
 
 
 
 
-extern u_int32_t
+extern uint32_t
 multi_parser_feed(const uint8_t c, struct multi_parser* p);
 
-extern u_int32_t
+extern uint32_t
 multi_parser_consume(char * string, struct multi_parser* p);
 
 extern void

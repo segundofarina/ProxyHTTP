@@ -89,11 +89,11 @@ void * solveDNS(void * data) {
     };
 
     char buff[7];
-    snprintf(buff, sizeof(buff), "%d", ntohs(conn->requestParser.reqParser.requestData.destPort));
+    snprintf(buff, sizeof(buff), "%d", ntohs(conn->requestParser.reqParser.destintation.destPort));
 
     printf("[NEW THREAD] getAddrInfo\n");
 
-    getaddrinfo(conn->requestParser.reqParser.requestData.destAddr.fqdn, buff, &hints, &conn->origin_resolution);
+    getaddrinfo(conn->requestParser.reqParser.destintation.destAddr.fqdn, buff, &hints, &conn->origin_resolution);
 
 
     printf("[NEW THREAD] notify block");
@@ -108,7 +108,7 @@ void * solveDNS(void * data) {
 int startOriginConnection(struct selector_key * key) {
     pthread_t tid;
     struct Connection * conn = DATA_TO_CONN(key);
-    struct requestData * rData = &(conn->requestParser.reqParser.requestData);
+    struct requestData * rData = &(conn->requestParser.reqParser.destintation);
     int ret = 0;
     struct selector_key * k;
 
@@ -162,7 +162,7 @@ unsigned requestRead(struct selector_key * key) {
 
     buffer_write_adv(&conn->readBuffer, n);
     
-    request_parser_consume(&conn->requestParser.reqParser, ptr, n);
+    request_parser_consume(&conn->requestParser.reqParser, (char *)ptr, n);
 
 /* DEBUGING *
 ptr[n] = 0;
@@ -214,7 +214,7 @@ if(strstr(ptr, "\r\n\r\n") != NULL) {
 
     /* Check if I should still listen to the client. Only if buffer is not full and the request is not done */
     fd_interest cliInterest = OP_NOOP;
-    if(buffer_can_write(&conn->readBuffer) && !parserIsRequestDone()) {
+    if(buffer_can_write(&conn->readBuffer) && !parserIsRequestDone(conn->requestParser.reqParser)) {
         cliInterest = OP_READ;
     }
 
@@ -319,7 +319,7 @@ printf("request write called\n");
 
 
     /* If the request is not done enable client to read */
-    if(!parserIsRequestDone()) {
+    if(!parserIsRequestDone(conn->requestParser.reqParser)) {
         if(selector_set_interest(key->s, conn->clientFd, OP_READ) != SELECTOR_SUCCESS) { 
             return ERROR;
         }
@@ -332,7 +332,7 @@ printf("request write called\n");
     }
 
     /* If the buffer is empty and the request is done move to response state */
-    if(!buffer_can_read(&conn->readBuffer) && parserIsRequestDone()) {
+    if(!buffer_can_read(&conn->readBuffer) && parserIsRequestDone(conn->requestParser.reqParser)) {
         originInterst = OP_READ;
         ret = RESPONSE;
     }
