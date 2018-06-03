@@ -177,7 +177,7 @@ if(strstr(ptr, "\r\n\r\n") != NULL) {
     printf("found end of request\n");
     isDone = 1;
 }
-/* END DEBUGING */
+ END DEBUGING */
 
     if(!parserHasOrigin(conn->requestParser.reqParser)) { // si no tengo el origin y no lo puedo tener de la request
         printf("Parser needs origin\n");

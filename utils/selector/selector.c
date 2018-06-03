@@ -47,9 +47,13 @@ selector_error(const selector_status status) {
     return msg;
 }
 
-
+/*
 static void
 wake_handler(const int signal) {
+    // nada que hacer. está solo para interrumpir el select
+}*/
+static void
+wake_handler() {
     // nada que hacer. está solo para interrumpir el select
 }
 
