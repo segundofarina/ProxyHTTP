@@ -162,7 +162,7 @@ unsigned requestRead(struct selector_key * key) {
     buffer_write_adv(&conn->readBuffer, n);
     //parseRequest(ptr, n);
 
-/* DEBUGING */
+/* DEBUGING *
 ptr[n] = 0;
 printf("read from client:%s \n", ptr);
 conn->requestParser.requestData.destAddrType = DOMAIN;
@@ -175,7 +175,7 @@ if(strstr(ptr, "\r\n\r\n") != NULL) {
     printf("found end of request\n");
     isDone = 1;
 }
-/* END DEBUGING */
+ END DEBUGING */
 
     if(!parserHasOrigin()) { // si no tengo el origin y no lo puedo tener de la request
         printf("Parser needs origin\n");
