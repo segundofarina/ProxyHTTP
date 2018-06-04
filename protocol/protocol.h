@@ -5,6 +5,8 @@
 #ifndef PC_2018_04_PROTOCOL_H
 #define PC_2018_04_PROTOCOL_H
 
+#include <stdint.h>
+
 /*
  *	Byte oriented protocol.
  *
@@ -34,6 +36,7 @@
  *	15) admin log in + password
  *
  *	Server-Side (responses)
+ *	100) error
  *	101) help
  *	102)	metrics
  *	103)		active clients
@@ -47,7 +50,29 @@
  *	111)	active configuration
  *	112)	set configuration
  *	113)	transformation list
- *	114) 	admin log in + accept
+ *	114)	transformation set
+ *	115) 	admin log in + accept
  */
+
+typedef enum {HELP = 1,
+	METRICS, ACTIVE_CLIENTS, TRANSFRRD_BYTES, CLIENT_BYTES_READ, SERVER_BYTES_WRITTEN,
+	COUNT_GET, COUNT_HEAD, COUNT_POST, HISTORY_CONNECTS,
+	ACTIVE_CONFIG, SET_CONFIG, TRANSF_LIST, SET_TRANSF, ADMIN_LOG_IN
+} clientInstruction;
+
+typedef enum {ERROR = 100, HELP,
+	METRICS, ACTIVE_CLIENTS, TRANSFRRD_BYTES, CLIENT_BYTES_READ, SERVER_BYTES_WRITTEN,
+	COUNT_GET, COUNT_HEAD, COUNT_POST, HISTORY_CONNECTS,
+	ACTIVE_CONFIG, SET_CONFIG, TRANSF_LIST, TRANSF_SET, ADMIN_LOGGED_IN
+} serverResponse;
+
+/*
+ *	Struct For Message Passing
+ */
+typedef struct protMsg {
+	uint8_t instruction;
+	uint16_t length;
+	void * data;
+} Msg;
 
 #endif //PC_2018_04_PROTOCOL_H
