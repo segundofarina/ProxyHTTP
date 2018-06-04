@@ -3,8 +3,11 @@
 #include <string.h>
 #include <arpa/inet.h>
 
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <sys/types.h>
 #include <signal.h>
+#include <errno.h>
 
 #include "proxyPassiveHandlers.h"
 #include "proxyActiveHandlers.h"
@@ -17,8 +20,9 @@
 
 static int poolSize = 0;
 static struct Connection * pool = NULL;
+static int spareFd = -1;
 
-static enum TransformationType transformationType = TRANSFORM_CAT;
+static enum TransformationType transformationType = NO_TRANSFORM;
 
 struct Connection * new_connection(const int clientFd) {
 	struct Connection * connection;
@@ -133,6 +137,25 @@ void destroy_connection(struct selector_key * key) {
 	}
 }
 
+/* Keep spare fd to avoid problems when max fd amount reached */
+void keepSpareFd() {
+	if(spareFd == -1) {
+		spareFd = open("/dev/null", O_RDONLY);
+	}
+}
+
+void handleAcceptEmfile(int fd, struct sockaddr * clientAddr, socklen_t  * clientAddrLen) {
+	/* Close spareFd, to get new fd to accept the connection */
+	close(spareFd);
+	spareFd = accept(fd, clientAddr, clientAddrLen);
+
+	/* Close accepted connection */
+	close(spareFd);
+	spareFd = -1;   
+	
+	/* Open again spareFd for future errors */
+	keepSpareFd();
+}
 
 void proxyPassiveAccept(struct selector_key *key) {
 	struct sockaddr_storage clientAddr;
@@ -140,8 +163,14 @@ void proxyPassiveAccept(struct selector_key *key) {
 	struct Connection * connection = NULL;
 	struct selector_key errorKey;
 
+	keepSpareFd();
+
 	const int clientFd = accept(key->fd, (struct sockaddr*) &clientAddr, &clientAddrLen);
     if(clientFd == -1) {
+		if(errno == EMFILE) {
+			/* There are no available fd so close connection */
+			handleAcceptEmfile(key->fd, (struct sockaddr*) &clientAddr, &clientAddrLen);
+		}
         goto handle_errors;
     }
     if(selector_fd_set_nio(clientFd) == -1) {
@@ -183,6 +212,12 @@ void proxyPassiveAccept(struct selector_key *key) {
 
 	/* Used only as exception handler */
 	handle_errors:
+
+		if(connection == NULL && clientFd != -1) {
+			//it was never registerd to the selector
+			close(clientFd);
+			return;
+		}
 
 		errorKey.s = key->s;
 		errorKey.fd = key->fd;
