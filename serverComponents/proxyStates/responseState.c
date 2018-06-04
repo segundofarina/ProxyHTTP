@@ -223,7 +223,7 @@ unsigned readFromOrigin(struct selector_key * key) {
 	if(n <= 0) {
         /* origin close connection */
         printf("[ERROR] {response} recv got 0 bytes\n");
-        return setError(key, BAD_GATEWAY_502);
+        return FATAL_ERROR;
 	}
     buffer_write_adv(&conn->respTempBuffer, n);
 
