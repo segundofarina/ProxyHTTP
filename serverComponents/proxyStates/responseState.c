@@ -9,6 +9,7 @@
 #include <arpa/inet.h>
 
 #include "responseState.h"
+#include "errorState.h"
 
 #include "../connection-structure.h"
 #include "../proxyStm.h"
@@ -17,23 +18,11 @@
 
 #include "../../parser/response.h"
 
-/* Esto va en response parser *
-enum parserState {
-    METHOD_P,
-    HEADERS_P,
-    BODY_P,
-    PARSER_DONE,
-    PARSER_ERROR
-};
-* End */
-
 int pareserResponseIsDone(struct response_parser parser) {
     return parser.state == response_done;
 }
 
 enum response_state parser_consume(struct response_parser * parser, char * ptrToParse, int * bytesToParse, char * ptrFromParse, int * parsedBytes) {
-    //memcpy(ptrFromParse, ptrToParse, *bytesToParse);
-    //*parsedBytes = *bytesToParse;
     printf("parser_consume()\n");
     
     enum response_state state = response_parser_consume(parser, ptrToParse, *bytesToParse, ptrFromParse, parsedBytes);
@@ -234,7 +223,7 @@ unsigned readFromOrigin(struct selector_key * key) {
 	if(n <= 0) {
         /* origin close connection */
         printf("[ERROR] {response} recv got 0 bytes\n");
-        return ERROR;
+        return setError(key, BAD_GATEWAY_502);
 	}
     buffer_write_adv(&conn->respTempBuffer, n);
 
@@ -246,7 +235,7 @@ unsigned readFromOrigin(struct selector_key * key) {
         printf("NO_TRANSFROM -> copyTempToWrite()\n");
         state = copyTempToWriteBuff(key);
         if(state == response_error) {
-            return ERROR;
+            return setError(key, INTERNAL_SERVER_ERR_500);
         }
     }
 
@@ -262,7 +251,7 @@ unsigned readFromOrigin(struct selector_key * key) {
         printf("end buffer copy\n");
         if(state == response_error) {
             printf("state == response_error\n");
-            return ERROR;
+            return setError(key, INTERNAL_SERVER_ERR_500);
         }
     }
     printf("Done origin read\n");
@@ -284,14 +273,14 @@ unsigned readFromTranformation(struct selector_key * key) {
     if(n == 0) {
         /* transformation closed connection. unregister it from the selector and close it */
         if(selector_unregister_fd(key->s, key->fd) != SELECTOR_SUCCESS) {
-            return ERROR;
+            return setError(key, INTERNAL_SERVER_ERR_500);
         }
         //close(conn->readTransformFd);
         conn->readTransformFd = -1;
     }
 	if(n < 0) {
         printf("[ERROR] {transformation} recv got 0 bytes\n");
-        return ERROR;
+        return setError(key, INTERNAL_SERVER_ERR_500);
 	}
     buffer_write_adv(&conn->outTransformBuffer, n);
 
@@ -300,7 +289,7 @@ unsigned readFromTranformation(struct selector_key * key) {
     printf("[RESPONSE] got response from origin. Size: %d\n", (int) n);
 
     if(!copyTransformToWriteBuffer(key)) {
-        return ERROR;
+        return setError(key, INTERNAL_SERVER_ERR_500);
     }
 
     return RESPONSE;
@@ -320,7 +309,7 @@ unsigned responseRead(struct selector_key * key) {
         return readFromTranformation(key);
     } else {
         /* Error */
-        return ERROR;
+        return setError(key, INTERNAL_SERVER_ERR_500);
     }
 }
 
@@ -339,7 +328,7 @@ unsigned writeToClient(struct selector_key * key) {
 	n = send(key->fd, ptr, count, MSG_NOSIGNAL);
 	if(n <= 0) { // transformation closed connection
         printf("[ERROR] {response} send got 0 bytes\n");
-        return ERROR;
+        return setError(key, INTERNAL_SERVER_ERR_500);
 	}
     buffer_read_adv(&conn->writeBuffer, n);
 
@@ -352,7 +341,7 @@ unsigned writeToClient(struct selector_key * key) {
 
         state = copyTempToWriteBuff(key);
         if(state == response_error) {
-            return state;
+            return setError(key, INTERNAL_SERVER_ERR_500);
         }
     }
 
@@ -360,7 +349,7 @@ unsigned writeToClient(struct selector_key * key) {
     if(conn->trasformationType != NO_TRANSFORM && originalState == response_body) {
         printf("copyTransformToWriteBuffer() since im in body\n");
         if(!copyTransformToWriteBuffer(key)) {
-            return ERROR;
+            return setError(key, INTERNAL_SERVER_ERR_500);
         }
     }
 
@@ -368,7 +357,7 @@ unsigned writeToClient(struct selector_key * key) {
     if(conn->trasformationType != NO_TRANSFORM && originalState != response_body && state == response_body) {
         printf("NO_TRNSFROM -> copyTempToTransformBuff()\n");
         if(copyTempToTransformBuff(key) == response_error) {
-            return ERROR;
+            return setError(key, INTERNAL_SERVER_ERR_500);
         }
     }
 
@@ -376,7 +365,7 @@ unsigned writeToClient(struct selector_key * key) {
     if(conn->trasformationType == NO_TRANSFORM && state == response_body) {
         printf("fix parser stop when changing to body \n");
         if(copyTempToWriteBuff(key) == response_error) {
-            return ERROR;
+            return setError(key, INTERNAL_SERVER_ERR_500);
         }
     }
 
@@ -388,7 +377,7 @@ unsigned writeToClient(struct selector_key * key) {
         interest = OP_WRITE;
     }
     if(selector_set_interest_key(key, interest) != SELECTOR_SUCCESS) {
-        return ERROR;
+        return setError(key, INTERNAL_SERVER_ERR_500);
     }
 
     /* Check if it's done */
@@ -415,7 +404,7 @@ unsigned writeToTransformation(struct selector_key * key) {
     n = write(key->fd, ptr, count);
 	if(n <= 0) { // transformation closed connection
         printf("[ERROR] {response} send got 0 bytes\n");
-        return ERROR;
+        return setError(key, INTERNAL_SERVER_ERR_500);
 	}
     buffer_read_adv(&conn->inTransformBuffer, n);
 
@@ -424,7 +413,7 @@ unsigned writeToTransformation(struct selector_key * key) {
     /* I have free space in buffer, copy tempBuffer if it's not empty */
     if(copyTempToTransformBuff(key) == response_error) {
         printf("copy Temp to transform error\n");
-        return ERROR;
+        return setError(key, INTERNAL_SERVER_ERR_500);
     }
 
     /* If response is done and buffer is empty close writeTransformFd */
@@ -433,7 +422,7 @@ unsigned writeToTransformation(struct selector_key * key) {
         printf("close write Transform fd\n");
         if(selector_unregister_fd(key->s, conn->writeTransformFd) != SELECTOR_SUCCESS) {
             printf("unregister error\n");
-            return ERROR;
+            return setError(key, INTERNAL_SERVER_ERR_500);
         }
         conn->writeTransformFd = -1;
     }
@@ -441,7 +430,7 @@ unsigned writeToTransformation(struct selector_key * key) {
     /* Set interests */
     /* readTransformFd can read */
     if(selector_set_interest(key->s, conn->readTransformFd, OP_READ) != SELECTOR_SUCCESS) {
-        return ERROR;
+        return setError(key, INTERNAL_SERVER_ERR_500);
     }
 
     /* Avoid this if I have closed the fd */
@@ -454,7 +443,7 @@ unsigned writeToTransformation(struct selector_key * key) {
         }
         printf("set interest to fd: %d\n", key->fd);
         if(selector_set_interest_key(key, interest) != SELECTOR_SUCCESS) {
-            return ERROR;
+            return setError(key, INTERNAL_SERVER_ERR_500);
         }
     }
 
@@ -475,7 +464,7 @@ unsigned responseWrite(struct selector_key * key) {
         return writeToTransformation(key);
     } else {
         /* Error */
-        return ERROR;
+        return setError(key, INTERNAL_SERVER_ERR_500);
     }
 }
 

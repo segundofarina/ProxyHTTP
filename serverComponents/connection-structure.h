@@ -11,6 +11,7 @@
 #include "../utils/stm/stm.h"
 #include "../parser/request.h"
 #include "../parser/response.h"
+#include "proxyStates/errorState.h"
 
 
 enum TransformationType {
@@ -79,6 +80,9 @@ struct Connection {
     int writeTransformFd, readTransformFd;
     enum TransformationType trasformationType;
     int transformationPid;
+
+    /* Keep an error to inform to the client */
+    enum error_code errorCode;
     
     /* amount of references to this struct, if 1 it should be destroyed */
     unsigned references;

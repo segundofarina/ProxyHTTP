@@ -9,6 +9,7 @@
 #include <arpa/inet.h>
 
 #include "requestState.h"
+#include "errorState.h"
 
 #include "../connection-structure.h"
 #include "../proxyStm.h"
@@ -159,7 +160,7 @@ unsigned requestRead(struct selector_key * key) {
 	ptr = buffer_write_ptr(&conn->readBuffer, &count);
 	n = recv(key->fd, ptr, count, 0);
 	if(n <= 0) { // client closed connection
-        return ERROR;
+        return FATAL_ERROR;
 	}
 
     buffer_write_adv(&conn->readBuffer, n);
@@ -171,7 +172,8 @@ unsigned requestRead(struct selector_key * key) {
         if(buffer_can_write(&conn->readBuffer)) {
             return REQUEST;
         } else {
-            return ERROR;
+            //return ERROR;
+            return setError(key, REQ_HEADER_TOO_LONG_431);
         }
     }
 
@@ -180,7 +182,8 @@ unsigned requestRead(struct selector_key * key) {
         /* New thread to solve DNS */
         if(startOriginConnection(key) == 0) {
             printf("[ERROR] failed to connect to origin server\n");
-            return ERROR;
+            //return ERROR;
+            return setError(key, BAD_GATEWAY_502);
         }
     }
 
@@ -192,13 +195,13 @@ unsigned requestRead(struct selector_key * key) {
 
     /* Set client interest */
     if(selector_set_interest_key(key, cliInterest) != SELECTOR_SUCCESS) { 
-        return ERROR;
+        return setError(key, INTERNAL_SERVER_ERR_500);
     }
 
     /* Set origin interest */
     if(conn->originFd != -1) {
         if(selector_set_interest(key->s, conn->originFd, OP_WRITE) != SELECTOR_SUCCESS) { 
-            return ERROR;
+            return setError(key, INTERNAL_SERVER_ERR_500);
         }
     }
 	return REQUEST;
@@ -222,7 +225,7 @@ printf("request write called\n");
 
 	if(n <= 0) { // origin closed connection
         printf("origin closed connection\n");
-        return ERROR;
+        return setError(key, BAD_GATEWAY_502);
 	}
 
     buffer_read_adv(&conn->readBuffer, n);
@@ -233,7 +236,7 @@ printf("request write called\n");
     /* If the request is not done enable client to read */
     if(!parserIsRequestDone(conn->requestParser.reqParser)) {
         if(selector_set_interest(key->s, conn->clientFd, OP_READ) != SELECTOR_SUCCESS) { 
-            return ERROR;
+            return setError(key, INTERNAL_SERVER_ERR_500);
         }
     }
 
@@ -251,7 +254,7 @@ printf("request write called\n");
 
     /* Set origin fd interests */
     if(selector_set_interest_key(key, originInterst) != SELECTOR_SUCCESS) { 
-        return ERROR;
+        return setError(key, INTERNAL_SERVER_ERR_500);
     }
 
     return ret;
@@ -265,7 +268,7 @@ unsigned requestBlockReady(struct selector_key * key) {
     if(conn->origin_resolution == 0) {
         // resolution failed
         printf("DNS failed\n");
-        return ERROR;
+        return setError(key, BAD_REQUEST_400); //maybe should be 500
     }
 
     /* Save resolution */
@@ -279,7 +282,7 @@ printf("attempt connect to origin\n");
 
     if( !connectToOrigin(key) ) {
         printf("[ERROR] connection to origin failed\n");
-        return ERROR;
+        return setError(key, BAD_GATEWAY_502);
     }
     
     /* What to do next? */
@@ -287,7 +290,7 @@ printf("attempt connect to origin\n");
     /* Write buffered request to the origin server */
     if(selector_set_interest(key->s, conn->originFd, OP_WRITE) != SELECTOR_SUCCESS) {
         printf("[ERROR] failed to set interest to origin fd\n");
-        return ERROR;
+        return setError(key, INTERNAL_SERVER_ERR_500);
     }
 printf("still in request waiting to connect to origin server\n");
 
