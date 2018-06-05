@@ -36,14 +36,10 @@ void consume(char * string, struct response_parser * p){
 
 int main(){
 
-    char * encoding = "         chUnKed";
-
-    enum body_type type =getTransfEncoding(encoding);
-
-    printf("Encoding %d\n",type);
+    
 
 
-    struct response_parser * p = malloc(sizeof(struct response_parser));
+    struct response_parser  p;
 
 
     char * r302 =
@@ -64,11 +60,11 @@ int main(){
             "\r\n";
 
     printf("====================302 Response!!!=====================\n");
-    response_parser_init(p);
+    response_parser_init(&p);
 
-    consume(r302,p);
+    consume(r302,&p);
 
-    response_parser_close(p);
+    response_parser_close(&p);
 
     char * r200 = "HTTP/1.1 200 OK\r\n"
                   "Date: Fri, 01 Jun 2018 01:17:17 GMT\r\n"
@@ -114,11 +110,11 @@ int main(){
 
     printf("====================200 response=====================\n");
 
-    response_parser_init(p);
+    response_parser_init(&p);
 
-    consume(r200,p);
+    consume(r200,&p);
 
-    response_parser_close(p);
+    response_parser_close(&p);
 
 
 }

@@ -11,7 +11,7 @@ set(CMAKE_C_STANDARD 11)
 
 #set(CMAKE_C_FLAGS    "--std=c99 -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-unused-parameter -Wno-implicit-fallthrough -D_POSIX_C_SOURCE=200112L ")
 
-set(CMAKE_C_FLAGS "-pthread -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-unused-parameter -D_POSIX_C_SOURCE=200112L")
+set(CMAKE_C_FLAGS "-g -pthread -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-unused-parameter -D_POSIX_C_SOURCE=200112L")
 
 if(CMAKE_C_COMPILER_ID MATCHES "Clang")
     find_program(CLANGTIDY NAMES clang-tidy)
@@ -56,3 +56,18 @@ add_executable(proxy
         serverComponents/proxyStates/requestState.c
         serverComponents/proxyStates/responseState.c
         serverComponents/transformationFork.c)
+
+        add_executable(response
+        parser/parser.c
+        parser/parser_utils.c
+        parser/multi_parser.c
+        parser/header.c
+        parser/headerGroup.c
+        parser/body.c
+        parser/method.c
+        parser/statusLine.c
+        parser/response.c
+        parser/response_test.c
+        parser/identity.c
+        parser/chunkGroup.c
+        parser/chunk.c)

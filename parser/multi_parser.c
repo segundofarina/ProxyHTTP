@@ -11,7 +11,7 @@ struct parser_data_list {
 
     struct parser * p;
 
-    struct parser_definition * def;
+    struct parser_definition  def;
 
     uint32_t match;
 
@@ -74,11 +74,13 @@ multi_parser_init (struct multi_parser* p,  const int notMatch, char ** strings,
 
 
         struct parser_definition def =parser_utils_strcmpi(strings[i]);
+        
+        //current->def =parser_utils_strcmpi(strings[i]);
+        
+        //current->def = malloc(sizeof(struct parser_definition));
+        memcpy(&current->def,&def,sizeof(struct parser_definition));
 
-        current->def = malloc(sizeof(struct parser_definition));
-        memcpy(current->def,&def,sizeof(struct parser_definition));
-
-        current->p = parser_init(parser_no_classes(), current->def);
+        current->p = parser_init(parser_no_classes(), &current->def);
         current->match = matches[i];
 
         prev= current;
@@ -122,7 +124,7 @@ void parser_list_destroy( struct parser_data_list * list){
     }
 
     parser_destroy(list->p);
-    parser_utils_strcmpi_destroy(list->def);
+    parser_utils_strcmpi_destroy(&list->def);
     parser_list_destroy(list->next);
     free(list);
 
