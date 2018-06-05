@@ -14,16 +14,21 @@ typedef enum {HELP = 1,
 */
 
 /*
- *	BLOQUEANTE POR PRINTFS
+ *	BLOQUEANTE POR printfs	--> NO importa, corre aparte del proxy
  */
 void adminShell(struct protMsg * command) {
 	// clientInstruction ans = HELP;
 	char buffer[0xFF] = {0};
-	char password[0xFF] = {0};
+	// char password[0xFF] = {0};
 	int c = 0, i = 0;
-	int j;
-	int transformation = 0, aux = 0;
+	int j = 0;
+	// int transformation = 0;
+	int aux = 0;
 	void * transformationChoice;
+
+	command->instruction = ADMIN_APP_ERROR;
+	command->length = 0;
+	command->data = NULL;
 
 	printf("[Admin] $> ");
 	while((c = tolower(getchar())) != '\n' && i < 0xFF) {
@@ -81,6 +86,9 @@ void adminShell(struct protMsg * command) {
 	} else {
 		printf("Command not recognized! These are the recognized commands.\n");
 		command->instruction = ADMIN_REQUEST_HELP;
+	}
+	if(command->instruction == ADMIN_APP_ERROR) {
+		printf("ERROR\n");
 	}
 	command->length = 0;
 
