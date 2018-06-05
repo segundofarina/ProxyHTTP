@@ -19,24 +19,6 @@ enum TransformationType {
     TRANSFORM_CAT
 };
 
-/* Parte del request parser *
-enum addrType {
-    IPv4, IPv6, DOMAIN 
-};
-
-union socks_addr {
-    char fqdn[0xff];
-    struct sockaddr_in  ipv4;
-    struct sockaddr_in6 ipv6;
-};
-
-struct requestData {
-    enum addrType destAddrType;
-    union socks_addr destAddr;
-    in_port_t destPort;
-};
- end */
-
 struct httpRequestParser {
     struct request_parser reqParser;
     struct requestData requestData;
