@@ -70,7 +70,6 @@ typedef enum {SERVER_RESPONSE_ERROR = 100, SERVER_RESPONSE_HELP,
 
 /*
  *	Struct For Message Passing.
- *	TODO: decide on "data" size?
  */
 struct protMsg {
 	uint8_t instruction;
@@ -98,6 +97,6 @@ struct transformationList {
 	uint16_t value;
 	char * name;
 	struct transformationList * next;
-}
+};
 
 #endif //PC_2018_04_PROTOCOL_H

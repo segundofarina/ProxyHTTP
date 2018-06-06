@@ -284,7 +284,7 @@ hostData requestTarget_marshall(char * buffer, char * result, uint16_t resultLen
  *	Uses function inet_pton to turn the char* host into sockaddr_in[6] as required.
  */
 int fillRequestData_marshall(hostData addressType, char * host, uint16_t port, struct requestData * rdStruct) {
-	int i, errCode;
+	int i, errCode = 1;
 
 	switch(addressType) {
 		case ERROR_hostData:
