@@ -2,6 +2,7 @@
 
 #include "proxyStates/requestState.h"
 #include "proxyStates/responseState.h"
+#include "proxyStates/errorState.h"
 
 const struct state_definition proxyStatesHandlers[] = {
     {
@@ -18,9 +19,12 @@ const struct state_definition proxyStatesHandlers[] = {
         .on_arrival = responseArrival,
         .on_departure = responseDeparture
     },{
-        .state = DONE,
+        .state = DONE
     },{
         .state = ERROR,
+        .on_write_ready = errorWrite
+    },{
+        .state = FATAL_ERROR
     }
 };
 

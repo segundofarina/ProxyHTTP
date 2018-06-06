@@ -47,7 +47,7 @@ struct Connection * new_connection(const int clientFd) {
 	connection->originFd = -1;
 
 	connection->stm.initial = REQUEST;
-	connection->stm.max_state = ERROR;
+	connection->stm.max_state = FATAL_ERROR;
 	connection->stm.states = getProxyStates();
 	stm_init(&connection->stm);
 
@@ -74,6 +74,9 @@ struct Connection * new_connection(const int clientFd) {
 		}
 		printf("Done fork\n");
 	}
+
+	/* Still no error */
+	connection->errorCode = NO_ERROR;
 	
 	connection->references = 1;
 
