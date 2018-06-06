@@ -32,6 +32,9 @@ struct response_parser {
 
     struct header_list        * headerList;
 
+    char headerNameBuffer[20];
+    bool hasBeenDumped;
+    int headerBufferLen;
 
 
 };
@@ -47,7 +50,7 @@ response_parser_feed (const uint8_t c,struct response_parser *p);
 
 
 enum response_state
-response_parser_consume(struct response_parser *p, char * b,int len, char * writebuff, int * written);
+response_parser_consume(struct response_parser *p, char * b,int * len, char * writebuff, int * written);
 
 void
 response_parser_close(struct response_parser *p);

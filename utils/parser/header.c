@@ -5,15 +5,10 @@
 #include "multi_parser.h"
 #include "header.h"
 
-#define HOST_MAX 0xFF
-#define CONT_LEN_MAX 16
 
-#define HEADER_VALUE_LEN 1000
+#define HEADER_VALUE_LEN 1024
 
 
-//char * * list  = ( char *[]){"Host"      ,"Content-Length"};
-//int      types[] = {            HEADER_HOST, HEADER_CONT_LEN};
-//#define AMOUNT 2
 
 
 static enum header_state
@@ -22,23 +17,10 @@ name(const uint8_t c, struct header_parser* p) {
     switch (c) {
         case ':':
             next = header_value;
-
-            //////////////////////////////////////////////////////////////////////////////////////////////////////////
-            /*cambiar
-            if(p->name == HEADER_HOST){
-                p->value = malloc(sizeof(char) * HOST_MAX);
-                p->value_max_len= HOST_MAX;
-            }else if( p->name == HEADER_CONT_LEN){
-                p->value = malloc(sizeof(char) * CONT_LEN_MAX);
-                p->value_max_len = CONT_LEN_MAX;
-            } else{
-                p->value = NULL;
-            }
-             */
             if(p->name == p->nameParser->notMatch){
                 p->value = NULL;
             } else{
-                p->value= malloc(sizeof(char )* HEADER_VALUE_LEN);//////////////////////////cambiar
+                p->value= malloc(sizeof(char )* HEADER_VALUE_LEN);
             }
             break;
         default:

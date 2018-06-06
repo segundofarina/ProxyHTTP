@@ -24,6 +24,7 @@ void chunk_parser_init (struct chunk_parser * p){
     p->bytes_read = 0;
     p->state = chunk_bytes;
     p->last = false;
+    p->shouldKeep = false;
 }
 
 void chunk_parser_feed(const char c, struct chunk_parser* p){
@@ -43,12 +44,14 @@ void chunkExtension(const char c, struct chunk_parser *p){
     if(c == '\r'){
         p->prev = chunk_extension;
         p->state = chunk_crlf;
+        p->shouldKeep = false;
         return;
     }
 }
 
 void breakLine(const char c, struct chunk_parser *p){
     if(c == '\n'){
+        p->shouldKeep = false;
         switch(p->prev){
             case chunk_bytes: p->state = chunk_data; break;
             case chunk_extension:  p->state = chunk_data; break;
@@ -62,10 +65,12 @@ void breakLine(const char c, struct chunk_parser *p){
 
 void countData(const char c, struct chunk_parser *p) {
     if(p->bytes_read < p->bytes_declared) {
+        p->shouldKeep = true;
         p->bytes_read++;
         return;
     }
     if(c == '\r'){
+        p->shouldKeep =false;
         p->prev = chunk_data;
         p->state = chunk_crlf;
         return;

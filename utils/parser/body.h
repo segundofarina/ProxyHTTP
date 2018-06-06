@@ -6,6 +6,7 @@
 #define PC_2018_04_BODY_H
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "identity.h"
 #include "chunkGroup.h"
 
@@ -29,6 +30,8 @@ struct body_parser{
 
     struct identity_parser *identityParser;
     struct chunkGroup_parser * chunkGroupParser;
+
+    bool shouldKeep;
 
 };
 

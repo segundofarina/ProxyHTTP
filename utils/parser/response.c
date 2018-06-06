@@ -8,66 +8,78 @@
 #include <ctype.h>
 
 
-
-
 #include "headerGroup.h"
 #include "multi_parser.h"
 #include "response.h"
 #include "statusLine.h"
 
 
-enum header_name{
+enum header_name {
     HEADER_CONT_LEN,
     HEADER_TRANSF_ENC,
-    HEADER_NOT_INTERESTED
+    HEADER_NOT_INTERESTED,
+    HEADER_CONT_ENCONDING,
+    HEADER_CONNECTION
 
 };
 
 
-char * * headerNames  = ( char *[]){"Content-Length","Transfer-Encoding"};
-int      types[] = {          HEADER_CONT_LEN,HEADER_TRANSF_ENC};
-#define HEADERS_AMOUNT 2
+char **headerNames = (char *[]) {"Content-Length", "Transfer-Encoding", "Content-Encoding", "Connection"};
+int types[] = {HEADER_CONT_LEN, HEADER_TRANSF_ENC, HEADER_CONT_ENCONDING, HEADER_CONNECTION};
+int ignoerd[] = {HEADER_CONT_LEN, HEADER_CONNECTION};
+#define HEADERS_AMOUNT 4
+#define HEADER_IGNORED 2
+
+
+bool isIgnored(enum header_name name) {
+    for (int i = 0; i < HEADER_IGNORED; i++) {
+        if (name == ignoerd[i]) {
+            return true;
+        }
+    }
+    return false;
+}
 
 enum body_type
-getTransfEncoding(char * value){
+getTransfEncoding(char *value) {
 
     struct multi_parser p;
-    enum transf_types{
+    enum transf_types {
         transf_chunk,
         transf_notIntrested,
 
     };
-    char * * transfNames  = ( char *[]){"Chunked"      };
-    int      types[] = {            body_type_chunked};
+    char **transfNames = (char *[]) {"Chunked"};
+    int types[] = {body_type_chunked};
     int len = 1;
     int i;
 
-    for(i=0;value[i] !=0 && value[i]==' ';i++);
+    for (i = 0; value[i] != 0 && value[i] == ' '; i++);
 
-    multi_parser_init(&p,body_type_identity,transfNames,types,len);
+    multi_parser_init(&p, body_type_identity, transfNames, types, len);
 
-    enum body_type result= multi_parser_consume(value+i,&p);
+    enum body_type result = multi_parser_consume(value + i, &p);
 
     return result;
 
 }
 
 
-int parseInt(const char * b){
+int parseInt(const char *b) {
     int num = -1;
     int i = 0;
 
-    if(b == NULL){
+    if (b == NULL) {
         return -1;
     }
 
-    while(b[i] != 0){
-        if(isdigit(b[i])){
-            if(num == -1){
+    while (b[i] != 0) {
+        if (isdigit(b[i])) {
+            if (num == -1) {
                 num = 0;
             }
-            num = num*10 + b[i]-'0';
-        }else if(b[i] != ' '){
+            num = num * 10 + b[i] - '0';
+        } else if (b[i] != ' ') {
             return -1;
         }
         i++;
@@ -78,12 +90,14 @@ int parseInt(const char * b){
 }
 
 enum body_type
-getBodyType(struct header_list * list){
+getBodyType(struct header_list *list) {
 
-    if(list == NULL){
+    if (list == NULL) {
         return body_type_error;
     }
-    if(list->name == HEADER_TRANSF_ENC ){
+    if (list->name == HEADER_TRANSF_ENC) {
+        return getTransfEncoding(list->value);
+    } else if (list->name == HEADER_CONT_ENCONDING) {
         return getTransfEncoding(list->value);
     }
     return getBodyType(list->next);
@@ -93,26 +107,25 @@ getBodyType(struct header_list * list){
  * returns -1 if it's not present or it's value is in an incorrect format
  */
 int
-getContentLength(struct header_list *list){
-    if(list == NULL){
+getContentLength(struct header_list *list) {
+    if (list == NULL) {
         return -1;
-    } else if(list->name == HEADER_CONT_LEN){
+    } else if (list->name == HEADER_CONT_LEN) {
         return parseInt(list->value);
     }
     return getContentLength(list->next);
 }
 
 
-
 enum response_state
-statusLine(const uint8_t c,struct response_parser *p) {
+statusLine(const uint8_t c, struct response_parser *p) {
     enum response_state next;
-    enum statusLine_state state =statusLine_parser_feed(c,p->statusLineParser);
-    switch(state){
+    enum statusLine_state state = statusLine_parser_feed(c, p->statusLineParser);
+    switch (state) {
         case sl_end:
 
             statusLine_parser_close(p->statusLineParser);
-            headerGroup_parser_init(p->headerParser,HEADER_NOT_INTERESTED,headerNames,types,HEADERS_AMOUNT);
+            headerGroup_parser_init(p->headerParser, HEADER_NOT_INTERESTED, headerNames, types, HEADERS_AMOUNT);
             next = response_headers;
             break;
         default:
@@ -123,28 +136,34 @@ statusLine(const uint8_t c,struct response_parser *p) {
 }
 
 enum response_state
-headers(const uint8_t c,struct response_parser *p){
+headers(const uint8_t c, struct response_parser *p) {
     enum response_state next;
-    enum headerGroup_state state = headerGroup_parser_feed(c,p->headerParser);
+    enum headerGroup_state state = headerGroup_parser_feed(c, p->headerParser);
     switch (state) {
         case headerGroup_end:
-            p->headerList=p->headerParser->list;
+            p->headerList = p->headerParser->list;
             headerGroup_parser_close(p->headerParser);
             int type = getBodyType(p->headerList);
             int len = getContentLength(p->headerList);
-            if(type == body_type_chunked || len >0){
+            if (type == body_type_chunked || len > 0) {
 
-                p->bodyParser = malloc(sizeof (struct body_parser));
-                body_parser_init(p->bodyParser,type,len);
+                p->bodyParser = malloc(sizeof(struct body_parser));
+                body_parser_init(p->bodyParser, type, len);
 
                 next = response_body;
-            }else{
+            } else {
                 next = response_done;
             }
             break;
         case headerGroup_error:
             next = response_error;
             break;
+//        case headerGroup_header:
+//            if(p->headerParser->headerParser->state == header_end){
+//                p->hasBeenDumped=false;
+//                p->headerBufferLen=0;
+//            }
+
         default:
             next = response_headers;
             break;
@@ -155,11 +174,11 @@ headers(const uint8_t c,struct response_parser *p){
 
 
 enum response_state
-body(const uint8_t c,struct response_parser *p) {
+body(const uint8_t c, struct response_parser *p) {
     enum response_state next;
-    enum body_state state= body_parser_feed(c,p->bodyParser);
+    enum body_state state = body_parser_feed(c, p->bodyParser);
 
-    switch(state){
+    switch (state) {
         case body_end:
             body_parser_close(p->bodyParser);
             next = response_done;
@@ -176,7 +195,7 @@ body(const uint8_t c,struct response_parser *p) {
 }
 
 enum response_state
-done( const uint8_t c,struct response_parser *p) {
+done(const uint8_t c, struct response_parser *p) {
     enum response_state next;
     next = response_error;
     return next;
@@ -190,27 +209,30 @@ response_parser_init(struct response_parser *p) {
     p->statusLineParser = malloc(sizeof(struct statusLine_parser));
     p->headerParser = malloc(sizeof(struct headerGroup_parser));
 
+    p->headerList = NULL;
+    p->hasBeenDumped = false;
+    p->headerBufferLen = 0;
     statusLine_parser_init(p->statusLineParser);
+
 }
 
 
-
 enum response_state
-response_parser_feed (const uint8_t c, struct response_parser *p){
+response_parser_feed(const uint8_t c, struct response_parser *p) {
     enum response_state next;
 
-    switch(p->state) {
+    switch (p->state) {
         case response_statusLine:
-            next = statusLine(c,p);
+            next = statusLine(c, p);
             break;
         case response_headers:
-            next = headers(c,p);
+            next = headers(c, p);
             break;
         case response_body:
-            next = body(c,p);
+            next = body(c, p);
             break;
         case response_done:
-            next = done(c,p);
+            next = done(c, p);
             break;
         default:
             next = response_error;
@@ -220,8 +242,8 @@ response_parser_feed (const uint8_t c, struct response_parser *p){
 }
 
 void
-response_parser_close(struct response_parser *p){
-    if(p != NULL){
+response_parser_close(struct response_parser *p) {
+    if (p != NULL) {
         header_list_destroy(p->headerList);
     }
 
@@ -229,9 +251,9 @@ response_parser_close(struct response_parser *p){
 
 
 char *
-response_state_string(enum response_state state){
-    char * resp;
-    switch(state) {
+response_state_string(enum response_state state) {
+    char *resp;
+    switch (state) {
         case response_statusLine:
             resp = "Status Line";
             break;
@@ -255,19 +277,92 @@ response_state_string(enum response_state state){
 }
 
 
-
 enum response_state
-response_parser_consume(struct response_parser *p, char * b,int len, char * writebuff, int * written){
-    int i;
-    for(i =0 ; i<len ; i++){
-        p->prevState= p->state;
-        response_parser_feed(b[i],p);
-        writebuff[i]=b[i];
-        if(p->prevState == response_headers && p->state == response_body){
-            // breaking so the proxy knows the header has begun
+response_parser_consume(struct response_parser *p, char *b, int *len, char *writebuff, int *written) {
+    int i, j;
+    for (i = 0, j = 0; i < *len; i++) {
+        p->prevState = p->state;
+        response_parser_feed(b[i], p);
+
+
+/*DEBUG---
+        char letter = b[i];
+        if(letter == '\n'){
+            letter = 'N';
+        }else if (letter == '\r'){
+            letter = 'R';
+        }
+        printf("feeded %c state now is %s\n",letter,response_state_string(p->state));
+
+*/
+
+        if (p->prevState == response_headers &&
+            (p->headerParser->state == headerGroup_header || p->headerParser->state == headerGroup_init)) {
+
+            enum header_state state = p->headerParser->headerParser->state;
+            switch (state) {
+                case header_name:
+
+                    if (p->headerBufferLen < 20) {
+                        p->headerNameBuffer[p->headerBufferLen++] = b[i];
+                    } else {
+                        if (!p->hasBeenDumped) {
+                            memcpy(writebuff + j, p->headerNameBuffer, p->headerBufferLen);
+                            p->hasBeenDumped = true;
+                            j += p->headerBufferLen;
+                            p->headerBufferLen = 0;
+                        }
+
+                        writebuff[j++] = b[i];
+
+                    }
+                    break;
+                case header_value:
+                    if (!isIgnored((enum header_name) p->headerParser->headerParser->nameParser->currentMatch)) {
+                        if (!p->hasBeenDumped) {
+                            memcpy(writebuff + j, p->headerNameBuffer, p->headerBufferLen);
+                            p->hasBeenDumped = true;
+                            j += p->headerBufferLen;
+                        }
+                        writebuff[j++] = b[i];
+                    } else {
+                        p->hasBeenDumped = true;
+                    }
+                    break;
+
+                default:
+                    if (!isIgnored((enum header_name) p->headerParser->headerParser->nameParser->currentMatch)) {
+                        p->hasBeenDumped = false;
+                        p->headerBufferLen = 0;
+                        writebuff[j++] = b[i];
+                    }
+                    break;
+            }
+
+
+        } else if (p->prevState == response_body) {
+
+            if (p->bodyParser->shouldKeep) {
+                writebuff[j++] = b[i];
+            }
+        } else {
+            writebuff[j++] = b[i];
+        }
+
+
+        if (p->prevState == response_headers && p->state == response_body) {
+            // breaking so the proxy knows the body has begun
+            i++;
+            break;
+        }
+        if (p->state == response_error) {
+            //printf("[RESPONSE PARSER]The parser state is  response_error\n");
             break;
         }
     }
-    *written = i;
+    *written = j;
+    *len = i;
+
+
     return p->state;
 }

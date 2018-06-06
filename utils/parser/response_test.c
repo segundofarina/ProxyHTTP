@@ -121,4 +121,133 @@ int main(){
     response_parser_close(p);
 
 
+    char * r301 = "HTTP/1.1 301 Moved Permanently\r\n"
+                  "Location: http://www.google.com/\r\n"
+                  "Content-Type: text/html; charset=UTF-8\r\n"
+                  "Date: Sun, 03 Jun 2018 04:35:48 GMT\r\n"
+                  "Expires: Tue, 03 Jul 2018 04:35:48 GMT\r\n"
+                  "Cache-Control: public, max-age=2592000\r\n"
+                  "Server: gws\r\n"
+                  "Content-Length: 219\r\n"
+                  "X-XSS-Protection: 1; mode=block\r\n"
+                  "X-Frame-Options: SAMEORIGIN\r\n"
+                  "\r\n"
+                  "<HTML><HEAD><meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">\n"
+                  "<TITLE>301 Moved</TITLE></HEAD><BODY>\n"
+                  "<H1>301 Moved</H1>\n"
+                  "The document has moved\n"
+                  "<A HREF=\"http://www.google.com/\">here</A>.\n"
+                  "</BODY></HTML>\n"
+                  "\r\n";
+
+    response_parser_init(p);
+
+    consume(r301,p);
+
+    response_parser_close(p);
+
+
+
+
+    char * aux = "<HTML><HEAD><meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">\n"
+                 "<TITLE>301 Moved</TITLE></HEAD><BODY>\n"
+                 "<H1>301 Moved</H1>\n"
+                 "The document has moved\n"
+                 "<A HREF=\"http://www.google.com/\">here</A>.\n"
+                 "</BODY></HTML>\n"
+                 "\r\n";
+
+
+    char * aux2 = "HTTP/1.1 301 Moved Permanently\r\n"
+                  "Location: http://www.google.com/\r\n"
+                  "Content-Type: text/html; charset=UTF-8\r\n"
+                  "Date: Sun, 03 Jun 2018 04:35:48 GMT\r\n"
+                  "Expires: Tue, 03 Jul 2018 04:35:48 GMT\r\n"
+                  "Cache-Control: public, max-age=2592000\r\n"
+                  "Server: gws\r\n"
+                  "Content-Length: 219\r\n"
+                  "X-XSS-Protection: 1; mode=block\r\n"
+                  "X-Frame-Options: SAMEORIGIN\r\n"
+                  "\r\n";
+
+
+
+    printf("aux len%d\n",(int)strlen(aux));
+    printf("aux len%d\n",(int)strlen(aux2));
+
+    char *headers;
+    int headersWritten =0;
+    char *body;
+    int bodyWritten=0;
+    int len,len2;
+
+    headers = calloc(1024, sizeof(char));
+    body= calloc(1024, sizeof(char));
+
+    response_parser_init(p);
+
+    len =strlen(r301);
+    response_parser_consume(p,r301,&len,headers,&headersWritten);
+    printf("amount wirtten is %d\n",headersWritten);
+    printf("parsed headers is\n%s",headers);
+
+
+    len2=strlen(r301+len);
+    response_parser_consume(p,r301+len,&len2,body,&bodyWritten);
+    printf("amount wirtten is %d",bodyWritten);
+    body[bodyWritten]=0;
+    printf("parsed body is\n%s",body);
+
+
+    response_parser_close(p);
+    free(headers);
+    free(body);
+
+
+    char * chunked ="HTTP/1.1 301 Moved Permanently\r\n"
+                    "Location: http://www.google.com/\r\n"
+                    "Content-Type: text/html; charset=UTF-8\r\n"
+                    "Date: Sun, 03 Jun 2018 04:35:48 GMT\r\n"
+                    "Expires: Tue, 03 Jul 2018 04:35:48 GMT\r\n"
+                    "Cache-Control: public, max-age=2592000\r\n"
+                    "Server: gws\r\n"
+                    "Transfer-Encoding: Chunked\r\n"
+                    "X-XSS-Protection: 1; mode=block\r\n"
+                    "X-Frame-Options: SAMEORIGIN\r\n"
+                    "\r\n"
+                    "4\r\n"
+                    "Wiki\r\n"
+                    "5\r\n"
+                    "pedia\r\n"
+                    "E\r\n"
+                    " in\r\n"
+                    "\r\n"
+                    "chunks.\r\n"
+                    "0\r\n"
+                    "\r\n";
+
+
+    headers = calloc(1024, sizeof(char));
+    body= calloc(1024, sizeof(char));
+    response_parser_init(p);
+
+    len =strlen(chunked);
+    response_parser_consume(p,chunked,&len,headers,&headersWritten);
+    printf("amount wirtten is %d\n",headersWritten);
+    printf("parsed headers is\n%s",headers);
+
+    len2=strlen(chunked+len);
+    response_parser_consume(p,chunked+len,&len2,body,&bodyWritten);
+    body[bodyWritten]=0;
+    printf("amount wirtten is %d\n",bodyWritten);
+    printf("parsed body is\n%s",body);
+
+
+    response_parser_close(p);
+
+
+    free(headers);
+    free(body);
+
+
 }
