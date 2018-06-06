@@ -22,3 +22,4 @@ unsigned errorWrite(struct selector_key * key);
 unsigned setError(struct selector_key * key, enum error_code error);
 
 #endif
+

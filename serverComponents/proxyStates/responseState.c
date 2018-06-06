@@ -25,8 +25,8 @@ int pareserResponseIsDone(struct response_parser parser) {
 enum response_state parser_consume(struct response_parser * parser, char * ptrToParse, int * bytesToParse, char * ptrFromParse, int * parsedBytes) {
     printf("parser_consume()\n");
     
-    enum response_state state = response_parser_consume(parser, ptrToParse, *bytesToParse, ptrFromParse, parsedBytes);
-    *bytesToParse = *parsedBytes;
+    enum response_state state = response_parser_consume(parser, ptrToParse, bytesToParse, ptrFromParse, parsedBytes);
+    //*bytesToParse = *parsedBytes;
     return state;
 }
 

@@ -16,3 +16,4 @@ enum proxyStates {
 struct state_definition * getProxyStates();
 
 #endif
+
