@@ -26,7 +26,7 @@ enum header_name {
 
 char **headerNamesResponse = (char *[]) {"Content-Length", "Transfer-Encoding", "Content-Encoding", "Connection"};
 int typesResponse[] = {HEADER_CONT_LEN, HEADER_TRANSF_ENC, HEADER_CONT_ENCONDING, HEADER_CONNECTION};
-int ignoeredResponse[] = {HEADER_CONT_LEN, HEADER_CONNECTION};
+enum header_name ignoeredResponse[] = {HEADER_CONT_LEN, HEADER_CONNECTION};
 #define HEADERS_AMOUNT 4
 #define HEADER_IGNORED 2
 

@@ -122,5 +122,3 @@ add_executable(parserHostreqline
         parser/parserHostReqLine.c
         parser/parserHostReqLine_test.c)
 
-add_executable(parseint
-        parser/funcionParaSegundito.c)
