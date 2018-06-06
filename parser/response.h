@@ -36,7 +36,6 @@ struct response_parser {
     bool hasBeenDumped;
     int headerBufferLen;
 
-
 };
 
 
@@ -60,5 +59,5 @@ response_state_string(enum response_state state);
 
 
 enum body_type
-getTransfEncoding(char * value);
+getTransfEncodingResponse(char * value);
 #endif //PC_2018_04_RESPONSE_H

@@ -25,7 +25,7 @@ struct requestLine_parser {
 
     enum request_method method;
 
-    u_int16_t len;
+    uint16_t len;
 
 
 };

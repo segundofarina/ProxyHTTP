@@ -31,9 +31,8 @@ enum header_state{
 
 struct header_parser{
     struct multi_parser * nameParser;
-
     enum header_state state;
-    u_int32_t name;
+    uint32_t name;
     char * value;
     int len;
 };

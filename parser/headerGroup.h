@@ -19,7 +19,7 @@ enum headerGroup_state{
 
 
 struct header_list{
-    u_int32_t name;
+    uint32_t name;
     char * value;
 
     struct header_list * next;
