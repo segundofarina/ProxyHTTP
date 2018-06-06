@@ -6,47 +6,64 @@
 #include "adminApp.h"
 
 #define PASSWORD_SIZE 0xFF
+#define PASSWORD_CORRECT 1
+#define ADMIN_APP_EXIT 2
 
 /*
  *	Password check.
  */
-int adminPasswordCheck(void) {
-	int c = 0, i = 0;
+int adminPasswordCheck(struct protMsg * passRequest) {
+	int c = 0, i = 0, success = 0;
 	char password[PASSWORD_SIZE] = {0};
-	struct protMsg * passRequest;
+
 	printf("Please enter password:\n");
 	while((c = getchar()) != '\n' && i < PASSWORD_SIZE) {
 		password[i] = c;
 	}
-	// if(i != 0) {
-	// 	//
-	// }
+	// passRequest = malloc(sizeof(struct protMsg *));
 	passRequest->instruction = ADMIN_REQUEST_ADMIN_LOG_IN;
 	passRequest->length = i*sizeof(char);
 	passRequest->data = password;
+	printf("Attemping connect...\n");
+	// TODO: send???????
+	success = PASSWORD_CORRECT;
+
+	return success;
 }
 
 /*
  *	Welcome message.
  */
-int welcome(void) {
-	int loggedIn = 0;
+int welcome(int ip, int port) {
+	int loggedIn = 0, option = 0;
+	struct protMsg * adminRequest = malloc(sizeof(struct protMsg*));
+
 	printf("Welcome home!\n\n");
 	do {
-		loggedIn = adminPasswordCheck();
+		loggedIn = adminPasswordCheck(adminRequest);
 		printf("\n");
 		if(!loggedIn) {
 			printf("Wrong password. Would you like to:\n");
 			printf("1) Retry\n2) Exit\n");
+			option = getchar() - '0';
+			while(getchar() != '\n');
+			printf("\n\n");
 		}
-	} while(!loggedIn);
+	} while(!loggedIn && option != ADMIN_APP_EXIT);
+	while(loggedIn == PASSWORD_CORRECT) {
+		loggedIn = adminShell(adminRequest);
+	}
+
+	free(adminRequest->data);
+	free(adminRequest);
+
+	printf("Goodbye!\n");
 }
 
 /*
  *	BLOQUEANTE POR printfs	--> NO importa, corre aparte del proxy
  */
-void adminShell(struct protMsg * command) {
-	// clientInstruction ans = HELP;
+int adminShell(struct protMsg * command) {
 	char buffer[0xFF] = {0};
 	// char password[0xFF] = {0};
 	int c = 0, i = 0;
@@ -122,4 +139,21 @@ void adminShell(struct protMsg * command) {
 	command->length = 0;
 
 	// TODO: resolve mallocs from this file.c
+}
+
+int
+main(int argc, char ** argv)
+{
+	int error, ip, port;
+	if(argc != 3) {
+		printf("Admin requires a proxy to connect to.\n");
+		printf("Run with [ip] [port].\n");
+		error = 1;
+	} else {
+		ip = atoi(argv[1]);
+		port = atoi(argv[2]);
+		error = welcome(ip, port);
+		// error = 0;
+	}
+	return error;
 }

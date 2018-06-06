@@ -54,13 +54,6 @@
  *	115) 	admin log in + accept
  */
 
-typedef enum {ADMIN_APP_ERROR = 0, ADMIN_REQUEST_HELP,
-	ADMIN_REQUEST_METRICS,
-	ADMIN_REQUEST_ACTIVE_CONFIG, ADMIN_REQUEST_SET_CONFIG,
-	ADMIN_REQUEST_TRANSF_LIST, ADMIN_REQUEST_SET_TRANSF,
-	ADMIN_REQUEST_ADMIN_LOG_IN, ADMIN_REQUEST_ADMIN_LOG_OUT
-} clientInstruction;
-
 typedef enum {SERVER_RESPONSE_ERROR = 100, SERVER_RESPONSE_HELP,
 	SERVER_RESPONSE_METRICS,
 	SERVER_RESPONSE_ACTIVE_CONFIG, SERVER_RESPONSE_SET_CONFIG,
@@ -93,10 +86,20 @@ struct proxyServerConfiguration {
 	uint16_t serverConnectionTimeout;
 };
 
-struct transformationList {
-	uint16_t value;
-	char * name;
-	struct transformationList * next;
+struct transformation {
+	uint16_t transformationCommand;
+	struct mediaType * mediaTypesList;
 };
+
+struct mediaType {
+	char * type;
+	struct mediaType * next;
+};
+
+// struct transformationList {
+// 	uint16_t value;
+// 	char * name;
+// 	struct transformationList * next;
+// };
 
 #endif //PC_2018_04_PROTOCOL_H
