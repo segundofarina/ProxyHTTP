@@ -11,10 +11,12 @@ body_parser_init (struct body_parser* p,enum body_type type, int len){
     if(type == body_type_chunked){
         p->state = body_chunked;
         p->chunkGroupParser = malloc(sizeof(struct chunkGroup_parser));
+        p->identityParser = NULL;
         chunkGroup_parser_init(p->chunkGroupParser);
     } else{
         p->state = body_identity;
         p->identityParser = malloc(sizeof(struct identity_parser));
+        p->chunkGroupParser =NULL;
         //init body parser
         identity_parser_init(p->identityParser,len);
     }
@@ -22,7 +24,15 @@ body_parser_init (struct body_parser* p,enum body_type type, int len){
 
 extern void
 body_parser_close(struct body_parser* p){
-
+    if(p->identityParser !=NULL){
+        identity_parser_close(p->identityParser);
+        free(p->identityParser);
+        p->identityParser=NULL;
+    }else if(p->chunkGroupParser !=NULL){
+        chunkGroup_parser_close(p->chunkGroupParser);
+        free(p->chunkGroupParser);
+        p->chunkGroupParser=NULL;
+    }
 }
 
 

@@ -61,6 +61,8 @@ getTransfEncodingResponse(char * value){
 
     enum body_type result = multi_parser_consume(value + i, &p);
 
+    multi_parser_close(&p);
+
     return result;
 }
 
@@ -124,6 +126,8 @@ statusLine(const uint8_t c, struct response_parser *p) {
         case sl_end:
 
             statusLine_parser_close(p->statusLineParser);
+            free(p->statusLineParser);
+            p->statusLineParser=NULL;
             headerGroup_parser_init(p->headerParser,HEADER_NOT_INTERESTED,headerNamesResponse,typesResponse,HEADERS_AMOUNT);
             next = response_headers;
             break;
@@ -142,6 +146,8 @@ headersResponse(const uint8_t c,struct response_parser *p){
         case headerGroup_end:
             p->headerList = p->headerParser->list;
             headerGroup_parser_close(p->headerParser);
+            free(p->headerParser);
+            p->headerParser=NULL;
             int type = getBodyTypeResponse(p->headerList);
             int len = getContentLengthResponse(p->headerList);
             if(type == body_type_chunked || len >0){
@@ -176,10 +182,13 @@ enum response_state
 bodyResponse(const uint8_t c,struct response_parser *p) {
     enum response_state next;
     enum body_state state = body_parser_feed(c, p->bodyParser);
+    p->shouldKeepLastChar = p->bodyParser->shouldKeep;
 
     switch (state) {
         case body_end:
             body_parser_close(p->bodyParser);
+            free(p->bodyParser);
+            p->bodyParser = NULL;
             next = response_done;
             break;
         case body_error:
@@ -211,6 +220,7 @@ response_parser_init(struct response_parser *p) {
     p->headerList = NULL;
     p->hasBeenDumped = false;
     p->headerBufferLen = 0;
+    p->shouldKeepLastChar = false;
     statusLine_parser_init(p->statusLineParser);
 
 }
@@ -295,7 +305,7 @@ response_parser_consume(struct response_parser *p, char *b, int *len, char *writ
 
 */
 
-        if (p->prevState == response_headers &&
+        if (p->state == response_headers &&
             (p->headerParser->state == headerGroup_header || p->headerParser->state == headerGroup_init)) {
 
             enum header_state state = p->headerParser->headerParser->state;
@@ -341,7 +351,7 @@ response_parser_consume(struct response_parser *p, char *b, int *len, char *writ
 
         } else if (p->prevState == response_body) {
 
-            if (p->bodyParser->shouldKeep) {
+            if (p->shouldKeepLastChar) {
                 writebuff[j++] = b[i];
             }
         } else {

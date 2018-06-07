@@ -57,14 +57,17 @@ method_parser_close(struct method_parser* p){
     if( p != NULL){
         parser_destroy(p->parserGet);
         parser_utils_strcmpi_destroy((p->dGet));
+        free(p->dGet);
 
         parser_destroy(p->parserHead);
         parser_utils_strcmpi_destroy((p->dHead));
+        free(p->dHead);
 
         parser_destroy(p->parserPost);
         parser_utils_strcmpi_destroy((p->dPost));
+        free(p->dPost);
 
-        free(p);
+    
 
     }
    

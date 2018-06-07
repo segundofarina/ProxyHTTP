@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 3.5)
 project(pc_2018_04 C)
 
 
+#set(CMAKE_C_FLAGS    "-g --std=c99 -pthread -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-unused-parameter -Wno-implicit-fallthrough -D_POSIX_C_SOURCE=200112L ")
 
-
-set(CMAKE_C_FLAGS    "--std=c99 -pthread -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-unused-parameter -Wno-implicit-fallthrough -D_POSIX_C_SOURCE=200112L ")
+set(CMAKE_C_FLAGS    "-g -fsanitize=address -fno-omit-frame-pointer --std=c99 -pthread -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-unused-parameter -Wno-implicit-fallthrough -D_POSIX_C_SOURCE=200112L ")
 
 #set(CMAKE_C_FLAGS "-g -pthread -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-unused-parameter -D_POSIX_C_SOURCE=200112L")
 

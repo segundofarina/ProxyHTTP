@@ -45,6 +45,8 @@ getTransfEncoding(char * value){
 
     enum body_type result= multi_parser_consume(value+i,&p);
 
+    multi_parser_close(&p);
+
     return result;
 
 }
@@ -129,6 +131,9 @@ requestLine(const uint8_t c,struct request_parser *p) {
             };
 
             requestLine_parser_close(p->requestLineParser);
+            free(p->requestLineParser);
+            p->requestLineParser=NULL;
+
             headerGroup_parser_init(p->headerParser,HEADER_NOT_INTERESTED,headerNames,types,HEADERS_AMOUNT);
             next = request_headers;
             break;
@@ -147,6 +152,8 @@ headers(const uint8_t c,struct request_parser *p){
         case headerGroup_end:
             p->headerList=p->headerParser->list;
             headerGroup_parser_close(p->headerParser);
+            free(p->headerParser);
+            p->headerParser=NULL;
             if(p->method == METHOD_POST){
 
                 int type = getBodyType(p->headerList);
@@ -204,6 +211,8 @@ body(const uint8_t c,struct request_parser *p) {
     switch(state){
         case body_end:
             body_parser_close(p->bodyParser);
+            free(p->bodyParser);
+            p->bodyParser=NULL;
             next = request_done;
             break;
         case body_error:

@@ -135,6 +135,9 @@ headerGroup_parser_feed(const uint8_t c,struct headerGroup_parser* p){
 extern void
 headerGroup_parser_close(struct headerGroup_parser* p){
     // header_list_destroy(p->list);
+    header_parser_close(p->headerParser);
+    free(p->headerParser);
+    p->headerParser =NULL;
 }
 
 char *

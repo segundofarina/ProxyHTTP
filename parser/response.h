@@ -36,6 +36,8 @@ struct response_parser {
     bool hasBeenDumped;
     int headerBufferLen;
 
+    bool shouldKeepLastChar;
+
 };
 
 

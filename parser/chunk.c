@@ -148,7 +148,7 @@ enum chunk_state chunk_parser_consume(const char *b, struct chunk_parser *p){
 
 
 void chunk_parser_close(struct chunk_parser* p){
-    free(p);
+    
 }
 
 

@@ -128,7 +128,8 @@ header_parser_close(struct header_parser* p){
         if(p->name != p->nameParser->notMatch){
             free(p->value);
         }
-        free(p);
+        free(p->nameParser);
+        p->nameParser = NULL;
     }
 }
 
