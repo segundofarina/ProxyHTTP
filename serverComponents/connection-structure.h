@@ -42,6 +42,9 @@ struct Connection {
     /* connection status info */
     int isConnectingOrigin;
 
+    /* origin has answerd */
+    int originHasAnswered;
+
 	/* state machine */
 	struct state_machine stm;
 
