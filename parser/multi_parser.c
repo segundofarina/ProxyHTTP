@@ -99,8 +99,6 @@ multi_parser_close(struct multi_parser* p){
         parser_list_destroy(p->list);
 
 
-        free(p);
-
     }
 
 

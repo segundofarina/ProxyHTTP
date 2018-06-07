@@ -59,7 +59,9 @@ void chunkGroup_parser_consume(const char *b,struct chunkGroup_parser *p){
 }
 
 void chunkGroup_parser_close(struct chunkGroup_parser* p){
-    free(p);
+    chunk_parser_close(p->cp);
+    free(p->cp);
+    p->cp =NULL;
 }
 
 

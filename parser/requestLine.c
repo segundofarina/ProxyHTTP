@@ -12,6 +12,7 @@ method(const uint8_t c, struct requestLine_parser* p) {
 
             //No se si hacerlo aca  o hacer una buena maquina de estdos con un on deprature
             method_parser_close(p->methodParser);
+            free(p->methodParser);
             p->methodParser=NULL;
             next = rl_target;
             break;
@@ -132,7 +133,8 @@ void
 requestLine_parser_close(struct requestLine_parser *p){
     if(p != NULL){
         method_parser_close(p->methodParser);
-        free(p);
+        free(p->methodParser);
+        p->methodParser=NULL;
     }
 
 }

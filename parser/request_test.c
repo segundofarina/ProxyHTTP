@@ -63,7 +63,7 @@ int main(){
     printf("Encoding %d\n",type);
 
 
-    struct request_parser * p = malloc(sizeof(struct request_parser));
+    struct request_parser  p ;
 
 
     char * GET =
@@ -75,11 +75,11 @@ int main(){
                         "\r\n";
 
     printf("====================GET REQUEST=====================\n");
-    request_parser_init(p);
+    request_parser_init(&p);
 
-    consume(GET,p);
+    consume(GET,&p);
 
-    request_parser_close(p);
+    request_parser_close(&p);
 
     char * POST = "POST /paw-2018a-4/search HTTP/1.1\r\n"
                   "Host: pawserver.it.itba.edu.ar\r\n"
@@ -99,11 +99,11 @@ int main(){
 
     printf("====================POST REQUEST=====================\n");
 
-    request_parser_init(p);
+    request_parser_init(&p);
 
-    consume(POST,p);
+    consume(POST,&p);
 
-    request_parser_close(p);
+    request_parser_close(&p);
 
 
 }
