@@ -9,4 +9,8 @@ unsigned responseRead(struct selector_key * key);
 
 unsigned responseWrite(struct selector_key * key);
 
+void responseArrival(unsigned state, struct selector_key * key);
+
+void responseDeparture(unsigned state, struct selector_key * key);
+
 #endif

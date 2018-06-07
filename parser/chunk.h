@@ -22,6 +22,7 @@ struct chunk_parser{
     bool last;
     enum chunk_state state;
     enum chunk_state prev;
+    bool shouldKeep;
 };
 
 void chunk_parser_init (struct chunk_parser * p);

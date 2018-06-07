@@ -353,5 +353,7 @@ int fillRequestData_marshall(hostData addressType, char * host, uint16_t port, s
 		rdStruct->destAddr.ipv6.sin6_scope_id = (uint32_t) 0;
 		// memcpy(&aux6, rdStruct->destAddr.ipv6.sin6_addr, sizeof(struct in6_addr));
 	}
+
+	rdStruct->destPort = htons(rdStruct->destPort);
 	return errCode;
 }

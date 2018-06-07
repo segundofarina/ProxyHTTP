@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include "body.h"
+#include "chunk.h"
 
 extern void
 body_parser_init (struct body_parser* p,enum body_type type, int len){
@@ -30,6 +31,7 @@ chunked(const uint8_t c, struct body_parser *p) {
 
     enum body_state next;
      chunkGroup_parser_feed(c,p->chunkGroupParser);
+     p->shouldKeep = p->chunkGroupParser->cp->shouldKeep;
     enum chunk_group_state state = p->chunkGroupParser->state;
     switch(state){
         case chunk_group_done:
@@ -49,6 +51,7 @@ enum body_state
 identity(const uint8_t c, struct body_parser *p) {
     enum body_state next;
     enum identity_state state = identity_parser_feed(c,p->identityParser);
+    p->shouldKeep=true;
     switch(state){
         case identity_end:
             next = body_end;

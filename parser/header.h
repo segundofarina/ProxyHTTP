@@ -20,12 +20,6 @@
  *                      of token, separators, and quoted-string>
  */
 
-// esto hay que sacarlo y ponerlo en request.c
-//enum header_name{
-//    HEADER_HOST,
-//    HEADER_CONT_LEN,
-//    HEADER_NOT_INTERESTED
-//};
 
 enum header_state{
     header_name,
@@ -37,13 +31,10 @@ enum header_state{
 
 struct header_parser{
     struct multi_parser * nameParser;
-
     enum header_state state;
-
-    u_int32_t name;
+    uint32_t name;
     char * value;
     int len;
-    int value_max_len;
 };
 
 

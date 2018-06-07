@@ -11,4 +11,8 @@ unsigned requestWrite(struct selector_key * key);
 
 unsigned requestBlockReady(struct selector_key * key);
 
+void requestArrival(const unsigned state, struct selector_key * key);
+
+void requestDeparture(const unsigned state, struct selector_key * key);
+
 #endif

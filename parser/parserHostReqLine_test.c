@@ -10,7 +10,7 @@
 
 int main(void) {
 
-    int i, errCode;
+    int i /*,errCode*/;
 	// char * test1 = "http://itba.edu.ar/foo?bar";
     char * test1 = "10.0.0.2";
 	char * test2 = "itba.edu.ar/./hello///";

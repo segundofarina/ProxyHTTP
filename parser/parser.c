@@ -60,7 +60,7 @@ parser_feed(struct parser *p, const uint8_t c) {
         const int when = state[i].when;
         if (state[i].when <= 0xFF) {
             matched = (c == when);
-        } else if(state[i].when == ANY) {
+        } else if(state[i].when == (int) ANY) {
             matched = true;
         } else if(state[i].when > 0xFF) {
             matched = (type & when);

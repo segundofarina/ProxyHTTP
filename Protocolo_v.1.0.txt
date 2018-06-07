@@ -1,0 +1,193 @@
+     
+1. AUTHENTICATION
+
+	+---------+----------+
+	|  LENGTH | PASSWORD |
+	+---------+----------+
+	|    1    | 1 to 255 |
+	+---------+----------+
+
+
+2. AUTHENTICATION RESPONONSE
+
+	+---------+
+	| STATUS  |
+	+---------+
+	|    1    |
+	+---------+
+
+	X'00' LOGGED IN
+	X'01' LOGIN FAILED
+	X'FF' SERVER ERROR
+
+
+3. CLIENT REQUEST
+
+	+--------+-------------+----------+
+	| METHOD | DATA_LENGTH |   DATA   |
+	+--------+-------------+----------+
+	|    1   |      1      | 1 to 255 |
+	+--------+-------------+----------+
+
+	METHOD:
+		X'00' SET TRANSFORMATION
+		X'01' ADD MEDIA TYPE
+		X'02' REMOVE MEDIA TYPE
+		X'03' SET BUFFER SIZE
+		X'04' SET TIMEOUT
+		X'05' GET METRICS
+		X'06' GET TRANSFORMATION
+		X'07' GET MEDIA TYPES
+		X'08' GET BUFFER_SIZE
+		X'09' GET TIMEOUT
+
+
+4. SERVER RESPONSE
+
+	+--------+-------------+----------+
+	| STATUS | DATA_LENGTH |   DATA   |
+	+--------+-------------+----------+
+	|    1   |      1      | 1 to 255 |
+	+--------+-------------+----------+
+
+	STATUS:
+		X'00' OK
+		X'01' ERR
+		X'02' NOT SUPPORTED
+		X'FF' SERVER ERROR
+
+
+
+
+5. SPECIFIC CASES
+
+	1) Set Transformation
+		Client Request:
+			- Method: X'00'
+			- Data length: contains the transformation command length (max 255), or 0 if setting no transformation
+			- Data: transformation command (max length 255)
+
+		Server Response:
+			- Status: according to the request
+			- Data length: X'00'
+
+	2) Add Media Type
+		Client Request:
+			- Method: X'01'
+			- Data length: number of media types sent in data field
+			- Data: list of media types number, according to section 6 of this RFC
+
+		Server Response:
+			- Status: according to the request
+			- Data length: X'00'
+
+	3) Remove Media Type
+		Client Request:
+			- Method: X'02'
+			- Data length: number of media types sent in data field
+			- Data: list of media types number, according to section 6 of this RFC
+
+		Server Response:
+			- Status: according to the request
+			- Data length: X'00'
+
+	4) Set Buffer Size
+		Client Request:
+			- Method: X'03'
+			- Data length: number size //ESTO HAY QUE ESPECIFICARLO MEJOR
+			- Data: buffer size in big endian?
+
+		Server Response:
+			- Status: according to the request
+			- Data length: X'00'
+
+	5) Set Timeout
+		Client Request:
+			- Method: X'04'
+			- Data length: number size //ESTO HAY QUE ESPECIFICARLO MEJOR
+			- Data: timeout in big endian?
+
+		Server Response:
+			- Status: according to the request
+			- Data length: X'00'
+
+	6) Get Metrics
+		Client Request:
+			- Method: X'05'
+			- Data length: X'00'
+
+		Server Response:
+			- Status: according to the request
+			- Data length: number of metrics
+			- Data: list of metrics according to section 7 of this RFC
+
+	7) Get Transformation
+		Client Request:
+			- Method: X'06'
+			- Data length: X'00'
+
+		Server Response:
+			- Status: according to the request
+			- Data length: contains the transformation command length (max 255), or 0 if setting no transformation
+			- Data: transformation command (max length 255)
+
+	8) Get Media types
+		Client Request:
+			- Method: X'07'
+			- Data length: X'00'
+
+		Server Response:
+			- Status: according to the request
+			- Data length: number of media types sent in data field
+			- Data: list of media types number, according to section 6 of this RFC
+
+	9) Get Buffer Size
+		Client Request:
+			- Method: X'08'
+			- Data length: X'00'
+
+		Server Response:
+			- Status: according to the request
+			- Data length: number size //ESTO HAY QUE ESPECIFICARLO MEJOR
+			- Data: buffer size in big endian?
+
+	10) Get Timeout
+		Client Request:
+			- Method: X'09'
+			- Data length: X'00'
+
+		Server Response:
+			- Status: according to the request
+			- Data length: number size //ESTO HAY QUE ESPECIFICARLO MEJOR
+			- Data: timeout in big endian?
+
+
+
+6. MEDIA TYPES
+We support a limited amount of media types:
+	X'00' text/*
+	X'01' text/plain
+	X'02' text/html
+	X'03' text/css
+	X'04' text/javascript
+	X'05' text/markdown
+	X'06' text/xml
+	X'07' image/*
+	X'08' image/gif
+	X'09' image/jpeg
+	X'0A' image/png
+	X'0B' image/tiff
+	X'0C' application/*
+	X'0D' application/json
+	X'0E' application/javascript
+
+	
+7. METRICS
+The list of metrics is ordered as follow:
+	1) Bytes Read
+	2) Bytes Sent
+	3) Amount of Gets
+	4) Amount of Post
+	5) Amount of Head
+	6) Active clients
+	7) Historic Connections

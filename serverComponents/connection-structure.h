@@ -9,13 +9,17 @@
 
 #include "../utils/buffer/buffer.h"
 #include "../utils/stm/stm.h"
+#include "../parser/request.h"
+#include "../parser/response.h"
+#include "proxyStates/errorState.h"
+
 
 enum TransformationType {
     NO_TRANSFORM,
     TRANSFORM_CAT
 };
 
-/* Parte del request parser */
+/* Parte del request parser *
 enum addrType {
     IPv4, IPv6, DOMAIN 
 };
@@ -29,13 +33,12 @@ union socks_addr {
 struct requestData {
     enum addrType destAddrType;
     union socks_addr destAddr;
-    /** port in network byte order */
     in_port_t destPort;
 };
-/* end */
+ end */
 
 struct httpRequestParser {
-    //struct parser
+    struct request_parser reqParser;
     struct requestData requestData;
 };
 
@@ -62,6 +65,7 @@ struct Connection {
 
     /* parsers */
     struct httpRequestParser requestParser;
+    struct response_parser responseParser;
 
 
 	/* general io buffers for client */
@@ -76,6 +80,9 @@ struct Connection {
     int writeTransformFd, readTransformFd;
     enum TransformationType trasformationType;
     int transformationPid;
+
+    /* Keep an error to inform to the client */
+    enum error_code errorCode;
     
     /* amount of references to this struct, if 1 it should be destroyed */
     unsigned references;
@@ -89,3 +96,4 @@ struct Connection {
 #define DATA_TO_CONN(key) ( (struct Connection *)(key)->data )
 
 #endif
+
