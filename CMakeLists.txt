@@ -63,4 +63,6 @@ add_executable(proxy
         serverComponents/adminStates/authenticateReadState.c
         serverComponents/adminStates/authenticateWriteState.c
         serverComponents/adminStates/adminReadState.c
-        serverComponents/adminStates/adminWriteState.c)
+        serverComponents/adminStates/adminWriteState.c
+        serverComponents/adminStates/adminErrorState.c
+        logger/logger.c)

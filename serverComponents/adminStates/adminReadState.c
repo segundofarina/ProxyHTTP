@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "adminReadState.h"
+#include "adminErrorState.h"
 
 #include "../admin-structure.h"
 #include "../adminStm.h"
@@ -15,7 +16,7 @@ void generateAdminResponse(buffer * buff);
 
 /* Parte del parser */
 int processAdminRequest() {
-    return 1;
+    return 0;
 }
 /* End parte del parser */
 
@@ -45,7 +46,8 @@ unsigned adminRead(struct selector_key * key) {
     }
 
     // generate response error
-    return ADMIN_ERROR;
+    printf("admin set errror\n");
+    return adminSetError(key, ADMIN_REQ_ERR);
 }
 
 void generateAdminResponse(buffer * buff) {

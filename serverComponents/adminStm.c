@@ -4,6 +4,7 @@
 #include "adminStates/authenticateWriteState.h"
 #include "adminStates/adminReadState.h"
 #include "adminStates/adminWriteState.h"
+#include "adminStates/adminErrorState.h"
 
 const struct state_definition adminStateHandlers[] = {
     {
@@ -21,8 +22,8 @@ const struct state_definition adminStateHandlers[] = {
     },{
         .state = ADMIN_DONE
     },{
-        .state = ADMIN_ERROR
-        //write
+        .state = ADMIN_ERROR,
+        .on_write_ready = adminErrorWrite
     },{
         .state = ADMIN_FATAL_ERROR
     }

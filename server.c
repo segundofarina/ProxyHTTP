@@ -12,11 +12,13 @@
 #include "utils/selector/selector.h"
 #include "serverComponents/proxyPassiveHandlers.h"
 #include "serverComponents/adminPassiveHandlers.h"
+#include "logger/logger.h"
 
 typedef enum {FALSE, TRUE} Bool;
 
 #define MAX_CLIENTS 10
 #define SELECTOR_SIZE 1024
+#define LOGGER_LEVEL PRODUCTION
 
 int createPassiveSock(const int port, const int protocol, char ** errMsg);
 
@@ -63,6 +65,9 @@ int main() {
 	if( (selector = selector_new(SELECTOR_SIZE)) == NULL ) {
 		//handle error
 	}
+
+	/* Start logger */
+	loggerInit(LOGGER_LEVEL, selector);
 
 	/* Listen to clients */
 	if( (serverFd = createPassiveSock(port, IPPROTO_TCP, &errMsg)) < 0 ) {
