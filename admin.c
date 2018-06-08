@@ -1,7 +1,3 @@
-//
-// Created by Segundo Fariña on 7/6/18.
-//
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -84,7 +80,7 @@ authenticate(int proxy){
 }
 
 void sendRequest(int proxy, uint8_t method,uint8_t len, uint8_t * data ){
-    send(proxy,method,len,data);
+    //  send(proxy,method,len,data);
 }
 
 void help(){
@@ -315,16 +311,16 @@ main(int argc, char ** argv)
 {
     int port;
 
-   if(argc == 3) {
+    if(argc == 3) {
         port = validateLong((uint8_t *)argv[2]);
 
         if(port == -1){
             fprintf(stderr, "port should be an integer: %s\n", argv[2]);
         }
     } else {
-       fprintf(stderr, "Usage: %s <host> <port>\n", argv[0]);
-       return 1;
-   }
+        fprintf(stderr, "Usage: %s <host> <port>\n", argv[0]);
+        return 1;
+    }
 
     char *errMsg;
 
