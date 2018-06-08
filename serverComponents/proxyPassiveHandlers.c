@@ -14,6 +14,7 @@
 #include "proxyStm.h"
 
 #include "../utils/buffer/buffer.h"
+#include "../logger/logger.h"
 #include "transformationFork.h"
 
 #define MAX_POOL 50

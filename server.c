@@ -11,19 +11,22 @@
 
 #include "utils/selector/selector.h"
 #include "serverComponents/proxyPassiveHandlers.h"
+#include "serverComponents/adminPassiveHandlers.h"
+#include "logger/logger.h"
 
 typedef enum {FALSE, TRUE} Bool;
 
 #define MAX_CLIENTS 10
 #define SELECTOR_SIZE 1024
+#define LOGGER_LEVEL PRODUCTION
 
-int createProxyPassiveSock(const int port, char ** errMsg);
+int createPassiveSock(const int port, const int protocol, char ** errMsg);
 
 
 //int main(const int argc, const char * argv[]) {
 int main() {
 
-	int port = 1080, serverFd;
+	int port = 1080, serverFd, adminPort = 1081, adminFd;
 	char * errMsg = NULL;
 	selector_status selectorStatus = SELECTOR_SUCCESS;
     fd_selector selector;
@@ -39,12 +42,20 @@ int main() {
 
 	/* Proxy socket handler */
 	const struct fd_handler proxyPassiveHandlers = {
-        .handle_read       = proxyPassiveAccept,
-        .handle_write      = NULL,
-        .handle_close      = NULL
+        .handle_read = proxyPassiveAccept,
+        .handle_write = NULL,
+        .handle_close = NULL
     };
 
-	// podemos cerrar la entrada estandard
+	/* Admin socket handler */
+	const struct fd_handler adminPassiveHandlers = {
+		.handle_read = adminPassiveAccept,
+		.handle_write = NULL,
+		.handle_close = NULL
+	};
+
+	/* Podemos cerrar la entrada estandard */
+	close(0);
 
 	/* Selector init */
 	if(selector_init(&conf) != 0) {
@@ -55,13 +66,28 @@ int main() {
 		//handle error
 	}
 
-	if( (serverFd = createProxyPassiveSock(port, &errMsg)) < 0 ) {
+	/* Start logger */
+	loggerInit(LOGGER_LEVEL, selector);
+
+	/* Listen to clients */
+	if( (serverFd = createPassiveSock(port, IPPROTO_TCP, &errMsg)) < 0 ) {
 		//handle error
 	}
 
 	selectorStatus = selector_register(selector, serverFd, &proxyPassiveHandlers, OP_READ, NULL);
     if(selectorStatus != SELECTOR_SUCCESS) {
-        errMsg = "Unable to register passive socket fd";
+        errMsg = "Unable to register proxy passive socket fd";
+		//handler error
+    }
+
+	/* Listen to admin */
+	if( (adminFd = createPassiveSock(adminPort, IPPROTO_SCTP, &errMsg)) < 0 ) {
+		//handle error
+	}
+
+	selectorStatus = selector_register(selector, adminFd, &adminPassiveHandlers, OP_READ, NULL);
+    if(selectorStatus != SELECTOR_SUCCESS) {
+        errMsg = "Unable to register admin passive socket fd";
 		//handler error
     }
 
@@ -77,14 +103,14 @@ int main() {
 }
 
 /* Returns socket fd or -1 if error */
-int createProxyPassiveSock(const int port, char ** errMsg) {
+int createPassiveSock(const int port, const int protocol, char ** errMsg) {
 	struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
     addr.sin_family      = AF_INET;
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
     addr.sin_port        = htons(port);
 
-	const int serverFd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	const int serverFd = socket(AF_INET, SOCK_STREAM, protocol);
 	if(serverFd < 0) {
 		*errMsg = "Unable to create socket";
 		return -1;

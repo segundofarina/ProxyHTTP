@@ -223,9 +223,16 @@ unsigned readFromOrigin(struct selector_key * key) {
 	if(n <= 0) {
         /* origin close connection */
         printf("[ERROR] {response} recv got 0 bytes\n");
+        /* Show error to client if server never answerd */
+        if(!conn->originHasAnswered) {
+            return setError(key, BAD_GATEWAY_502);
+        }
         return FATAL_ERROR;
 	}
     buffer_write_adv(&conn->respTempBuffer, n);
+
+    /* origin has sent a response */
+    conn->originHasAnswered = 1;
 
     printf("[RESPONSE] got response from origin. Size: %d\n", (int) n);
 
