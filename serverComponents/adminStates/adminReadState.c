@@ -16,7 +16,7 @@ void generateAdminResponse(buffer * buff);
 
 /* Parte del parser */
 int processAdminRequest() {
-    return 0;
+    return 1;
 }
 /* End parte del parser */
 

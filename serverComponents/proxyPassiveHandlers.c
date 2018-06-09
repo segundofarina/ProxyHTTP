@@ -12,6 +12,7 @@
 #include "proxyPassiveHandlers.h"
 #include "proxyActiveHandlers.h"
 #include "proxyStm.h"
+#include "maxFdHandler.h"
 
 #include "../utils/buffer/buffer.h"
 #include "../logger/logger.h"
@@ -21,7 +22,6 @@
 
 static int poolSize = 0;
 static struct Connection * pool = NULL;
-static int spareFd = -1;
 
 static enum TransformationType transformationType = NO_TRANSFORM;
 
@@ -139,26 +139,6 @@ void destroy_connection(struct selector_key * key) {
 	} else {
 		freeConnection(connection);
 	}
-}
-
-/* Keep spare fd to avoid problems when max fd amount reached */
-void keepSpareFd() {
-	if(spareFd == -1) {
-		spareFd = open("/dev/null", O_RDONLY);
-	}
-}
-
-void handleAcceptEmfile(int fd, struct sockaddr * clientAddr, socklen_t  * clientAddrLen) {
-	/* Close spareFd, to get new fd to accept the connection */
-	close(spareFd);
-	spareFd = accept(fd, clientAddr, clientAddrLen);
-
-	/* Close accepted connection */
-	close(spareFd);
-	spareFd = -1;   
-	
-	/* Open again spareFd for future errors */
-	keepSpareFd();
 }
 
 void proxyPassiveAccept(struct selector_key *key) {

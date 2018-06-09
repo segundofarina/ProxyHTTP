@@ -56,6 +56,7 @@ add_executable(proxy
         serverComponents/adminStates/adminReadState.c
         serverComponents/adminStates/adminWriteState.c
         serverComponents/adminStates/adminErrorState.c
+        serverComponents/maxFdHandler.c
         logger/logger.c)
 
 
