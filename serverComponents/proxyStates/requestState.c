@@ -17,6 +17,7 @@
 #include "../../utils/buffer/buffer.h"
 #include "../../parser/request.h"
 #include "../../logger/logger.h"
+#include "../metrics.h"
 
 int parserHasOrigin(struct request_parser parser) {
     return parser.hasDestination;
@@ -168,6 +169,8 @@ unsigned requestRead(struct selector_key * key) {
 	if(n <= 0) { // client closed connection
         return FATAL_ERROR;
 	}
+    /* Save value for metrics */
+    addBytesRead(n);
 
     buffer_write_adv(&conn->readBuffer, n);
     

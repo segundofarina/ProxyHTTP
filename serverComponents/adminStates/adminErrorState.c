@@ -15,7 +15,6 @@ unsigned adminErrorWrite(struct selector_key * key) {
 	n = send(key->fd, ptr, count, MSG_NOSIGNAL);
     
     if(n <= 0) { // client closed connection
-        //printf("client closed connection\n");
         return ADMIN_FATAL_ERROR;
 	}
 
@@ -39,11 +38,9 @@ unsigned adminSetError(struct selector_key * key, enum admin_error_code error) {
 	int n;
 
     if(conn->adminFd == -1) {
-        //printf("adminFd == -1\n");
         return ADMIN_FATAL_ERROR;
     }
 
-    //conn->errorCode = error;
     buffer_reset(&conn->buff);
     
     ptr = buffer_write_ptr(&conn->buff, &count);

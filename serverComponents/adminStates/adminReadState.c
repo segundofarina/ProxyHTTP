@@ -11,6 +11,7 @@
 #include "../adminActiveHandlers.h"
 #include "../../utils/buffer/buffer.h"
 #include "../../parser/request.h"
+#include "../metrics.h"
 
 void generateAdminResponse(buffer * buff);
 
@@ -46,7 +47,6 @@ unsigned adminRead(struct selector_key * key) {
     }
 
     // generate response error
-    printf("admin set errror\n");
     return adminSetError(key, ADMIN_REQ_ERR);
 }
 
@@ -57,7 +57,11 @@ void generateAdminResponse(buffer * buff) {
     uint8_t * ptr;
     size_t size;
     ptr = buffer_write_ptr(buff, &size);
-    memcpy(ptr, "hola", 4);
-    ptr[4] = 0;
-    buffer_write_adv(buff, 5);    
+    //memcpy(ptr, "hola", 4);
+    //ptr[4] = 0;
+
+    int n = sprintf((char *)ptr, "Metrics:\n o Bytes Read: %d\n o Bytes sent: %d\n o Amount of GET: %d\n o Amount of POST: %d\n o Amount of HEAD: %d\n o Active clients: %d\n o Historic clients: %d\n", getBytesRead(), getBytesSent(), getAmountOfGet(), getAmountOfPost(), getAmountOfHead(), getActiveClients(), getHistoricClients());
+    ptr[n+1] = 0;
+
+    buffer_write_adv(buff, n+1);    
 }

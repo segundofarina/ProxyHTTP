@@ -4,6 +4,7 @@
 #include "errorState.h"
 #include "../proxyStm.h"
 #include "../connection-structure.h"
+#include "../metrics.h"
 
 unsigned errorWrite(struct selector_key * key) {
     struct Connection * conn = DATA_TO_CONN(key);
@@ -57,6 +58,8 @@ unsigned setError(struct selector_key * key, enum error_code error) {
     ptr = buffer_write_ptr(&conn->writeBuffer, &count);
     n = writeErrorToBuff((char *)ptr, count, error);
     buffer_write_adv(&conn->writeBuffer, n);
+
+    addBytesSent(n);
 
     if(selector_set_interest(key->s, conn->clientFd, OP_WRITE) != SELECTOR_SUCCESS) {
         return FATAL_ERROR;

@@ -15,7 +15,9 @@
 
 #include "../utils/buffer/buffer.h"
 #include "../logger/logger.h"
+#include "metrics.h"
 #include "transformationFork.h"
+
 
 #define MAX_POOL 50
 
@@ -82,6 +84,9 @@ struct Connection * new_connection(const int clientFd) {
 	
 	connection->references = 1;
 
+	/* Save to metrics */
+	addClient();
+
 	return connection;
 }
 
@@ -101,6 +106,9 @@ void destroy_connection(struct selector_key * key) {
 	if(connection == NULL) {
 		return;
 	}
+
+	/* Save to metrics */
+	removeClient();
 
 	// Close transformation process 
 	if(connection->transformationPid != -1) {

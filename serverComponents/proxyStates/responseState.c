@@ -16,6 +16,7 @@
 #include "../proxyActiveHandlers.h"
 #include "../../utils/buffer/buffer.h"
 #include "../../logger/logger.h"
+#include "../metrics.h"
 
 #include "../../parser/response.h"
 
@@ -300,6 +301,9 @@ unsigned writeToClient(struct selector_key * key) {
         return setError(key, INTERNAL_SERVER_ERR_500);
 	}
     buffer_read_adv(&conn->writeBuffer, n);
+
+    /* Save value for metrics */
+    addBytesSent(n);
 
     /* Copy from temp if it's on headers or no transformation */
     if(conn->trasformationType == NO_TRANSFORM || state == response_headers || state == response_statusLine) {
