@@ -27,7 +27,7 @@ int createPassiveSock(const int port, const int protocol);
 //int main(const int argc, const char * argv[]) {
 int main() {
 
-	int port =1080, serverFd, adminPort = 1081, adminFd;
+	int port = 1080, serverFd, adminPort = 1081, adminFd;
 	char * errMsg = NULL;
 	selector_status selectorStatus = SELECTOR_SUCCESS;
     fd_selector selector;
@@ -104,7 +104,7 @@ int main() {
 		
     }
 
-	loggerWrite(PRODUCTION, "[INFO] Proxy started and waiting for new connections\n");
+	loggerWrite(PRODUCTION, "\x1b[32m[INFO]\x1b[0m Proxy started and waiting for new connections\n");
 
     while(TRUE) {
         selectorStatus = selector_select(selector);
@@ -118,7 +118,7 @@ int main() {
 	return 0;
 
 	error_handler:
-		printf("[FATAL ERROR] %s\n", errMsg);
+		printf("\x1b[31m[FATAL ERROR]\x1b[0m %s\n", errMsg);
 		return 1;
 }
 
