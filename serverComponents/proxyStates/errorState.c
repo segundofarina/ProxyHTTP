@@ -15,7 +15,6 @@ unsigned errorWrite(struct selector_key * key) {
 	n = send(key->fd, ptr, count, MSG_NOSIGNAL);
     
     if(n <= 0) { // client closed connection
-        printf("client closed connection\n");
         return FATAL_ERROR;
 	}
 

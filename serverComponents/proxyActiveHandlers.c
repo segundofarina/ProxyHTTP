@@ -49,7 +49,5 @@ void connection_block (struct selector_key *key) {
 }
 
 void connectionDone(struct selector_key * key) {
-    printf("destroyConnection()\n");
-
     destroy_connection(key);
 }

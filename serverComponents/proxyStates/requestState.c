@@ -16,6 +16,7 @@
 #include "../proxyActiveHandlers.h"
 #include "../../utils/buffer/buffer.h"
 #include "../../parser/request.h"
+#include "../../logger/logger.h"
 
 int parserHasOrigin(struct request_parser parser) {
     return parser.hasDestination;
@@ -29,7 +30,8 @@ int parserIsRequestDone(struct request_parser parser) {
 int connectToOrigin(struct selector_key * key) {
     struct Connection * conn = DATA_TO_CONN(key);
 
-    printf("Attempt connection to origin server\n");
+    loggerWrite(DEBUG, "Attempt connection to origin server\n");
+
     if( (conn->originFd = socket(conn->originDomain, SOCK_STREAM, 0)) == -1) {
         //handle error
         goto handle_errors;
@@ -41,7 +43,9 @@ int connectToOrigin(struct selector_key * key) {
         // handle error
         goto handle_errors;
     }
-printf("connecting to origin server\n");
+
+    loggerWrite(DEBUG, "Connecting to origin server\n");
+    
     if (connect(conn->originFd, (const struct sockaddr *) &conn->originAddr, conn->originAddrLen) == -1) {
         if(errno == EINPROGRESS) { /* Wait until connection is established */
             
@@ -49,7 +53,9 @@ printf("connecting to origin server\n");
                 // handle error
                 goto handle_errors;
             }
-printf("connection will be done when I can write to it\n");
+
+            loggerWrite(DEBUG, "Connection will be done when I can write to it\n");
+            
             conn->references += 1;
 
         } else {
@@ -58,13 +64,13 @@ printf("connection will be done when I can write to it\n");
         }
     }
 
-    printf("Connection established\n");
-
     return 1;
 
 
     handle_errors:
-        printf("error while connecting to origin\n");
+
+        loggerWrite(DEBUG, "Error while connecting to origin\n");
+    
         /* It's never been registered in the selector */
         if(conn->originFd != -1) {
             close(conn->originFd);
@@ -94,12 +100,12 @@ void * solveDNS(void * data) {
     char buff[7];
     snprintf(buff, sizeof(buff), "%d", ntohs(conn->requestParser.reqParser.destintation.destPort));
 
-    printf("[NEW THREAD] getAddrInfo\n");
+    loggerWrite(DEBUG, "New thread created to resolve DNS\n");
 
     getaddrinfo(conn->requestParser.reqParser.destintation.destAddr.fqdn, buff, &hints, &conn->origin_resolution);
 
+    loggerWrite(DEBUG, "DNS resolved, notifying to parent thread\n");
 
-    printf("[NEW THREAD] notify block");
     selector_notify_block(key->s, key->fd);
 
     free(data);
@@ -168,7 +174,9 @@ unsigned requestRead(struct selector_key * key) {
     request_parser_consume(&conn->requestParser.reqParser, (char *)ptr, n);
 
     if(!parserHasOrigin(conn->requestParser.reqParser)) { // si no tengo el origin y no lo puedo tener de la request
-        printf("Parser needs origin\n");
+        
+        loggerWrite(DEBUG, "Parser needs origin\n");
+        
         if(buffer_can_write(&conn->readBuffer)) {
             return REQUEST;
         } else {
@@ -178,11 +186,14 @@ unsigned requestRead(struct selector_key * key) {
     }
 
     if(conn->originFd == -1 && !conn->isConnectingOrigin) { // y no estoy resolviendo todavia
-    printf("attempt connection to the origin server\n");
+    
+        loggerWrite(DEBUG, "Attempt connection to origin server\n");
+    
         /* New thread to solve DNS */
         if(startOriginConnection(key) == 0) {
-            printf("[ERROR] failed to connect to origin server\n");
-            //return ERROR;
+            
+            loggerWrite(DEBUG, "[ERROR] Failed to connect to origin server\n");
+            
             return setError(key, BAD_GATEWAY_502);
         }
     }
@@ -216,22 +227,18 @@ unsigned requestWrite(struct selector_key * key) {
 	ssize_t  n;
     unsigned ret = REQUEST;
 
-printf("request write called\n");
-
     /* Send bufferd data to the origin server */
     ptr = buffer_read_ptr(&conn->readBuffer, &count);
 	n = send(conn->originFd, ptr, count, MSG_NOSIGNAL);
-    printf("send %d\n", (int)n);
 
 	if(n <= 0) { // origin closed connection
-        printf("origin closed connection\n");
+
+        loggerWrite(DEBUG, "Origin closed connection\n");
+    
         return setError(key, BAD_GATEWAY_502);
 	}
 
     buffer_read_adv(&conn->readBuffer, n);
-
-    printf("[SERVER] writing to origin server\n");
-
 
     /* If the request is not done enable client to read */
     if(!parserIsRequestDone(conn->requestParser.reqParser)) {
@@ -263,11 +270,7 @@ printf("request write called\n");
 unsigned requestBlockReady(struct selector_key * key) {
     struct Connection * conn = DATA_TO_CONN(key);
 
-    printf("Block notified\n");
-
     if(conn->origin_resolution == 0) {
-        // resolution failed
-        printf("DNS failed\n");
         return setError(key, BAD_REQUEST_400); //maybe should be 500
     }
 
@@ -278,10 +281,10 @@ unsigned requestBlockReady(struct selector_key * key) {
     freeaddrinfo(conn->origin_resolution);
     conn->origin_resolution = 0;
 
-printf("attempt connect to origin\n");
-
     if( !connectToOrigin(key) ) {
-        printf("[ERROR] connection to origin failed\n");
+
+        loggerWrite(DEBUG, "[ERROR] Connection to origin failed\n");
+
         return setError(key, BAD_GATEWAY_502);
     }
     
@@ -289,10 +292,8 @@ printf("attempt connect to origin\n");
 
     /* Write buffered request to the origin server */
     if(selector_set_interest(key->s, conn->originFd, OP_WRITE) != SELECTOR_SUCCESS) {
-        printf("[ERROR] failed to set interest to origin fd\n");
         return setError(key, INTERNAL_SERVER_ERR_500);
     }
-printf("still in request waiting to connect to origin server\n");
 
     return REQUEST;
 }

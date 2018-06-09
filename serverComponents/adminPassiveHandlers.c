@@ -16,6 +16,8 @@
 #include "adminActiveHandlers.h"
 #include "maxFdHandler.h"
 
+#include "../logger/logger.h"
+
 #define ADMIN_MAX_POOL 50
 
 static int adminPoolSize = 0;
@@ -58,6 +60,8 @@ void adminPassiveAccept(struct selector_key * key) {
     socklen_t clientAddrLen = sizeof(clientAddr);
 	struct AdminConn * conn = NULL;
 	struct selector_key errorKey;
+
+	loggerWrite(DEBUG, "New admin connection\n");
 
 	keepSpareFd();
 
@@ -104,8 +108,10 @@ void adminPassiveAccept(struct selector_key * key) {
 
 void destroyAdminConnection(struct selector_key * key) {
     struct AdminConn * conn = DATA_TO_ADMIN(key);
+	
+	loggerWrite(DEBUG, "Closing admin connection\n");
+	
 	if(conn == NULL) {
-		printf("connection is null\n");
 		return;
 	}
 

@@ -18,6 +18,7 @@ typedef enum {FALSE, TRUE} Bool;
 
 #define MAX_CLIENTS 10
 #define SELECTOR_SIZE 1024
+
 #define LOGGER_LEVEL PRODUCTION
 
 int createPassiveSock(const int port, const int protocol, char ** errMsg);
@@ -92,7 +93,6 @@ int main() {
     }
 
     while(TRUE) {
-		printf("Waiting in select\n");
         selectorStatus = selector_select(selector);
         if(selectorStatus != SELECTOR_SUCCESS) {
             //handle error
