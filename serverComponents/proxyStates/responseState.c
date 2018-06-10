@@ -43,11 +43,25 @@ int min(int val1, int val2) {
     return val2;
 }
 
+int isValidTransformation(struct Connection * conn) {
+    char c;
+    int n = read(conn->readTransformFd, &c, 1);
+    /* If its valid, it outputs with EAGAIN because its non-blockin, and nothing was sent */
+    if(n == 0) {
+        loggerWrite(PRODUCTION, "\x1b[31m[ERROR]\x1b[0m Invalid transformation command loaded. Applying no transformation.\n");
+        return 0;
+    }
+    if(errno == EAGAIN) {
+        return 1;
+    }
+    return 0;
+}
+
 int shouldTransform(struct Connection * conn) {
     if(conn->transformationType == TRANSFORM) {
         /* First time, check if media type is in the list and if content-type is valid and transfer-encoding is valid */
         /* If it is */
-        if(hasMediaTypeInList(conn->mediaTypesList, strToMediaType("text/plain") )) { // CAMBIAR POR LO QUE ME DA EL PARSER
+        if(hasMediaTypeInList(conn->mediaTypesList, strToMediaType("text/plain")) && isValidTransformation(conn) ) { // CAMBIAR POR LO QUE ME DA EL PARSER
             conn->transformationType = IS_TRANSFORMING;
         } else {
             conn->transformationType = NO_TRANSFORM;
