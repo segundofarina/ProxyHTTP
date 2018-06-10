@@ -131,7 +131,7 @@ add_executable(parserHostreqline
         parser/parserHostReqLine_test.c)
 
 add_executable(admin
-        admin.c)
+        admin.c utils/transformation/transformation.c)
 
 
 
