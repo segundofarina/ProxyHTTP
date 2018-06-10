@@ -55,8 +55,9 @@ enum media_type{
 
 long
 validateLong(uint8_t * num){
+
     char * number = (char *) num;
-    char *end  = 0;
+    char *end     = 0;
     const long sl = strtol(number, &end, 10);
 
     if (end == number|| '\0' != *end
@@ -70,10 +71,12 @@ validateLong(uint8_t * num){
 
 void
 authenticate(int proxy){
-    bool loggedIn =false;
+
+    bool loggedIn        = false;
     uint8_t buffer[0xFF] = {0};
-    uint8_t i=1;
-    int c=0;
+    uint8_t i            = 1;
+    int c                = 0;
+
     while(!loggedIn){
         printf("Please insert admin password\n");
         while((c = tolower(getchar())) != '\n' && i < 0xFF) {
@@ -99,6 +102,7 @@ authenticate(int proxy){
 
 void
 sendRequest(int proxy, uint8_t method,uint8_t len, uint8_t * data ){
+    
     uint8_t * msg = malloc(sizeof(uint8_t)*(len+2));
     msg[0] = method;
     msg[1] = len;
@@ -264,9 +268,9 @@ getProperties(int proxy,enum client_request command){
     uint8_t data[MAX_SERVER_RESPONSE] = {0};
     receiveResponse(proxy,(uint8_t)MAX_SERVER_RESPONSE,data);
 
-    int i = 0;
+    int i          = 0;
     uint8_t status = data[i++];
-    uint8_t len = data[i++];
+    uint8_t len    = data[i++];
 
     if(status == ERR){
         printf("An error has ocurred. Please try again\n");
@@ -307,8 +311,8 @@ shell(int proxy){
         memset(command,0,0xFF);
         memset(parameter,0,0xFF);
         param = false;
-        ci = 0;
-        pi = 0;
+        ci    = 0;
+        pi    = 0;
 
         printf("Admin:$ ");
 
@@ -329,7 +333,7 @@ shell(int proxy){
             c = tolower(getchar());
 
         }
-        command[ci] = 0;
+        command[ci]   = 0;
         parameter[pi] = 0;
 
         if(strcmp("help",command)==0){
@@ -368,8 +372,8 @@ connectToProxy(char * host, int port,char ** errMsg){
 
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
-    addr.sin_family      = AF_INET;
-    addr.sin_port        = htons(port);
+    addr.sin_family = AF_INET;
+    addr.sin_port   = htons(port);
 
     const int proxy = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if(proxy < 0) {
