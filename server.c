@@ -18,9 +18,10 @@ typedef enum {FALSE, TRUE} Bool;
 
 #define MAX_CLIENTS 10
 #define SELECTOR_SIZE 1024
-#define LOGGER_LEVEL PRODUCTION
 
-int createPassiveSock(const int port, const int protocol, char ** errMsg);
+#define LOGGER_LEVEL DEBUG
+
+int createPassiveSock(const int port, const int protocol);
 
 
 //int main(const int argc, const char * argv[]) {
@@ -59,51 +60,70 @@ int main() {
 
 	/* Selector init */
 	if(selector_init(&conf) != 0) {
-		//handle error
+		/* Handle error */
+        errMsg = "Unable to start selector";
+		goto error_handler;
 	}
 
 	if( (selector = selector_new(SELECTOR_SIZE)) == NULL ) {
-		//handle error
+		/* Handle error */
+		errMsg = "Unable to create new selector";
+		goto error_handler;
 	}
 
 	/* Start logger */
 	loggerInit(LOGGER_LEVEL, selector);
 
 	/* Listen to clients */
-	if( (serverFd = createPassiveSock(port, IPPROTO_TCP, &errMsg)) < 0 ) {
-		//handle error
+	if( (serverFd = createPassiveSock(port, IPPROTO_TCP)) < 0 ) {
+		/* Handle error */
+		errMsg = "Error creating the passive socket for http requests, check if the port is not already in use";
+		goto error_handler;
 	}
 
 	selectorStatus = selector_register(selector, serverFd, &proxyPassiveHandlers, OP_READ, NULL);
     if(selectorStatus != SELECTOR_SUCCESS) {
-        errMsg = "Unable to register proxy passive socket fd";
-		//handler error
+        /* Handle error */
+		errMsg = "Unable to register proxy passive socket fd in selector";
+		goto error_handler;
+		
     }
 
 	/* Listen to admin */
-	if( (adminFd = createPassiveSock(adminPort, IPPROTO_SCTP, &errMsg)) < 0 ) {
-		//handle error
+	if( (adminFd = createPassiveSock(adminPort, IPPROTO_SCTP)) < 0 ) {
+		/* Handle error */
+		errMsg = "Error creating the passive socket for admin requests, check if the port is not already in use";
+		goto error_handler;
 	}
 
 	selectorStatus = selector_register(selector, adminFd, &adminPassiveHandlers, OP_READ, NULL);
     if(selectorStatus != SELECTOR_SUCCESS) {
-        errMsg = "Unable to register admin passive socket fd";
-		//handler error
+        /* Handle error */
+		errMsg = "Unable to register admin passive socket fd";
+		goto error_handler;
+		
     }
 
+	loggerWrite(PRODUCTION, "\x1b[32m[INFO]\x1b[0m Proxy started and waiting for new connections\n");
+
     while(TRUE) {
-		printf("Waiting in select\n");
         selectorStatus = selector_select(selector);
         if(selectorStatus != SELECTOR_SUCCESS) {
-            //handle error
+			/* Handle error */
+		    errMsg = "Error in selector";
+			goto error_handler;
         }
     }
 
 	return 0;
+
+	error_handler:
+		printf("\x1b[31m[FATAL ERROR]\x1b[0m %s\n", errMsg);
+		return 1;
 }
 
 /* Returns socket fd or -1 if error */
-int createPassiveSock(const int port, const int protocol, char ** errMsg) {
+int createPassiveSock(const int port, const int protocol) {
 	struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
     addr.sin_family      = AF_INET;
@@ -112,25 +132,21 @@ int createPassiveSock(const int port, const int protocol, char ** errMsg) {
 
 	const int serverFd = socket(AF_INET, SOCK_STREAM, protocol);
 	if(serverFd < 0) {
-		*errMsg = "Unable to create socket";
 		return -1;
 	}
 
 	setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int));
 
 	if(bind(serverFd, (struct sockaddr*) &addr, sizeof(addr)) < 0) {
-		*errMsg = "Unable to bind socket";
 		return -1;
 	}
 
 	if(listen(serverFd, MAX_CLIENTS) < 0) {
-		*errMsg = "Unable to listen socket";
 		return -1;
 	}
 
 	/* Set fd as non-blocking */
 	if(selector_fd_set_nio(serverFd) < 0) {
-		*errMsg = "Unable to ser socket as non-blocking";
 		return -1;
 	}
 

@@ -14,6 +14,9 @@
 #include "admin-structure.h"
 #include "adminStm.h"
 #include "adminActiveHandlers.h"
+#include "maxFdHandler.h"
+
+#include "../logger/logger.h"
 
 #define ADMIN_MAX_POOL 50
 
@@ -58,13 +61,15 @@ void adminPassiveAccept(struct selector_key * key) {
 	struct AdminConn * conn = NULL;
 	struct selector_key errorKey;
 
-	//keepSpareFd();
+	loggerWrite(DEBUG, "New admin connection\n");
+
+	keepSpareFd();
 
 	const int adminFd = accept(key->fd, (struct sockaddr*) &clientAddr, &clientAddrLen);
     if(adminFd == -1) {
 		if(errno == EMFILE) {
 			/* There are no available fd so close connection */
-			//handleAcceptEmfile(key->fd, (struct sockaddr*) &clientAddr, &clientAddrLen);
+			handleAcceptEmfile(key->fd, (struct sockaddr*) &clientAddr, &clientAddrLen);
 		}
         goto handle_errors;
     }
@@ -103,8 +108,10 @@ void adminPassiveAccept(struct selector_key * key) {
 
 void destroyAdminConnection(struct selector_key * key) {
     struct AdminConn * conn = DATA_TO_ADMIN(key);
+	
+	loggerWrite(DEBUG, "Closing admin connection\n");
+	
 	if(conn == NULL) {
-		printf("connection is null\n");
 		return;
 	}
 

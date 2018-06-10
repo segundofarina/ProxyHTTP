@@ -37,19 +37,7 @@ void adminConn_close (struct selector_key *key) {
         close(key->fd);
     }
 }
-/*
-void connection_block (struct selector_key *key) {
-	struct state_machine *stm   = &DATA_TO_CONN(key)->stm;
-    const enum proxyStates state = stm_handler_block(stm, key);
 
-    if(state == FATAL_ERROR || state == DONE) {
-        adminConnDone(key);
-    }
-
-}
-*/
 void adminConnDone(struct selector_key * key) {
-    printf("destroyConnection()\n");
-
     destroyAdminConnection(key);
 }
