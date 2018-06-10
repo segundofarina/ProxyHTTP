@@ -3,6 +3,8 @@
 
 #include "transformationFork.h"
 
+#include "transformationManager.h"
+
 #define READ 0
 #define WRITE 1
 
@@ -27,7 +29,7 @@ int forkTransformation(int * readTransformFd, int * writeTransformFd/* , transfo
     }
 
     if(pid == 0) {
-        runChildCode(readPipe, writePipe, "cat");
+        runChildCode(readPipe, writePipe, getTransformation());
         exit(0);
     }
 

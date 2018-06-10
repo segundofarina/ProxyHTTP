@@ -47,7 +47,19 @@ add_executable(proxy
         serverComponents/proxyStates/requestState.c
         serverComponents/proxyStates/responseState.c
         serverComponents/transformationFork.c
-        serverComponents/proxyStates/errorState.c)
+        serverComponents/proxyStates/errorState.c
+        serverComponents/adminActiveHandlers.c
+        serverComponents/adminPassiveHandlers.c
+        serverComponents/adminStm.c
+        serverComponents/adminStates/authenticateReadState.c
+        serverComponents/adminStates/authenticateWriteState.c
+        serverComponents/adminStates/adminReadState.c
+        serverComponents/adminStates/adminWriteState.c
+        serverComponents/adminStates/adminErrorState.c
+        serverComponents/maxFdHandler.c
+        serverComponents/metrics.c
+        serverComponents/transformationManager.c
+        logger/logger.c)
 
 
 add_executable(requestLine
@@ -122,5 +134,7 @@ add_executable(parserHostreqline
         parser/parserHostReqLine_test.c)
 
 add_executable(admin
-        admin.c)
+        admin.c utils/transformation/transformation.c)
+
+
 
