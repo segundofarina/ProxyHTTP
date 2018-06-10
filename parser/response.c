@@ -14,6 +14,21 @@
 #include "statusLine.h"
 
 
+/* Taken from RFC 7230 section 3.3
+ *  "The presence of a message body in a response depends on both the
+   request method to which it is responding and the response status code
+   (Section 3.1.2).  Responses to the HEAD request method (Section 4.3.2
+   of [RFC7231]) never include a message body because the associated
+   response header fields (e.g., Transfer-Encoding, Content-Length,
+   etc.), if present, indicate only what their values would have been if
+   the request method had been GET (Section 4.3.1 of [RFC7231]). 2xx
+   (Successful) responses to a CONNECT request method (Section 4.3.6 of
+   [RFC7231]) switch to tunnel mode instead of having a message body.
+   All 1xx (Informational), 204 (No Content), and 304 (Not Modified)
+   responses do not include a message body.  All other responses do
+   include a message body, although the body might be of zero length."
+   */
+
 enum header_name {
     HEADER_CONT_LEN,
     HEADER_TRANSF_ENC,
@@ -39,6 +54,20 @@ bool isIgnored(enum header_name name) {
     }
     return false;
 }
+
+bool
+expectsBody(int statusCode, enum request_method method){
+    if(method == METHOD_HEAD){
+        return false;
+    }else if(statusCode>= 100 && statusCode<200){
+        return false;
+    }else if (statusCode == 204 || statusCode== 304){
+        return false;
+    }
+
+    return true;
+}
+
 
 
 enum body_type
@@ -148,27 +177,28 @@ headersResponse(const uint8_t c,struct response_parser *p){
             headerGroup_parser_close(p->headerParser);
             free(p->headerParser);
             p->headerParser=NULL;
-            int type = getBodyTypeResponse(p->headerList);
-            int len = getContentLengthResponse(p->headerList);
-            if(type == body_type_chunked || len >0){
 
-                p->bodyParser = malloc(sizeof(struct body_parser));
-                body_parser_init(p->bodyParser, type, len);
 
-                next = response_body;
-            } else {
-                next = response_done;
+            if(expectsBody(p->statusCode,p->method)){
+                int type = getBodyTypeResponse(p->headerList);
+                int len = getContentLengthResponse(p->headerList);
+                if(type == body_type_chunked || len >0){
+
+                    p->bodyParser = malloc(sizeof(struct body_parser));
+                    body_parser_init(p->bodyParser, type, len);
+
+                    next = response_body;
+                } else {
+                    next = response_error;
+                }
+            }else{
+                next =response_done;
             }
+
             break;
         case headerGroup_error:
             next = response_error;
             break;
-//        case headerGroup_header:
-//            if(p->headerParser->headerParser->state == header_end){
-//                p->hasBeenDumped=false;
-//                p->headerBufferLen=0;
-//            }
-
         default:
             next = response_headers;
             break;
@@ -211,7 +241,7 @@ doneResponse( const uint8_t c,struct response_parser *p) {
 
 
 void
-response_parser_init(struct response_parser *p) {
+response_parser_init(struct response_parser *p, enum request_method method) {
 
     p->state = response_statusLine;
     p->statusLineParser = malloc(sizeof(struct statusLine_parser));
@@ -221,6 +251,7 @@ response_parser_init(struct response_parser *p) {
     p->hasBeenDumped = false;
     p->headerBufferLen = 0;
     p->shouldKeepLastChar = false;
+    p->method = method;
     statusLine_parser_init(p->statusLineParser);
 
 }
@@ -294,17 +325,6 @@ response_parser_consume(struct response_parser *p, char *b, int *len, char *writ
         response_parser_feed(b[i], p);
 
 
-/*DEBUG---
-        char letter = b[i];
-        if(letter == '\n'){
-            letter = 'N';
-        }else if (letter == '\r'){
-            letter = 'R';
-        }
-        printf("feeded %c state now is %s\n",letter,response_state_string(p->state));
-
-*/
-
         if (p->state == response_headers &&
             (p->headerParser->state == headerGroup_header || p->headerParser->state == headerGroup_init)) {
 
@@ -361,6 +381,7 @@ response_parser_consume(struct response_parser *p, char *b, int *len, char *writ
 
         if (p->prevState == response_headers && p->state == response_body) {
             // breaking so the proxy knows the body has begun
+
             i++;
             break;
         }

@@ -5,7 +5,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include "method.h"
+
+
 
 enum requestLine_state {
     rl_method,
@@ -16,10 +17,18 @@ enum requestLine_state {
     rl_error
 };
 
+enum request_method{
+    METHOD_GET,
+    METHOD_HEAD,
+    METHOD_POST,
+    METHOD_NOTSUPPORTED
+};
 
 struct requestLine_parser {
     enum requestLine_state state;
-    struct method_parser * methodParser;
+    struct multi_parser * methodParser;
+
+
 
     char uri [0xFF];
 
@@ -62,6 +71,9 @@ requestLine_parser_close(struct requestLine_parser *p);
 
 char *
 requestLine_state_toString(const enum requestLine_state st);
+
+char *
+method_string(enum request_method type);
 
 
 #endif //PC_2018_04_METHOD_H

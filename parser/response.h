@@ -11,6 +11,7 @@
 #include <sys/socket.h>
 
 #include "body.h"
+#include "requestLine.h"
 
 
 
@@ -25,7 +26,8 @@ enum response_state {
 struct response_parser {
     enum response_state state;
     enum response_state prevState;
-
+    enum request_method method;
+    int statusCode;
     struct statusLine_parser * statusLineParser;
     struct headerGroup_parser * headerParser;
     struct body_parser        * bodyParser;
@@ -44,7 +46,7 @@ struct response_parser {
 
 
 void
-response_parser_init(struct response_parser *p);
+response_parser_init(struct response_parser *p, enum request_method method);
 
 enum response_state
 response_parser_feed (const uint8_t c,struct response_parser *p);

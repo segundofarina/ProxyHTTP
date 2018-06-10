@@ -29,7 +29,6 @@ add_executable(proxy
         parser/header.c
         parser/headerGroup.c
         parser/body.c
-        parser/method.c
         parser/requestLine.c
         parser/request.c
         parser/identity.c
@@ -51,7 +50,7 @@ add_executable(proxy
 
 
 add_executable(requestLine
-        parser/method.c
+        parser/multi_parser.c
         parser/parser.c
         parser/parser_utils.c
         parser/requestLine.c
@@ -93,7 +92,6 @@ add_executable(request
         parser/header.c
         parser/headerGroup.c
         parser/body.c
-        parser/method.c
         parser/requestLine.c
         parser/request.c
         parser/request_test.c
@@ -108,7 +106,6 @@ add_executable(response
         parser/header.c
         parser/headerGroup.c
         parser/body.c
-        parser/method.c
         parser/statusLine.c
         parser/response.c
         parser/response_test.c
