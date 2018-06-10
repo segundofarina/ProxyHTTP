@@ -47,7 +47,7 @@ int shouldTransform(struct Connection * conn) {
     if(conn->transformationType == TRANSFORM) {
         /* First time, check if media type is in the list and if content-type is valid and transfer-encoding is valid */
         /* If it is */
-        if(hasMediaTypeInList(conn->mediaTypesList, strToMediaType("text/html") )) { // CAMBIAR POR LO QUE ME DA EL PARSER
+        if(hasMediaTypeInList(conn->mediaTypesList, strToMediaType("text/plain") )) { // CAMBIAR POR LO QUE ME DA EL PARSER
             conn->transformationType = IS_TRANSFORMING;
         } else {
             conn->transformationType = NO_TRANSFORM;

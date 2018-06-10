@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <unitypes.h>
 
 char hexadecimal(int i) {
     char ans = 0;
