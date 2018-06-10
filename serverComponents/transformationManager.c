@@ -1,9 +1,12 @@
 #include <stdlib.h>
+#include <string.h>
 
 #include "transformationManager.h"
 
+#define MAX_CMD 255
+
 struct Transformation {
-    char cmd[256];
+    char cmd[MAX_CMD + 1];
     struct mediaTypesNode * firstNode;
 };
 
@@ -27,6 +30,21 @@ int hasTransformation() {
 
 char * getTransformation() {
     return transformation->cmd;
+}
+
+int addTransformation(const char * cmd) {
+    int n = strlen(cmd);
+    if(n > MAX_CMD) {
+        return 0;
+    }
+
+    memcpy(transformation->cmd, cmd, n+1);
+
+    return 1;
+}
+
+void removeTransformation() {
+    transformation->cmd[0] = 0;
 }
 
 static struct mediaTypesNode * copyList(const struct mediaTypesNode * node) {
@@ -100,7 +118,28 @@ int removeMediaType(enum MediaType mediaType) {
 }
 
 void transformationManagerDestroy() {
+    if(transformation == NULL) {
+        return;
+    }
     freeMediaTypeList(transformation->firstNode);
     free(transformation);
 }
 
+
+int hasMediaTypeInList(const struct mediaTypesNode * list, const enum MediaType mediaType) {
+    const struct mediaTypesNode * current = list;
+    while(current != NULL) {
+        if(current->mediaType == mediaType) {
+            return 1;
+        }
+        current = current->next;
+    }
+    return 0;
+}
+
+enum MediaType strToMediaType(const char * str) {
+    if(strcmp("text/plain", str) == 0) {
+        return MT_TEXT_PLAIN;
+    }
+    return MT_NONE;
+}

@@ -11,12 +11,14 @@
 #include "../utils/stm/stm.h"
 #include "../parser/request.h"
 #include "../parser/response.h"
+#include "transformationManager.h"
 #include "proxyStates/errorState.h"
 
 
 enum TransformationType {
     NO_TRANSFORM,
-    TRANSFORM_CAT
+    TRANSFORM,
+    IS_TRANSFORMING
 };
 
 struct httpRequestParser {
@@ -63,8 +65,9 @@ struct Connection {
 
     /* transformation details */
     int writeTransformFd, readTransformFd;
-    enum TransformationType trasformationType;
+    enum TransformationType transformationType;
     int transformationPid;
+    struct mediaTypesNode * mediaTypesList;
 
     /* Keep an error to inform to the client */
     enum error_code errorCode;

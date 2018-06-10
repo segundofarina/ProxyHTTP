@@ -12,6 +12,7 @@
 #include "proxyActiveHandlers.h"
 #include "proxyStm.h"
 #include "maxFdHandler.h"
+#include "transformationManager.h"
 
 #include "../utils/buffer/buffer.h"
 #include "../logger/logger.h"
@@ -23,8 +24,6 @@
 
 static int poolSize = 0;
 static struct Connection * pool = NULL;
-
-static enum TransformationType transformationType = NO_TRANSFORM;
 
 struct Connection * new_connection(const int clientFd) {
 	struct Connection * connection;
@@ -59,14 +58,21 @@ struct Connection * new_connection(const int clientFd) {
 	buffer_init(&connection->respTempBuffer, N(connection->rawBuff_c), connection->rawBuff_c);
 	
 	/* transformation */
-	connection->trasformationType = transformationType;
+	if(hasTransformation()) {
+		connection->transformationType = TRANSFORM;
+	} else {
+		connection->transformationType = NO_TRANSFORM;
+	}
+	
 	connection->transformationPid = -1;
 	connection->readTransformFd = -1;
 	connection->writeTransformFd = -1;
 
-	if(connection->trasformationType != NO_TRANSFORM) {
+	if(connection->transformationType != NO_TRANSFORM) {
 		buffer_init(&connection->inTransformBuffer, N(connection->rawBuff_d), connection->rawBuff_d);
 		buffer_init(&connection->outTransformBuffer, N(connection->rawBuff_e), connection->rawBuff_e);
+
+		connection->mediaTypesList = getMediaTypesList();
 
 		/* Fork transformation process and create pipes */
 		loggerWrite(DEBUG, "Fork transformation process\n");
@@ -135,6 +141,11 @@ void destroy_connection(struct selector_key * key) {
 		connection->writeTransformFd = -1;
 	}
 
+	/* Free media types list */
+	if(connection->mediaTypesList != NULL) {
+		free(connection->mediaTypesList);
+	}
+
 	if(connection->references > 1) {
 		connection->references -= 1;
 		return;
@@ -183,7 +194,7 @@ void proxyPassiveAccept(struct selector_key *key) {
 		goto handle_errors;
 	}
 	/* register transformation fds */
-	if(connection->trasformationType != NO_TRANSFORM) {
+	if(connection->transformationType != NO_TRANSFORM) {
 		if(selector_fd_set_nio(connection->readTransformFd) == -1 || selector_fd_set_nio(connection->writeTransformFd) == -1) {
 			goto handle_errors;
 		}

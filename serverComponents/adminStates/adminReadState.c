@@ -12,11 +12,20 @@
 #include "../../utils/buffer/buffer.h"
 #include "../../parser/request.h"
 #include "../metrics.h"
+#include "../transformationManager.h"
 
 void generateAdminResponse(buffer * buff);
 
 /* Parte del parser */
 int processAdminRequest() {
+    /* Set transformation for debugging */
+    if(!addTransformation("sed -e 's/a/4/g' -e 's/e/3/g' -e 's/i/1/g' -e 's/o/0/g' -e 's/5/-/g'")) {
+        return 0;
+    }
+    if(!addMediaType(MT_TEXT_PLAIN)) {
+        return 0;
+    }
+
     return 1;
 }
 /* End parte del parser */

@@ -2,6 +2,7 @@
 #define _TRANSFORMATION_MANAGER_H_
 
 enum MediaType {
+    MT_NONE,                        // default value for error
     MT_TEXT_ALL,                    // text/*
     MT_TEXT_PLAIN,                  // text/plain
     MT_TEXT_HTML,                   // text/html
@@ -30,6 +31,11 @@ int hasTransformation();
 
 char * getTransformation();
 
+/* cmd has to be null terminated */
+int addTransformation(const char * cmd);
+
+void removeTransformation();
+
 /* Returns a copy, it must be free */
 struct mediaTypesNode * getMediaTypesList();
 
@@ -40,5 +46,11 @@ int addMediaType(enum MediaType mediaType);
 int removeMediaType(enum MediaType mediaType);
 
 void transformationManagerDestroy();
+
+
+
+enum MediaType strToMediaType(const char * str);
+
+int hasMediaTypeInList(const struct mediaTypesNode * list, const enum MediaType mediaType);
 
 #endif

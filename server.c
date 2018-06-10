@@ -13,6 +13,7 @@
 #include "serverComponents/proxyPassiveHandlers.h"
 #include "serverComponents/adminPassiveHandlers.h"
 #include "logger/logger.h"
+#include "serverComponents/proxyPassiveHandlers.h"
 
 typedef enum {FALSE, TRUE} Bool;
 
@@ -74,6 +75,9 @@ int main() {
 	/* Start logger */
 	loggerInit(LOGGER_LEVEL, selector);
 
+	/* Start transformation manager */
+	transformationManagerInit();
+
 	/* Listen to clients */
 	if( (serverFd = createPassiveSock(port, IPPROTO_TCP)) < 0 ) {
 		/* Handle error */
@@ -118,6 +122,17 @@ int main() {
 	return 0;
 
 	error_handler:
+
+		transformationManagerDestroy();
+
+		if(selector != NULL) {
+			selector_destroy(selector);
+		}
+		
+		selector_close();
+
+		//destroy pool
+
 		printf("\x1b[31m[FATAL ERROR]\x1b[0m %s\n", errMsg);
 		return 1;
 }

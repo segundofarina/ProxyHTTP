@@ -43,6 +43,23 @@ int min(int val1, int val2) {
     return val2;
 }
 
+int shouldTransform(struct Connection * conn) {
+    if(conn->transformationType == TRANSFORM) {
+        /* First time, check if media type is in the list and if content-type is valid and transfer-encoding is valid */
+        /* If it is */
+        if(hasMediaTypeInList(conn->mediaTypesList, strToMediaType("text/html") )) { // CAMBIAR POR LO QUE ME DA EL PARSER
+            conn->transformationType = IS_TRANSFORMING;
+        } else {
+            conn->transformationType = NO_TRANSFORM;
+        }
+    }
+
+    if(conn->transformationType == IS_TRANSFORMING) {
+        return 1;
+    }
+    return 0;
+}
+
 enum response_state copyTempToWriteBuff(struct selector_key * key) {
     struct Connection * conn = DATA_TO_CONN(key);
 	uint8_t * ptrToParse, * ptrFromParse;
@@ -176,12 +193,14 @@ int copyTransformToWriteBuffer(struct selector_key * key) {
     }
         
     /* If outTransformBuffer is not full and missing bytes readTransformFd OP_READ */
-    interest = OP_NOOP;
-    if(buffer_can_write(&conn->outTransformBuffer) && conn->readTransformFd != -1) {
-        interest = OP_READ;
-    }
-    if(selector_set_interest(key->s, conn->readTransformFd, interest) != SELECTOR_SUCCESS) {
-        return 0;
+    if(conn->readTransformFd != -1) {
+        interest = OP_NOOP;
+        if(buffer_can_write(&conn->outTransformBuffer) && conn->readTransformFd != -1) {
+            interest = OP_READ;
+        }
+        if(selector_set_interest(key->s, conn->readTransformFd, interest) != SELECTOR_SUCCESS) {
+            return 0;
+        }
     }
 
     return 1;
@@ -213,7 +232,7 @@ unsigned readFromOrigin(struct selector_key * key) {
 
     /* If im not in body write to writeBuffer */
     /* Always write to writeBuffer if there is no transformation */
-    if(conn->trasformationType == NO_TRANSFORM || state == response_statusLine || state == response_headers) {
+    if(!shouldTransform(conn) || state == response_statusLine || state == response_headers) {
         state = copyTempToWriteBuff(key);
         if(state == response_error) {
             return setError(key, INTERNAL_SERVER_ERR_500);
@@ -222,7 +241,7 @@ unsigned readFromOrigin(struct selector_key * key) {
 
     /* If im in body write to inTransformBuffer */
     if(state == response_body) {
-        if(conn->trasformationType == NO_TRANSFORM) {
+        if(!shouldTransform(conn)) {
             state = copyTempToWriteBuff(key);
         } else {
             state = copyTempToTransformBuff(key);
@@ -241,8 +260,6 @@ unsigned readFromTranformation(struct selector_key * key) {
 	size_t count;
 	ssize_t  n;
 
-    loggerWrite(DEBUG, "Reading from transformation\n");
-
     /* Read from transformation and save in out transform buffer */
 	ptr = buffer_write_ptr(&conn->outTransformBuffer, &count);
 	n = read(key->fd, ptr, count);
@@ -251,17 +268,22 @@ unsigned readFromTranformation(struct selector_key * key) {
         if(selector_unregister_fd(key->s, key->fd) != SELECTOR_SUCCESS) {
             return setError(key, INTERNAL_SERVER_ERR_500);
         }
-        //close(conn->readTransformFd);
+        
         conn->readTransformFd = -1;
     }
 	if(n < 0) {
-        loggerWrite(DEBUG, "[ERROR] Receive got 0 bytes from transformation\n");
+        loggerWrite(DEBUG, "[ERROR] Receive got < 0 bytes from transformation\n");
         return setError(key, INTERNAL_SERVER_ERR_500);
 	}
     buffer_write_adv(&conn->outTransformBuffer, n);
 
     if(!copyTransformToWriteBuffer(key)) {
         return setError(key, INTERNAL_SERVER_ERR_500);
+    }
+
+    if(pareserResponseIsDone(conn->responseParser) && !buffer_can_read(&conn->writeBuffer) && (conn->transformationType == NO_TRANSFORM || conn->readTransformFd == -1) ) {
+        loggerWrite(DEBUG, "Response is done\n");
+        return DONE;
     }
 
     return RESPONSE;
@@ -306,7 +328,7 @@ unsigned writeToClient(struct selector_key * key) {
     addBytesSent(n);
 
     /* Copy from temp if it's on headers or no transformation */
-    if(conn->trasformationType == NO_TRANSFORM || state == response_headers || state == response_statusLine) {
+    if(!shouldTransform(conn) || state == response_headers || state == response_statusLine) {
         state = copyTempToWriteBuff(key);
         if(state == response_error) {
             return setError(key, INTERNAL_SERVER_ERR_500);
@@ -314,21 +336,21 @@ unsigned writeToClient(struct selector_key * key) {
     }
 
     /* I have not enterd in the above if and I'm in the body */
-    if(conn->trasformationType != NO_TRANSFORM && originalState == response_body) {
+    if(shouldTransform(conn) && originalState == response_body) {
         if(!copyTransformToWriteBuffer(key)) {
             return setError(key, INTERNAL_SERVER_ERR_500);
         }
     }
 
     /* If the parser changed state to body and there is no transformation */
-    if(conn->trasformationType != NO_TRANSFORM && originalState != response_body && state == response_body) {
+    if(shouldTransform(conn) && originalState != response_body && state == response_body) {
         if(copyTempToTransformBuff(key) == response_error) {
             return setError(key, INTERNAL_SERVER_ERR_500);
         }
     }
 
     /* Fix parser stop reading when changing to body */
-    if(conn->trasformationType == NO_TRANSFORM && state == response_body) {
+    if(!shouldTransform(conn) && state == response_body) {
         if(copyTempToWriteBuff(key) == response_error) {
             return setError(key, INTERNAL_SERVER_ERR_500);
         }
@@ -345,7 +367,7 @@ unsigned writeToClient(struct selector_key * key) {
     }
 
     /* Check if it's done */
-    if(pareserResponseIsDone(conn->responseParser) && !buffer_can_read(&conn->writeBuffer) && conn->readTransformFd == -1) {
+    if(pareserResponseIsDone(conn->responseParser) && !buffer_can_read(&conn->writeBuffer) && (conn->transformationType == NO_TRANSFORM || conn->readTransformFd == -1) ) {
         loggerWrite(DEBUG, "Response is done\n");
         return DONE;
     }
