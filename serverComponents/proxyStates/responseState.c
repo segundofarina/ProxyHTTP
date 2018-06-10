@@ -388,7 +388,7 @@ unsigned writeToTransformation(struct selector_key * key) {
 
         loggerWrite(DEBUG, "[ERROR] write to transformation returned 0\n");
     
-        return setError(key, INTERNAL_SERVER_ERR_500);
+        return FATAL_ERROR; // since I have already sent the headers
 	}
     buffer_read_adv(&conn->inTransformBuffer, n);
 

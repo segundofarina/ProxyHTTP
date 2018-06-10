@@ -20,7 +20,7 @@ typedef enum {FALSE, TRUE} Bool;
 #define MAX_CLIENTS 10
 #define SELECTOR_SIZE 1024
 
-#define LOGGER_LEVEL DEBUG
+#define LOGGER_LEVEL PRODUCTION
 
 int createPassiveSock(const int port, const int protocol);
 
@@ -107,6 +107,9 @@ int main() {
 		goto error_handler;
 		
     }
+
+	/* Avoid process kill with sigpipe */
+	signal(SIGPIPE, SIG_IGN);
 
 	loggerWrite(PRODUCTION, "\x1b[32m[INFO]\x1b[0m Proxy started and waiting for new connections\n");
 
