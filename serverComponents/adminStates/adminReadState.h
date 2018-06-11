@@ -5,6 +5,12 @@
 
 #include "../../utils/selector/selector.h"
 
+#define REQUEST_METHOD 0
+#define REQUEST_LENGTH_DATA 1
+#define REQUEST_DATA 2
+
+
+
 unsigned adminRead(struct selector_key * key);
 
 #endif

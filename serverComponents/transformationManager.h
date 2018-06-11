@@ -29,7 +29,7 @@ int transformationManagerInit();
 
 int hasTransformation();
 
-char * getTransformation();
+char * getCurrentTransformation();
 
 /* cmd has to be null terminated */
 int addTransformation(const char * cmd);

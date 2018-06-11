@@ -10,14 +10,40 @@
 #include "../adminActiveHandlers.h"
 #include "../../utils/buffer/buffer.h"
 #include "../../parser/request.h"
+#include "adminErrorState.h"
+#include "adminReadState.h"
 
-void generateAuthResponse(buffer * buff);
+int createResponse(buffer * buff,enum auth_response code) {
+    int i = 0;
+    buffer_reset(buff);
+    uint8_t  * msg = buffer_write_ptr(buff,&i);
 
-/* Parte del parser */
-int processAuthentication() {
+    if(i == 0){
+        return 0;
+    }
+    msg[0] = code;
+    buffer_write_adv(buff,1);
     return 1;
+
 }
-/* End parte del parser */
+
+enum auth_response processAuthentication(buffer * buff) {
+    int i = 0;
+    uint8_t * ptr = buffer_read_ptr(buff,&i);
+    uint8_t pwd[256] = {0};
+    enum auth_response ans;
+
+    if(i < ptr[0]+1 || (strcmp(pwd, PASSWORD) != 0)){
+        ans = LOGIN_FAILED;
+    }else{
+        ans = LOGGED_IN;
+    }
+    int aux = createResponse(buff,ans);
+    if(aux == 0){
+        return LOGIN_FAILED;
+    }
+    return LOGGED_IN;
+}
 
 unsigned authenticateRead(struct selector_key * key) {
     struct AdminConn * conn = DATA_TO_ADMIN(key);
@@ -33,29 +59,13 @@ unsigned authenticateRead(struct selector_key * key) {
     }
     buffer_write_adv(&conn->buff, n);
 
-    // parse data?
+    enum auth_response error = processAuthentication(&conn->buff);
 
-    if(processAuthentication()) {
+    if(error == LOGGED_IN) {
         if(selector_set_interest_key(key, OP_WRITE) != SELECTOR_SUCCESS) {
             return ADMIN_FATAL_ERROR;
         }
-        
-        generateAuthResponse(&conn->buff);
         return AUTHENTICATE_WRITE;
     }
-
-    // generate response error
-    return ADMIN_ERROR;
-}
-
-void generateAuthResponse(buffer * buff) {
-    buffer_reset(buff);
-
-    // write response to buff
-    uint8_t * ptr;
-    size_t size;
-    ptr = buffer_write_ptr(buff, &size);
-    memcpy(ptr, "hola", 4);
-    ptr[4] = 0;
-    buffer_write_adv(buff, 5);    
+    return adminSetError(key, error);
 }
