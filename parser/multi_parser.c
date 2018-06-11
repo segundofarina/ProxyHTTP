@@ -21,7 +21,7 @@ struct parser_data_list {
 extern uint32_t
 multi_parser_consume(char * string, struct multi_parser* p){
     int i=0;
-    uint32_t state;
+    uint32_t state = p->currentMatch;
     while(string[i]){
         state = multi_parser_feed(string[i],p);
         i++;

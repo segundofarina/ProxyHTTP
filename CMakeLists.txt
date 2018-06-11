@@ -6,6 +6,16 @@ project(pc_2018_04 C)
 
 set(CMAKE_C_FLAGS    "-g -fsanitize=address -fno-omit-frame-pointer --std=c99 -pthread -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-unused-parameter -Wno-implicit-fallthrough -D_POSIX_C_SOURCE=200112L ")
 
+set(CLANG_TIDY_CHECKS *
+   -boost-*
+   -mpi-*
+   -llvm-*
+   -cppcoreguidelines-*
+   -clang-analyzer-osx.*
+   -cert-*-cpp
+   -misc-unused-parameters,
+   -clang-diagnostic-missing-declarations)
+string(REPLACE ";" "," CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS}")
 
 if(CMAKE_C_COMPILER_ID MATCHES "Clang")
     find_program(CLANGTIDY NAMES clang-tidy)

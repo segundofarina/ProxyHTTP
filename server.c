@@ -31,7 +31,7 @@ int main() {
 	int port = 1080, serverFd, adminPort = 1081, adminFd;
 	char * errMsg = NULL;
 	selector_status selectorStatus = SELECTOR_SUCCESS;
-    fd_selector selector;
+    fd_selector selector=NULL;
 
 	/* Selector conf structure */
 	const struct selector_init conf = {

@@ -156,15 +156,9 @@ requestLine_is_done(const enum requestLine_state st, bool *errored){
 enum requestLine_state
 requestLine_parser_consume(char *buffer,size_t len, struct requestLine_parser *p, bool *errored){
     size_t i;
-    enum requestLine_state state;
+    enum requestLine_state state = p->state;
     for(i =0 ; i< len ;i++){
        state = requestLine_parser_feed(buffer[i],p);
-        char letter = buffer[i];
-        if(letter == '\n'){
-            letter = 'N';
-        }else if (letter == '\r'){
-            letter = 'R';
-        }
     }
     if( errored != NULL) {
         if (state == rl_error) {
