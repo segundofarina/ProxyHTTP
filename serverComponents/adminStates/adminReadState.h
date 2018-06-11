@@ -9,6 +9,9 @@
 #define REQUEST_LENGTH_DATA 1
 #define REQUEST_DATA 2
 
+#define AUTH_LENGHT_PWD 0
+#define AUTH_PWD 1
+
 
 
 unsigned adminRead(struct selector_key * key);

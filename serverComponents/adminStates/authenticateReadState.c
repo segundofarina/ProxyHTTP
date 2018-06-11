@@ -31,9 +31,12 @@ enum auth_response processAuthentication(buffer * buff) {
     size_t i = 0;
     uint8_t * ptr = buffer_read_ptr(buff,&i);
     uint8_t pwd[256] = {0};
+    size_t len = ptr[AUTH_LENGHT_PWD];
+    memcpy(pwd,ptr+AUTH_PWD,len);
+    buffer_read_adv(buff,len);
     enum auth_response ans;
 
-    if(i < ptr[0]+1 || (strcmp(pwd, PASSWORD) != 0)){
+    if(i < len || (strncmp(pwd, PASSWORD,len) != 0)){
         ans = LOGIN_FAILED;
     }else{
         ans = LOGGED_IN;
