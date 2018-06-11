@@ -68,6 +68,7 @@ add_executable(proxy
         serverComponents/maxFdHandler.c
         serverComponents/metrics.c
         serverComponents/transformationManager.c
+        serverComponents/transErrorManager.c
         logger/logger.c)
 
 

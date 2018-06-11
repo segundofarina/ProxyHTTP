@@ -14,12 +14,12 @@
 #include "serverComponents/adminPassiveHandlers.h"
 #include "logger/logger.h"
 #include "serverComponents/proxyPassiveHandlers.h"
+#include "serverComponents/transErrorManager.h"
 
 typedef enum {FALSE, TRUE} Bool;
 
 #define MAX_CLIENTS 10
 #define SELECTOR_SIZE 1024
-#define TRANS_ERR_MAX_LEN 256
 #define DEFAULT_PROXY_HTTP_PORT 8080
 #define DEFAULT_ADMIN_PORT 9090
 
@@ -30,7 +30,6 @@ struct serverSettings {
 	uint16_t httpPort;
 	uint32_t adminAddr;
 	uint16_t adminPort;
-	char transformationErr[TRANS_ERR_MAX_LEN];
 };
 
 int createPassiveSock(const uint32_t addr, const uint16_t port, const int protocol);
@@ -227,21 +226,14 @@ void getParams(const int argc, char * const * argv, struct serverSettings * sett
 	settings->adminAddr = htonl(INADDR_LOOPBACK);
 	settings->adminPort = htons(DEFAULT_ADMIN_PORT);
 	
-	int errSize = strlen("/dev/null");
-	memcpy(settings->transformationErr, "/dev/null", errSize);
-	settings->transformationErr[errSize] = 0;
-	
 	int opt;
 	while( (opt = getopt(argc, argv, "e:hl:L:M:o:p:t:v")) != -1 ) {
 		switch (opt) {
 			case 'e':
-				errSize = strlen(optarg);
-				if(errSize > TRANS_ERR_MAX_LEN) {
-					printf("Error: the error file %s can't be over %d bytes\n", optarg, TRANS_ERR_MAX_LEN);
+				if(!setTransformationErrorFile(optarg)) {
+					printf("Error: the error file %s is too long\n", optarg);
 					exit(EXIT_FAILURE);	
 				}
-				memcpy(settings->transformationErr, optarg, errSize);
-				settings->transformationErr[errSize] = 0;
 				break;
 			case 'h':
 				printHelp();

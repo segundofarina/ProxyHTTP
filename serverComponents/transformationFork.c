@@ -7,6 +7,7 @@
 #include "transformationFork.h"
 
 #include "transformationManager.h"
+#include "transErrorManager.h"
 
 #define READ 0
 #define WRITE 1
@@ -52,7 +53,7 @@ void runChildCode(const int readPipe[2], const int writePipe[2], const char * cm
     int error = 0, errorFd = -1;
     configureChildPipes(readPipe, writePipe);
 
-    errorFd = open("/dev/null", O_WRONLY | O_CREAT | O_APPEND);
+    errorFd = open(getTransformationErrorFile(), O_WRONLY | O_CREAT | O_APPEND);
     if(errorFd != -1) {
         dup2(errorFd, STDERR_FILENO);
         close(errorFd);
