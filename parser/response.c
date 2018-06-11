@@ -39,15 +39,13 @@ enum header_name {
 
 };
 
-//char * headersAdd = {"Transfer-Encoding: Chunked\r\nConnection: close\r\n\r\n"};
-
 char **headerNamesResponse = (char *[]) {"Content-Length", "Transfer-Encoding", "Content-Encoding", "Connection","Media-Type"};
 int typesResponse[] = {HEADER_CONT_LEN, HEADER_TRANSF_ENC, HEADER_CONT_ENCONDING, HEADER_CONNECTION,HEADER_MEDIA_TYPE};
 enum header_name ignoeredResponse[] = {HEADER_CONT_LEN, HEADER_CONNECTION,HEADER_TRANSF_ENC};
 #define HEADERS_AMOUNT 5
 #define HEADER_IGNORED 3
 
-char *
+extern char *
 getHeaderValue(struct header_list * list, enum header_name name){
     if(list == NULL){
         return NULL;
@@ -62,6 +60,9 @@ extern char *
 getMediaType(struct response_parser * p){
     return getHeaderValue(p->headerList,HEADER_MEDIA_TYPE);
 }
+
+
+
 
 extern bool
 isIgnored(uint32_t name) {

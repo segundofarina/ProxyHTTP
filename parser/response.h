@@ -25,7 +25,6 @@ enum response_state {
 
 struct response_parser {
     enum response_state state;
-    enum response_state prevState;
     enum request_method method;
     int statusCode;
     struct statusLine_parser * statusLineParser;
