@@ -172,6 +172,7 @@ header_list_destroy(struct header_list *pList) {
         return;
     }else{
         header_list_destroy(pList->next);
+        pList->next = NULL;
         free(pList->value);
         free(pList);
     }

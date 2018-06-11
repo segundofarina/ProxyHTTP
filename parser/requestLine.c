@@ -1,6 +1,12 @@
 
 #include "requestLine.h"
 #include <stdio.h>
+#include "multi_parser.h"
+
+
+char * * methodNames  = ( char *[]){"GET"      ,"HEAD"     ,"POST"};
+int      methodTypes[] = {          METHOD_GET ,METHOD_HEAD,METHOD_POST};
+#define METHODS_AMOUNT 3
 
 static enum requestLine_state
 method(const uint8_t c, struct requestLine_parser* p) {
@@ -8,16 +14,16 @@ method(const uint8_t c, struct requestLine_parser* p) {
     switch (c) {
         case ' ':
             // Guardar el method que quedo en p->method_parser.method
-            p->method=p->methodParser->method;
+            p->method=p->methodParser->currentMatch;
 
-            //No se si hacerlo aca  o hacer una buena maquina de estdos con un on deprature
-            method_parser_close(p->methodParser);
+            multi_parser_close(p->methodParser);
             free(p->methodParser);
             p->methodParser=NULL;
+
             next = rl_target;
             break;
         default:
-            method_parser_feed(c,p->methodParser);
+            multi_parser_feed(c,p->methodParser);
             next = rl_method;
             break;
     }
@@ -122,9 +128,9 @@ void
 requestLine_parser_init (struct requestLine_parser *p){
     p->state = rl_method;
     p->len =0;
-    p->methodParser = malloc(sizeof(struct method_parser));
+    p->methodParser = malloc(sizeof(struct multi_parser));
 
-    method_parser_init(p->methodParser);
+    multi_parser_init(p->methodParser,METHOD_NOTSUPPORTED,methodNames,methodTypes,METHODS_AMOUNT);
 
 }
 
@@ -132,7 +138,7 @@ requestLine_parser_init (struct requestLine_parser *p){
 void
 requestLine_parser_close(struct requestLine_parser *p){
     if(p != NULL){
-        method_parser_close(p->methodParser);
+        multi_parser_close(p->methodParser);
         free(p->methodParser);
         p->methodParser=NULL;
     }
@@ -194,6 +200,27 @@ char * requestLine_state_toString(const enum requestLine_state st){
             break;
         default:
             resp = "Unkown";
+    }
+    return resp;
+}
+char * method_string(enum request_method type){
+    char * resp;
+    switch(type) {
+        case METHOD_GET:
+            resp = "GET";
+            break;
+        case METHOD_HEAD:
+            resp = "HEAD";
+            break;
+        case METHOD_POST:
+            resp = "POST";
+            break;
+        case METHOD_NOTSUPPORTED:
+            resp = "Method not supported";
+            break;
+        default:
+            resp = "ERROR_hostData";
+            break;
     }
     return resp;
 }

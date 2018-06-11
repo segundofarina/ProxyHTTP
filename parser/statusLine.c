@@ -5,8 +5,39 @@
 
 #include "statusLine.h"
 #include <stdio.h>
+#include <ctype.h>
 
+static enum statusLine_state
+version(const uint8_t c, struct statusLine_parser* p) {
+    enum statusLine_state next;
+    switch (c) {
+        case ' ':
+            next = sl_code;
+            break;
+        default:
+            next = sl_version;
+            break;
+    }
+    return next;
+}
 
+static enum statusLine_state
+code(const uint8_t c, struct statusLine_parser* p) {
+    enum statusLine_state next;
+    switch (c) {
+        case ' ':
+            next = sl_extra;
+            break;
+        default:
+            if(isdigit(c)){
+                p->code = p->code*10+(c-'0');
+                next = sl_error;
+            }else{
+                next = sl_code;
+            }
+    }
+    return next;
+}
 
 static enum statusLine_state
 extra(const uint8_t c, struct statusLine_parser* p) {
@@ -55,6 +86,12 @@ statusLine_parser_feed ( const uint8_t c,struct statusLine_parser* p) {
     enum statusLine_state next;
 
     switch(p->state) {
+        case sl_version:
+            next = version(c,p);
+            break;
+        case sl_code:
+            next = code(c,p);
+            break;
         case sl_extra:
             next = extra(c,p);
             break;
@@ -72,20 +109,21 @@ statusLine_parser_feed ( const uint8_t c,struct statusLine_parser* p) {
     return p->state = next;
 }
 
-void
+extern void
 statusLine_parser_init (struct statusLine_parser *p){
     p->state = sl_extra;
+    p->code =0;
 
 }
 
 
-void
+extern void
 statusLine_parser_close(struct statusLine_parser *p){
 
 }
 
 
-char *
+extern char *
 statusLine_state_string(const enum statusLine_state st){
     char * resp;
     switch(st) {

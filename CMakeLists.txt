@@ -29,7 +29,6 @@ add_executable(proxy
         parser/header.c
         parser/headerGroup.c
         parser/body.c
-        parser/method.c
         parser/requestLine.c
         parser/request.c
         parser/identity.c
@@ -47,11 +46,23 @@ add_executable(proxy
         serverComponents/proxyStates/requestState.c
         serverComponents/proxyStates/responseState.c
         serverComponents/transformationFork.c
-        serverComponents/proxyStates/errorState.c)
+        serverComponents/proxyStates/errorState.c
+        serverComponents/adminActiveHandlers.c
+        serverComponents/adminPassiveHandlers.c
+        serverComponents/adminStm.c
+        serverComponents/adminStates/authenticateReadState.c
+        serverComponents/adminStates/authenticateWriteState.c
+        serverComponents/adminStates/adminReadState.c
+        serverComponents/adminStates/adminWriteState.c
+        serverComponents/adminStates/adminErrorState.c
+        serverComponents/maxFdHandler.c
+        serverComponents/metrics.c
+        serverComponents/transformationManager.c
+        logger/logger.c)
 
 
 add_executable(requestLine
-        parser/method.c
+        parser/multi_parser.c
         parser/parser.c
         parser/parser_utils.c
         parser/requestLine.c
@@ -93,7 +104,6 @@ add_executable(request
         parser/header.c
         parser/headerGroup.c
         parser/body.c
-        parser/method.c
         parser/requestLine.c
         parser/request.c
         parser/request_test.c
@@ -108,10 +118,25 @@ add_executable(response
         parser/header.c
         parser/headerGroup.c
         parser/body.c
-        parser/method.c
         parser/statusLine.c
         parser/response.c
         parser/response_test.c
+        parser/identity.c
+        parser/chunkGroup.c
+        parser/chunk.c)
+
+
+add_executable(manager
+        parser/parser.c
+        parser/parser_utils.c
+        parser/multi_parser.c
+        parser/header.c
+        parser/headerGroup.c
+        parser/body.c
+        parser/statusLine.c
+        parser/response.c
+        parser/response_manager.c
+        parser/response_manager_test.c
         parser/identity.c
         parser/chunkGroup.c
         parser/chunk.c)
@@ -122,5 +147,7 @@ add_executable(parserHostreqline
         parser/parserHostReqLine_test.c)
 
 add_executable(admin
-        admin.c)
+        admin.c utils/transformation/transformation.c)
+
+
 
