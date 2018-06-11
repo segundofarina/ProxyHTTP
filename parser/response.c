@@ -13,6 +13,7 @@
 #include "response.h"
 #include "statusLine.h"
 #include "parser_errorCodes.h"
+#include "parsing_utils.h"
 
 
 /* Taken from RFC 7230 section 3.3

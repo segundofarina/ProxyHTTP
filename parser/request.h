@@ -62,8 +62,6 @@ request_state_string(enum request_state state);
 enum body_type
 getTransfEncoding(char * value);
 
-char *
-getHeaderValue(struct header_list * list, enum header_name name);
 #endif //PC_2018_04_HTTPREQUEST_H
 
 

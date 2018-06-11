@@ -11,6 +11,7 @@
 #include "headerGroup.h"
 #include "multi_parser.h"
 #include "request.h"
+#include "parsing_utils.h"
 
 enum header_name{
     HEADER_HOST,
@@ -101,16 +102,7 @@ getContentLength(struct header_list *list){
     return getContentLength(list->next);
 }
 
-char *
-getHeaderValue(struct header_list * list, enum header_name name){
-    if(list == NULL){
-        return NULL;
-    }
-    if(list->name == name){
-        return list->value;
-    }
-    return getHeaderValue(list->next,name);
-}
+
 
 enum request_state
 requestLine(const uint8_t c,struct request_parser *p) {
