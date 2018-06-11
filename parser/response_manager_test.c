@@ -1,43 +1,18 @@
 //
-// Created by Segundo Fariña on 31/5/18.
+// Created by Segundo Fariña on 10/6/18.
 //
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "response.h"
-#include "headerGroup.h"
-#include "body.h"
+#include "response_manager.h"
+#include "requestLine.h"
 
-void consume(char * string, struct response_parser * p){
-    size_t i;
-    enum response_state state;
-    for(i =0 ; i< strlen(string) ;i++){
-        state = response_parser_feed(string[i],p);
-        char letter = string[i];
-        if(letter == '\n'){
-            letter = 'N';
-        }else if (letter == '\r'){
-            letter = 'R';
-        }
-        printf("feeded %c state now is %s\n",letter,response_state_string(state));
-    }
-
-    //printf("Header value is %s",p->value);
-    printf("Printing list....\n");
-    if(p->headerList == NULL){
-        printf("LIST IS NULL\n");
-    }
-    header_list_print(p->headerList);
-
-}
-
-
-void consume_wrapper(struct response_parser * p, char * response){
+void consume_wrapper(struct response_manager * p, char * response){
     char *headers;
-    int headersWritten =0;
+    int headersWritten =1023;
     char *body;
-    int bodyWritten=0;
+    int bodyWritten=1023;
     int len,len2;
 
     headers = calloc(1024, sizeof(char));
@@ -45,13 +20,13 @@ void consume_wrapper(struct response_parser * p, char * response){
 
 
     len =strlen(response);
-    response_parser_consume(p,response,&len,headers,&headersWritten);
+    manager_parser_consume(p,response,&len,headers,&headersWritten);
     printf("headers wirtten bytes is %d\n",headersWritten);
     printf("parsed headers is\n%s",headers);
 
 
     len2=strlen(response+len);
-    response_parser_consume(p,response+len,&len2,body,&bodyWritten);
+    manager_parser_consume(p,response+len,&len2,body,&bodyWritten);
 
     printf("body wirtten bytes is %d\n",bodyWritten);
     body[bodyWritten]=0;
@@ -65,10 +40,10 @@ void consume_wrapper(struct response_parser * p, char * response){
 
 int main(){
 
-    
 
 
-    struct response_parser  p;
+
+    struct response_manager  p;
 
 
     char * r302 =
@@ -90,11 +65,11 @@ int main(){
 
     printf("====================302 Response!!!=====================\n");
 
-    response_parser_init(&p,METHOD_GET);
+    manager_parser_init(&p,METHOD_GET);
 
     consume_wrapper(&p,r302);
 
-    response_parser_close(&p);
+    manager_parser_close(&p);
 
 
     char * r200 = "HTTP/1.1 200 OK\r\n"
@@ -141,11 +116,11 @@ int main(){
 
     printf("====================200 response=====================\n");
 
-    response_parser_init(&p,METHOD_GET);
+    manager_parser_init(&p,METHOD_GET);
 
     consume_wrapper(&p,r200);
 
-    response_parser_close(&p);
+    manager_parser_close(&p);
 
 
     char * r301 = "HTTP/1.1 301 Moved Permanently\r\n"
@@ -168,11 +143,11 @@ int main(){
                   "\r\n";
 
 
-    response_parser_init(&p,METHOD_GET);
+    manager_parser_init(&p,METHOD_GET);
 
     consume_wrapper(&p,r301);
 
-    response_parser_close(&p);
+    manager_parser_close(&p);
 
 
     char * chunked ="HTTP/1.1 301 Moved Permanently\r\n"
@@ -198,11 +173,11 @@ int main(){
                     "\r\n";
 
 
-    response_parser_init(&p,METHOD_GET);
+    manager_parser_init(&p,METHOD_GET);
 
     consume_wrapper(&p,chunked);
 
-    response_parser_close(&p);
+    manager_parser_close(&p);
 
 
 }

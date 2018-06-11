@@ -114,6 +114,22 @@ add_executable(response
         parser/chunk.c)
 
 
+add_executable(manager
+        parser/parser.c
+        parser/parser_utils.c
+        parser/multi_parser.c
+        parser/header.c
+        parser/headerGroup.c
+        parser/body.c
+        parser/statusLine.c
+        parser/response.c
+        parser/response_manager.c
+        parser/response_manager_test.c
+        parser/identity.c
+        parser/chunkGroup.c
+        parser/chunk.c)
+
+
 add_executable(parserHostreqline
         parser/parserHostReqLine.c
         parser/parserHostReqLine_test.c)

@@ -34,9 +34,6 @@ struct response_parser {
 
     struct header_list        * headerList;
 
-    char headerNameBuffer[20];
-    bool hasBeenDumped;
-    int headerBufferLen;
 
     bool shouldKeepLastChar;
 
@@ -45,15 +42,15 @@ struct response_parser {
 
 
 
-void
+extern void
 response_parser_init(struct response_parser *p, enum request_method method);
 
 enum response_state
 response_parser_feed (const uint8_t c,struct response_parser *p);
 
 
-enum response_state
-response_parser_consume(struct response_parser *p, char * b,int * len, char * writebuff, int * written);
+//enum response_state
+//response_parser_consume(struct response_parser *p, char * b,int * len, char * writebuff, int * written);
 
 void
 response_parser_close(struct response_parser *p);
@@ -64,4 +61,8 @@ response_state_string(enum response_state state);
 
 enum body_type
 getTransfEncodingResponse(char * value);
+
+extern bool
+isIgnored(uint32_t name);
+
 #endif //PC_2018_04_RESPONSE_H
