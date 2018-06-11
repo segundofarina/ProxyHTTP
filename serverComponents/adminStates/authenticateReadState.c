@@ -14,7 +14,7 @@
 #include "adminReadState.h"
 
 int createResponse(buffer * buff,enum auth_response code) {
-    int i = 0;
+    size_t i = 0;
     buffer_reset(buff);
     uint8_t  * msg = buffer_write_ptr(buff,&i);
 
@@ -28,7 +28,7 @@ int createResponse(buffer * buff,enum auth_response code) {
 }
 
 enum auth_response processAuthentication(buffer * buff) {
-    int i = 0;
+    size_t i = 0;
     uint8_t * ptr = buffer_read_ptr(buff,&i);
     uint8_t pwd[256] = {0};
     enum auth_response ans;
