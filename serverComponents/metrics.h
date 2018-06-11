@@ -3,8 +3,10 @@
 
 #include <stdint.h>
 
+/* @depreacted */
 uint32_t getBytesRead();
 
+/* @depreacted */
 uint32_t getBytesSent();
 
 uint32_t getAmountOfPost();
@@ -17,8 +19,10 @@ uint32_t getActiveClients();
 
 uint32_t getHistoricClients();
 
+/* @depreacted */
 void addBytesRead(int n);
 
+/* @depreacted */
 void addBytesSent(int n);
 
 void addGetRequest();

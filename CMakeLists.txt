@@ -46,6 +46,8 @@ add_executable(proxy
         parser/chunk.c
         parser/statusLine.c
         parser/response.c
+        parser/parsing_utils.c
+        parser/response_manager.c
         server.c
         serverComponents/proxyActiveHandlers.c
         serverComponents/proxyPassiveHandlers.c
@@ -53,6 +55,7 @@ add_executable(proxy
         utils/buffer/buffer.c
         utils/selector/selector.c
         utils/stm/stm.c
+        utils/transformation/transformation.c
         serverComponents/proxyStates/requestState.c
         serverComponents/proxyStates/responseState.c
         serverComponents/transformationFork.c
@@ -68,6 +71,7 @@ add_executable(proxy
         serverComponents/maxFdHandler.c
         serverComponents/metrics.c
         serverComponents/transformationManager.c
+        serverComponents/transErrorManager.c
         logger/logger.c)
 
 
