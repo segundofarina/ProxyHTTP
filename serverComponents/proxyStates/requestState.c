@@ -192,6 +192,15 @@ unsigned requestRead(struct selector_key * key) {
     
         loggerWrite(DEBUG, "Attempt connection to origin server\n");
     
+        /* Save method to metrics */
+        if(conn->requestParser.reqParser.method == METHOD_GET) {
+            addGetRequest();
+        } else if(conn->requestParser.reqParser.method == METHOD_HEAD) {
+            addHeadRequest();
+        } else if(conn->requestParser.reqParser.method == METHOD_POST) {
+            addPostRequest();
+        }
+
         /* New thread to solve DNS */
         if(startOriginConnection(key) == 0) {
             
