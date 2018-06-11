@@ -34,7 +34,7 @@ enum header_name {
     HEADER_TRANSF_ENC,
     HEADER_NOT_INTERESTED,
     HEADER_CONT_ENCONDING,
-    HEADER_CONNECTION
+    HEADER_CONNECTION,
     HEADER_MEDIA_TYPE
 
 };
@@ -47,9 +47,20 @@ enum header_name ignoeredResponse[] = {HEADER_CONT_LEN, HEADER_CONNECTION,HEADER
 #define HEADERS_AMOUNT 5
 #define HEADER_IGNORED 3
 
+char *
+getHeaderValue(struct header_list * list, enum header_name name){
+    if(list == NULL){
+        return NULL;
+    }
+    if(list->name == name){
+        return list->value;
+    }
+    return getHeaderValue(list->next,name);
+}
+
 extern char *
 getMediaType(struct response_parser * p){
-    return getHeaderValue(p->list,HEADER_MEDIA_TYPE);
+    return getHeaderValue(p->headerList,HEADER_MEDIA_TYPE);
 }
 
 extern bool
@@ -153,16 +164,6 @@ getContentLengthResponse(struct header_list *list){
     return getContentLengthResponse(list->next);
 }
 
-char *
-getHeaderValue(struct header_list * list, enum header_name name){
-    if(list == NULL){
-        return NULL;
-    }
-    if(list->name == name){
-        return list->value;
-    }
-    return getHeaderValue(list->next,name);
-}
 
 static enum response_state
 statusLine(const uint8_t c, struct response_parser *p) {
