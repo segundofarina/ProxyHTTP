@@ -46,6 +46,8 @@ add_executable(proxy
         parser/chunk.c
         parser/statusLine.c
         parser/response.c
+        parser/parsing_utils.c
+        parser/response_manager.c
         server.c
         serverComponents/proxyActiveHandlers.c
         serverComponents/proxyPassiveHandlers.c
@@ -120,7 +122,8 @@ add_executable(request
         parser/request_test.c
         parser/identity.c
         parser/chunkGroup.c
-        parser/chunk.c)
+        parser/chunk.c
+        parser/parsing_utils.c)
 
 add_executable(response
         parser/parser.c
@@ -134,7 +137,8 @@ add_executable(response
         parser/response_test.c
         parser/identity.c
         parser/chunkGroup.c
-        parser/chunk.c)
+        parser/chunk.c
+        parser/parsing_utils.c)
 
 
 add_executable(manager
@@ -150,7 +154,8 @@ add_executable(manager
         parser/response_manager_test.c
         parser/identity.c
         parser/chunkGroup.c
-        parser/chunk.c)
+        parser/chunk.c
+        parser/parsing_utils.c)
 
 
 add_executable(parserHostreqline

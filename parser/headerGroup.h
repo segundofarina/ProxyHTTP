@@ -7,6 +7,7 @@
 
 #include "header.h"
 #include <stdint.h>
+#include "parsing_utils.h"
 
 
 enum headerGroup_state{
@@ -18,12 +19,7 @@ enum headerGroup_state{
 };
 
 
-struct header_list{
-    uint32_t name;
-    char * value;
 
-    struct header_list * next;
-};
 
 struct headerGroup_parser{
 

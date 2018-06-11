@@ -232,10 +232,6 @@ manager_parser_consume(struct response_manager *manager, char *readBuff, int *re
     }
 
 
-//    if(manager->state ==  manager_error){
-//        printf("Manager state is error\n");
-//    }
-
     return manager->state;
 }
 extern void
