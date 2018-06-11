@@ -20,86 +20,6 @@ int createResponse(buffer * buff,enum admin_error_code code, uint8_t len) {
 
 }
 
-enum admin_error_code processAdminRequest(buffer * buff) {
-    int read = 0;
-    uint8_t * ptr = buffer_read_ptr(buff,&read);
-
-    if(read < REQUEST_DATA){
-        return ADMIN_REQ_ERR;
-    }
-
-    uint8_t method = ptr[REQUEST_METHOD];
-    uint8_t len = ptr[REQUEST_LENGTH_DATA];
-    uint8_t data[MAX_DATA+1] = {0};
-    memcpy(data,ptr+REQUEST_DATA,len);
-    buffer_read_adv(buff,REQUEST_DATA+len);
-
-    enum admin_error_code responseStatus;
-    uint8_t responseLen = 0;
-
-    int ans;
-
-    switch(method) {
-        case SET_TRANSFORMATION:
-            data[len] = 0;
-            if(addTransformation(data) == 0){
-                responseStatus = ADMIN_REQ_ERR;
-            }else{
-                responseStatus = ADMIN_NO_ERROR;
-            }
-            ans = createResponse(buff,responseStatus,responseLen);
-            break;
-        case ADD_MEDIA_TYPE:
-            if(addMediaType(data[0]) == 0){
-                responseStatus = ADMIN_REQ_ERR;
-            }else{
-                responseStatus = ADMIN_NO_ERROR;
-            }
-            ans = createResponse(buff,responseStatus,responseLen);
-            break;
-        case REMOVE_MEDIA_TYPE:
-            if(removeMediaType(data[0]) == 0){
-                responseStatus = ADMIN_REQ_ERR;
-            }else{
-                responseStatus = ADMIN_NO_ERROR;
-            }
-            ans = createResponse(buff,responseStatus,responseLen);
-            break;
-        case SET_BUFFER_SIZE:
-            //HACER
-            break;
-        case SET_TIMEOUT:
-            //HACER
-            break;
-        case GET_METRICS:
-            ans = getMetrics(buff);
-            break;
-        case GET_TRANSFORMATION:
-            ans = getTransformation(buff);
-            break;
-        case GET_MEDIA_TYPES:
-            ans = getMediaTypes(buff);
-            break;
-        case GET_BUFFER_SIZE:
-            //HACER
-            break;
-        case GET_TIMEOUT:
-            //HACER
-            break;
-        default:
-            responseStatus = ADMIN_NOT_SUPPORTED_ERROR;
-            ans = createResponse(buff,responseStatus,responseLen);
-    }
-
-   if(ans==0){
-        return  ADMIN_NO_ERROR;
-    }else{
-       return ADMIN_INTERNAL_SERVER_ERR;
-    }
-
-}
-
-
 int getTransformation(buffer * buff){
     enum admin_error_code responseStatus = ADMIN_NO_ERROR;
     char * t = getCurrentTransformation();
@@ -192,6 +112,88 @@ int getMediaTypes(buffer * buff){
     }
     return i;
 }
+
+enum admin_error_code processAdminRequest(buffer * buff) {
+    int read = 0;
+    uint8_t * ptr = buffer_read_ptr(buff,&read);
+
+    if(read < REQUEST_DATA){
+        return ADMIN_REQ_ERR;
+    }
+
+    uint8_t method = ptr[REQUEST_METHOD];
+    uint8_t len = ptr[REQUEST_LENGTH_DATA];
+    uint8_t data[MAX_DATA+1] = {0};
+    memcpy(data,ptr+REQUEST_DATA,len);
+    buffer_read_adv(buff,REQUEST_DATA+len);
+
+    enum admin_error_code responseStatus;
+    uint8_t responseLen = 0;
+
+    int ans;
+
+    switch(method) {
+        case SET_TRANSFORMATION:
+            data[len] = 0;
+            if(addTransformation(data) == 0){
+                responseStatus = ADMIN_REQ_ERR;
+            }else{
+                responseStatus = ADMIN_NO_ERROR;
+            }
+            ans = createResponse(buff,responseStatus,responseLen);
+            break;
+        case ADD_MEDIA_TYPE:
+            if(addMediaType(data[0]) == 0){
+                responseStatus = ADMIN_REQ_ERR;
+            }else{
+                responseStatus = ADMIN_NO_ERROR;
+            }
+            ans = createResponse(buff,responseStatus,responseLen);
+            break;
+        case REMOVE_MEDIA_TYPE:
+            if(removeMediaType(data[0]) == 0){
+                responseStatus = ADMIN_REQ_ERR;
+            }else{
+                responseStatus = ADMIN_NO_ERROR;
+            }
+            ans = createResponse(buff,responseStatus,responseLen);
+            break;
+        case SET_BUFFER_SIZE:
+            //HACER
+            break;
+        case SET_TIMEOUT:
+            //HACER
+            break;
+        case GET_METRICS:
+            ans = getMetrics(buff);
+            break;
+        case GET_TRANSFORMATION:
+            ans = getTransformation(buff);
+            break;
+        case GET_MEDIA_TYPES:
+            ans = getMediaTypes(buff);
+            break;
+        case GET_BUFFER_SIZE:
+            //HACER
+            break;
+        case GET_TIMEOUT:
+            //HACER
+            break;
+        default:
+            responseStatus = ADMIN_NOT_SUPPORTED_ERROR;
+            ans = createResponse(buff,responseStatus,responseLen);
+    }
+
+   if(ans==0){
+        return  ADMIN_NO_ERROR;
+    }else{
+       return ADMIN_INTERNAL_SERVER_ERR;
+    }
+
+}
+
+
+
 
 
 
