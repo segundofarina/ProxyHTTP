@@ -1,3 +1,4 @@
+#include <string.h>
 #include "transErrorManager.h"
 
 char transformationErr[TRANS_ERR_MAX_LEN + 1] = {0};
