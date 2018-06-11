@@ -18,16 +18,15 @@
 #include "../../logger/logger.h"
 #include "../metrics.h"
 
-#include "../../parser/response.h"
+#include "../../parser/response_manager.h"
 
-int pareserResponseIsDone(struct response_parser parser) {
-    return parser.state == response_done;
+int pareserResponseIsDone(struct response_manager parser) {
+    return parser.state == manager_done;
 }
 
-enum response_state parser_consume(struct response_parser * parser, char * ptrToParse, int * bytesToParse, char * ptrFromParse, int * parsedBytes) {
+enum manager_state parser_consume(struct response_manager * parser, char * ptrToParse, int * bytesToParse, char * ptrFromParse, int * parsedBytes) {
     
-    enum response_state state = response_parser_consume(parser, ptrToParse, bytesToParse, ptrFromParse, parsedBytes);
-    //*bytesToParse = *parsedBytes;
+    enum manager_state state = manager_parser_consume(parser, ptrToParse, bytesToParse, ptrFromParse, parsedBytes);
     return state;
 }
 
@@ -43,11 +42,25 @@ int min(int val1, int val2) {
     return val2;
 }
 
+int isValidTransformation(struct Connection * conn) {
+    char c;
+    int n = read(conn->readTransformFd, &c, 1);
+    /* If its valid, it outputs with EAGAIN because its non-blockin, and nothing was sent */
+    if(n == 0) {
+        loggerWrite(PRODUCTION, "\x1b[31m[ERROR]\x1b[0m Invalid transformation command loaded. Applying no transformation.\n");
+        return 0;
+    }
+    if(errno == EAGAIN) {
+        return 1;
+    }
+    return 0;
+}
+
 int shouldTransform(struct Connection * conn) {
     if(conn->transformationType == TRANSFORM) {
         /* First time, check if media type is in the list and if content-type is valid and transfer-encoding is valid */
         /* If it is */
-        if(hasMediaTypeInList(conn->mediaTypesList, strToMediaType("text/plain") )) { // CAMBIAR POR LO QUE ME DA EL PARSER
+        if(hasMediaTypeInList(conn->mediaTypesList, strToMediaType("text/plain")) && isValidTransformation(conn) ) { // CAMBIAR POR LO QUE ME DA EL PARSER
             conn->transformationType = IS_TRANSFORMING;
         } else {
             conn->transformationType = NO_TRANSFORM;
@@ -60,23 +73,23 @@ int shouldTransform(struct Connection * conn) {
     return 0;
 }
 
-enum response_state copyTempToWriteBuff(struct selector_key * key) {
+enum manager_state copyTempToWriteBuff(struct selector_key * key) {
     struct Connection * conn = DATA_TO_CONN(key);
 	uint8_t * ptrToParse, * ptrFromParse;
-	size_t maxTempBuffSize, maxWriteBuffSize;
-	int  parsedBytes = 0, bytesToParse = 0;
-    enum response_state state;
+	//size_t maxTempBuffSize, maxWriteBuffSize;
+	size_t  parsedBytes = 0, bytesToParse = 0;
+    enum manager_state state;
 
     /* parse string from buffer_read_ptr(&conn->respTempBuffer, &maxTempBuffSize) */
-    ptrToParse = buffer_read_ptr(&conn->respTempBuffer, &maxTempBuffSize);
+    ptrToParse = buffer_read_ptr(&conn->respTempBuffer, &bytesToParse);
 
     /* leave parsed data in buffer_write_ptr(&conn->writeBuffer, &maxWriteBuffSize) */
-    ptrFromParse = buffer_write_ptr(&conn->writeBuffer, &maxWriteBuffSize);
+    ptrFromParse = buffer_write_ptr(&conn->writeBuffer, &parsedBytes);
 
     /* parse string size is min(maxWriteBuffSize, maxTempBuffSize) */
     /* leave bytes parsed in parsedBytes */
-    bytesToParse = min(maxWriteBuffSize, maxTempBuffSize);
-    state = parser_consume(&conn->responseParser, (char *)ptrToParse, &bytesToParse, (char *)ptrFromParse, &parsedBytes);
+    //bytesToParse = min(maxWriteBuffSize, maxTempBuffSize);
+    state = parser_consume(&conn->responseParser, (char *)ptrToParse, (int *)&bytesToParse, (char *)ptrFromParse, (int *)&parsedBytes);
 
     /* move temp buffer pointer accoring to parsedBytes */
     buffer_read_adv(&conn->respTempBuffer, bytesToParse);
@@ -92,7 +105,7 @@ enum response_state copyTempToWriteBuff(struct selector_key * key) {
         interest = OP_WRITE;
     }
     if(selector_set_interest(key->s, conn->clientFd, interest) != SELECTOR_SUCCESS) {
-        return response_error;
+        return manager_error;
     }
 
         
@@ -102,30 +115,30 @@ enum response_state copyTempToWriteBuff(struct selector_key * key) {
         interest = OP_READ;
     }
     if(selector_set_interest(key->s, conn->originFd, interest) != SELECTOR_SUCCESS) {
-        return response_error;
+        return manager_error;
     }
 
     /* save parser return status */
     return state;
 }
 
-enum response_state copyTempToTransformBuff(struct selector_key * key) {
+enum manager_state copyTempToTransformBuff(struct selector_key * key) {
     struct Connection * conn = DATA_TO_CONN(key);
 	uint8_t * ptrToParse, * ptrFromParse;
-	size_t maxTempBuffSize, maxWriteBuffSize;
-	int  parsedBytes = 0, bytesToParse = 0;
-    enum response_state state;
+	//size_t maxTempBuffSize, maxWriteBuffSize;
+	size_t  parsedBytes = 0, bytesToParse = 0;
+    enum manager_state state;
 
     /* parse string from buffer_read_ptr(&conn->respTempBuffer, &maxTempBuffSize) */
-    ptrToParse = buffer_read_ptr(&conn->respTempBuffer, &maxTempBuffSize);
+    ptrToParse = buffer_read_ptr(&conn->respTempBuffer, &bytesToParse);
 
     /* leave parsed data in buffer_write_ptr(&conn->inTransformBuffer, &maxWriteBuffSize) */
-    ptrFromParse = buffer_write_ptr(&conn->inTransformBuffer, &maxWriteBuffSize);
+    ptrFromParse = buffer_write_ptr(&conn->inTransformBuffer, &parsedBytes);
 
     /* parse string size is min(maxWriteBuffSize, maxTempBuffSize) */
     /* leave bytes parsed in parsedBytes */
-    bytesToParse = min(maxTempBuffSize, maxWriteBuffSize);
-    state = parser_consume(&conn->responseParser, (char *)ptrToParse, &bytesToParse, (char *)ptrFromParse, &parsedBytes);
+    //bytesToParse = min(maxTempBuffSize, maxWriteBuffSize);
+    state = parser_consume(&conn->responseParser, (char *)ptrToParse, (int *)&bytesToParse, (char *)ptrFromParse, (int *)&parsedBytes);
 
     /* move temp buffer pointer accoring to parsedBytes */
     buffer_read_adv(&conn->respTempBuffer, bytesToParse);
@@ -141,7 +154,7 @@ enum response_state copyTempToTransformBuff(struct selector_key * key) {
         interest = OP_WRITE;
     }
     if(selector_set_interest(key->s, conn->writeTransformFd, interest) != SELECTOR_SUCCESS) {
-        return response_error;
+        return manager_error;
     }
         
     /* If respTempBuffer is not full and response is not done originFd OP_READ */
@@ -150,7 +163,7 @@ enum response_state copyTempToTransformBuff(struct selector_key * key) {
         interest = OP_READ;
     }
     if(selector_set_interest(key->s, conn->originFd, interest) != SELECTOR_SUCCESS) {
-        return response_error;
+        return manager_error;
     }
     
     /* save parser return status */
@@ -211,7 +224,7 @@ unsigned readFromOrigin(struct selector_key * key) {
 	uint8_t *ptr;
 	size_t count;
 	ssize_t  n;
-    enum response_state state = conn->responseParser.state;
+    enum manager_state state = conn->responseParser.state;
     
     /* Read from origin and save in temp buffer */
 	ptr = buffer_write_ptr(&conn->respTempBuffer, &count);
@@ -232,21 +245,21 @@ unsigned readFromOrigin(struct selector_key * key) {
 
     /* If im not in body write to writeBuffer */
     /* Always write to writeBuffer if there is no transformation */
-    if(!shouldTransform(conn) || state == response_statusLine || state == response_headers) {
+    if(!shouldTransform(conn) || state == manager_statusLine || state == manager_headers || state == manager_addingHeaders) {
         state = copyTempToWriteBuff(key);
-        if(state == response_error) {
+        if(state == manager_error) {
             return setError(key, INTERNAL_SERVER_ERR_500);
         }
     }
 
     /* If im in body write to inTransformBuffer */
-    if(state == response_body) {
+    if(state == manager_body) {
         if(!shouldTransform(conn)) {
             state = copyTempToWriteBuff(key);
         } else {
             state = copyTempToTransformBuff(key);
         }
-        if(state == response_error) {
+        if(state == manager_error) {
             return setError(key, INTERNAL_SERVER_ERR_500);
         }
     }
@@ -310,8 +323,8 @@ unsigned writeToClient(struct selector_key * key) {
 	uint8_t *ptr;
 	size_t count;
 	ssize_t  n;
-    enum response_state state = conn->responseParser.state;
-    enum response_state originalState = state;
+    enum manager_state state = conn->responseParser.state;
+    enum manager_state originalState = state;
 
     /* Send bufferd data to the client */
 	ptr = buffer_read_ptr(&conn->writeBuffer, &count);
@@ -328,30 +341,30 @@ unsigned writeToClient(struct selector_key * key) {
     addBytesSent(n);
 
     /* Copy from temp if it's on headers or no transformation */
-    if(!shouldTransform(conn) || state == response_headers || state == response_statusLine) {
+    if(!shouldTransform(conn) || state == manager_headers || state == manager_statusLine || state == manager_addingHeaders) {
         state = copyTempToWriteBuff(key);
-        if(state == response_error) {
+        if(state == manager_error) {
             return setError(key, INTERNAL_SERVER_ERR_500);
         }
     }
 
     /* I have not enterd in the above if and I'm in the body */
-    if(shouldTransform(conn) && originalState == response_body) {
+    if(shouldTransform(conn) && originalState == manager_body) {
         if(!copyTransformToWriteBuffer(key)) {
             return setError(key, INTERNAL_SERVER_ERR_500);
         }
     }
 
     /* If the parser changed state to body and there is no transformation */
-    if(shouldTransform(conn) && originalState != response_body && state == response_body) {
-        if(copyTempToTransformBuff(key) == response_error) {
+    if(shouldTransform(conn) && originalState != manager_body && state == manager_body) {
+        if(copyTempToTransformBuff(key) == manager_error) {
             return setError(key, INTERNAL_SERVER_ERR_500);
         }
     }
 
     /* Fix parser stop reading when changing to body */
-    if(!shouldTransform(conn) && state == response_body) {
-        if(copyTempToWriteBuff(key) == response_error) {
+    if(!shouldTransform(conn) && state == manager_body) {
+        if(copyTempToWriteBuff(key) == manager_error) {
             return setError(key, INTERNAL_SERVER_ERR_500);
         }
     }
@@ -388,12 +401,12 @@ unsigned writeToTransformation(struct selector_key * key) {
 
         loggerWrite(DEBUG, "[ERROR] write to transformation returned 0\n");
     
-        return setError(key, INTERNAL_SERVER_ERR_500);
+        return FATAL_ERROR; // since I have already sent the headers
 	}
     buffer_read_adv(&conn->inTransformBuffer, n);
 
     /* I have free space in buffer, copy tempBuffer if it's not empty */
-    if(copyTempToTransformBuff(key) == response_error) {
+    if(copyTempToTransformBuff(key) == manager_error) {
         return setError(key, INTERNAL_SERVER_ERR_500);
     }
 
@@ -444,10 +457,10 @@ unsigned responseWrite(struct selector_key * key) {
 
 void responseArrival(unsigned state, struct selector_key * key) {
     struct Connection * conn = DATA_TO_CONN(key);
-    response_parser_init(&conn->responseParser);
+    manager_parser_init(&conn->responseParser, conn->requestParser.reqParser.method);
 }
 
 void responseDeparture(unsigned state, struct selector_key * key) {
     struct Connection * conn = DATA_TO_CONN(key);
-    response_parser_close(&conn->responseParser);
+    manager_parser_close(&conn->responseParser);
 }

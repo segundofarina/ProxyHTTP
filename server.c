@@ -19,19 +19,32 @@ typedef enum {FALSE, TRUE} Bool;
 
 #define MAX_CLIENTS 10
 #define SELECTOR_SIZE 1024
+#define TRANS_ERR_MAX_LEN 256
+#define DEFAULT_PROXY_HTTP_PORT 8080
+#define DEFAULT_ADMIN_PORT 9090
 
-#define LOGGER_LEVEL DEBUG
+#define LOGGER_LEVEL PRODUCTION
 
-int createPassiveSock(const int port, const int protocol);
+struct serverSettings {
+	uint32_t httpAddr;
+	uint16_t httpPort;
+	uint32_t adminAddr;
+	uint16_t adminPort;
+	char transformationErr[TRANS_ERR_MAX_LEN];
+};
+
+int createPassiveSock(const uint32_t addr, const uint16_t port, const int protocol);
+void getParams(const int argc, char * const * argv, struct serverSettings * settings);
 
 
-//int main(const int argc, const char * argv[]) {
-int main() {
-
-	int port = 1080, serverFd, adminPort = 1081, adminFd;
+int main(const int argc, char * const * argv) {
+	struct serverSettings settings;
+	int serverFd, adminFd;
 	char * errMsg = NULL;
 	selector_status selectorStatus = SELECTOR_SUCCESS;
-    fd_selector selector=NULL;
+    fd_selector selector = NULL;
+
+	getParams(argc, argv, &settings);
 
 	/* Selector conf structure */
 	const struct selector_init conf = {
@@ -79,7 +92,7 @@ int main() {
 	transformationManagerInit();
 
 	/* Listen to clients */
-	if( (serverFd = createPassiveSock(port, IPPROTO_TCP)) < 0 ) {
+	if( (serverFd = createPassiveSock(settings.httpAddr, settings.httpPort, IPPROTO_TCP)) < 0 ) {
 		/* Handle error */
 		errMsg = "Error creating the passive socket for http requests, check if the port is not already in use";
 		goto error_handler;
@@ -94,7 +107,7 @@ int main() {
     }
 
 	/* Listen to admin */
-	if( (adminFd = createPassiveSock(adminPort, IPPROTO_SCTP)) < 0 ) {
+	if( (adminFd = createPassiveSock(settings.adminAddr, settings.adminPort, IPPROTO_SCTP)) < 0 ) {
 		/* Handle error */
 		errMsg = "Error creating the passive socket for admin requests, check if the port is not already in use";
 		goto error_handler;
@@ -107,6 +120,9 @@ int main() {
 		goto error_handler;
 		
     }
+
+	/* Avoid process kill with sigpipe */
+	signal(SIGPIPE, SIG_IGN);
 
 	loggerWrite(PRODUCTION, "\x1b[32m[INFO]\x1b[0m Proxy started and waiting for new connections\n");
 
@@ -138,12 +154,12 @@ int main() {
 }
 
 /* Returns socket fd or -1 if error */
-int createPassiveSock(const int port, const int protocol) {
+int createPassiveSock(const uint32_t address, const uint16_t port, const int protocol) {
 	struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
     addr.sin_family      = AF_INET;
-    addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    addr.sin_port        = htons(port);
+    addr.sin_addr.s_addr = address;
+    addr.sin_port        = port;
 
 	const int serverFd = socket(AF_INET, SOCK_STREAM, protocol);
 	if(serverFd < 0) {
@@ -166,4 +182,102 @@ int createPassiveSock(const int port, const int protocol) {
 	}
 
 	return serverFd;
+}
+
+void printHelp() {
+	printf("help\n");
+}
+
+void printVersion() {
+	printf("httpd server - version: 1.0.0\n");
+}
+
+void printUsage() {
+	printf("usage \n");
+}
+
+void processMediaTypesList(const char * str) {
+	char mediaType[25 +1] = {0};
+	int i = 0, j = 0;
+	while(str[i] != 0) {
+		if(str[i] == ',') {
+			if(j < 25 + 1) {
+				mediaType[j] = 0;
+				// mediaType to enum
+				addMediaType(strToMediaType(mediaType));
+			}
+			j = 0;
+			i++;
+		} else {
+			mediaType[j++] = str[i++];
+		}
+	}
+
+	/* Add last one */
+	if(j < 25 + 1) {
+		mediaType[j] = 0;
+		addMediaType(strToMediaType(mediaType));
+	}
+}
+
+void getParams(const int argc, char * const * argv, struct serverSettings * settings) {
+	/* Set default settings */
+	settings->httpAddr = htonl(INADDR_ANY);
+	settings->httpPort = htons(DEFAULT_PROXY_HTTP_PORT);
+	settings->adminAddr = htonl(INADDR_LOOPBACK);
+	settings->adminPort = htons(DEFAULT_ADMIN_PORT);
+	
+	int errSize = strlen("/dev/null");
+	memcpy(settings->transformationErr, "/dev/null", errSize);
+	settings->transformationErr[errSize] = 0;
+	
+	int opt;
+	while( (opt = getopt(argc, argv, "e:hl:L:M:o:p:t:v")) != -1 ) {
+		switch (opt) {
+			case 'e':
+				errSize = strlen(optarg);
+				if(errSize > TRANS_ERR_MAX_LEN) {
+					printf("Error: the error file %s can't be over %d bytes\n", optarg, TRANS_ERR_MAX_LEN);
+					exit(EXIT_FAILURE);	
+				}
+				memcpy(settings->transformationErr, optarg, errSize);
+				settings->transformationErr[errSize] = 0;
+				break;
+			case 'h':
+				printHelp();
+				exit(EXIT_SUCCESS);
+				break;
+			case 'l':
+				//printf("dir http is %s\n", optarg);
+				//CAMBIAR Y MODIFICAR httpAddr
+				break;
+			case 'L':
+				//printf("dir sctp is %s\n", optarg);
+				// CAMBIAR Y MODIFICAR adminAddr
+				break;
+			case 'M':
+				processMediaTypesList(optarg);
+				break;
+			case 'o':
+				settings->adminPort = htons(atoi(optarg));
+				break;
+			case 'p':
+				settings->httpPort = htons(atoi(optarg));
+				break;
+			case 't':
+				if(!addTransformation(optarg)) {
+					printf("Error: the command %s is invalid\n", optarg);
+				}
+				break;
+			case 'v':
+				printVersion();
+				exit(EXIT_SUCCESS);
+				break;
+
+			default:
+				printUsage();
+				exit(EXIT_FAILURE);
+		}
+	}
+
 }

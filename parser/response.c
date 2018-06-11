@@ -47,17 +47,6 @@ enum header_name ignoeredResponse[] = {HEADER_CONT_LEN, HEADER_CONNECTION,HEADER
 #define HEADER_IGNORED 3
 
 extern char *
-getHeaderValue(struct header_list * list, enum header_name name){
-    if(list == NULL){
-        return NULL;
-    }
-    if(list->name == name){
-        return list->value;
-    }
-    return getHeaderValue(list->next,name);
-}
-
-extern char *
 getMediaType(struct response_parser * p){
     return getHeaderValue(p->headerList,HEADER_MEDIA_TYPE);
 }

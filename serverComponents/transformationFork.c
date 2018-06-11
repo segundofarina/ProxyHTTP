@@ -1,5 +1,8 @@
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include "transformationFork.h"
 
@@ -46,8 +49,16 @@ int forkTransformation(int * readTransformFd, int * writeTransformFd/* , transfo
 }
 
 void runChildCode(const int readPipe[2], const int writePipe[2], const char * cmd) {
-    int error = 0;
+    int error = 0, errorFd = -1;
     configureChildPipes(readPipe, writePipe);
+
+    errorFd = open("/dev/null", O_WRONLY | O_CREAT | O_APPEND);
+    if(errorFd != -1) {
+        dup2(errorFd, STDERR_FILENO);
+        close(errorFd);
+    } else {
+        close(STDERR_FILENO);
+    }
 
 	if (execl("/bin/sh", "sh", "-c", cmd, (char *) 0) == -1){
         //error
