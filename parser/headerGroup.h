@@ -29,6 +29,8 @@ struct headerGroup_parser{
 
     enum headerGroup_state state;
 
+    enum parser_errorCode errorCode;
+
     struct header_list * list;
 
     struct header_parser * headerParser;

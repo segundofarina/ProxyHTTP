@@ -59,7 +59,8 @@ header(const uint8_t c, struct headerGroup_parser *p) {
             next = headerGroup_init;
             break;
         case header_error:
-            //???que hago??
+            next = headerGroup_error;
+            break;
         default:
             next = headerGroup_header;
 

@@ -12,6 +12,7 @@
 
 #include "body.h"
 #include "requestLine.h"
+#include "parser_errorCodes.h"
 
 
 
@@ -25,6 +26,7 @@ enum response_state {
 
 struct response_parser {
     enum response_state state;
+    enum parser_errorCode errorCode;
     enum request_method method;
     int statusCode;
     struct statusLine_parser * statusLineParser;

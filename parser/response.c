@@ -12,6 +12,7 @@
 #include "multi_parser.h"
 #include "response.h"
 #include "statusLine.h"
+#include "parser_errorCodes.h"
 
 
 /* Taken from RFC 7230 section 3.3
@@ -210,6 +211,7 @@ headersResponse(const uint8_t c,struct response_parser *p){
                 } else if(len ==0){
                     next = response_done;
                 }else{
+                    p->errorCode = ERROR_BAD_REQUEST;
                     next = response_error;
                 }
             }else{
