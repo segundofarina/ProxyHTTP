@@ -30,7 +30,7 @@ int createResponse(buffer * buff,enum auth_response code) {
 enum auth_response processAuthentication(buffer * buff) {
     size_t i = 0;
     uint8_t * ptr = buffer_read_ptr(buff,&i);
-    uint8_t pwd[256] = {0};
+    char pwd[256] = {0};
     size_t len = ptr[AUTH_LENGHT_PWD];
     memcpy(pwd,ptr+AUTH_PWD,len);
     buffer_read_adv(buff,len);
