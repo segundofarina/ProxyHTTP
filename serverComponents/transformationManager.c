@@ -130,11 +130,34 @@ void transformationManagerDestroy() {
     free(transformation);
 }
 
+int matchAllMediaType(const enum MediaType allMediaType, const enum MediaType mediaType) {
+    if(allMediaType == MT_TEXT_ALL) {
+        if(mediaType == MT_TEXT_PLAIN || mediaType == MT_TEXT_HTML ||
+            mediaType == MT_TEXT_CSS || mediaType == MT_TEXT_JAVASCRIPT ||
+            mediaType == MT_TEXT_MARKDOWN || mediaType == MT_TEXT_XML) {
+            return 1;
+        }
+    }
+
+    if(allMediaType == MT_IMAGE_ALL) {
+        if(mediaType == MT_IMAGE_GIF || mediaType == MT_IMAGE_JPEG || 
+            mediaType == MT_IMAGE_PNG || mediaType == MT_IMAGE_TIFF) {
+            return 1;
+        }
+    }
+
+    if(allMediaType == MT_APPLICATION_ALL) {
+        if(mediaType == MT_APPLICATION_JSON || mediaType == MT_APPLICATION_JAVASCRIPT) {
+            return 1;
+        }
+    }
+    return 0;
+}
 
 int hasMediaTypeInList(const struct mediaTypesNode * list, const enum MediaType mediaType) {
     const struct mediaTypesNode * current = list;
     while(current != NULL) {
-        if(current->mediaType == mediaType) {
+        if(current->mediaType == mediaType || matchAllMediaType(current->mediaType, mediaType)) {
             return 1;
         }
         current = current->next;
@@ -143,6 +166,10 @@ int hasMediaTypeInList(const struct mediaTypesNode * list, const enum MediaType 
 }
 
 enum MediaType strToMediaType(const char * str) {
+    if(strcmp("text/*", str) == 0) {
+        return MT_TEXT_ALL;
+    }
+
     if(strcmp("text/plain", str) == 0) {
         return MT_TEXT_PLAIN;
     }
