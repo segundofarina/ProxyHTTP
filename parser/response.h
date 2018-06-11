@@ -37,6 +37,8 @@ struct response_parser {
 
 
     bool shouldKeepLastChar;
+    bool compresed;
+    bool chunked;
 
 };
 
@@ -59,9 +61,6 @@ response_parser_close(struct response_parser *p);
 char *
 response_state_string(enum response_state state);
 
-
-enum body_type
-getTransfEncodingResponse(char * value);
 
 extern bool
 isIgnored(uint32_t name);

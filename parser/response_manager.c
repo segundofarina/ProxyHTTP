@@ -223,7 +223,10 @@ manager_parser_consume(struct response_manager *manager, char *readBuff, int *re
             (*read)++;
         }
         *written+=wirtteninfeed;
-
+        if(manager->prevState == manager_headers && manager->state == manager_addingHeaders){
+            //breaking so the proxy can change the read buffers
+            break;
+        }
         if(manager->prevState == manager_addingHeaders && manager->state == manager_body){
             //breaking so the proxy can change the read buffers
             break;

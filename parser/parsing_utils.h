@@ -17,6 +17,8 @@ struct header_list{
 char *
 getHeaderValue(struct header_list * list, uint32_t name);
 
+int parseIntResponse(const char * b);
+
 
 #endif //PC_2018_04_PARSING_UTILS_H
 
