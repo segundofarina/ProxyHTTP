@@ -55,6 +55,7 @@ add_executable(proxy
         utils/buffer/buffer.c
         utils/selector/selector.c
         utils/stm/stm.c
+        utils/transformation/transformation.c
         serverComponents/proxyStates/requestState.c
         serverComponents/proxyStates/responseState.c
         serverComponents/transformationFork.c

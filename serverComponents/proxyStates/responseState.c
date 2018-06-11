@@ -17,6 +17,7 @@
 #include "../../utils/buffer/buffer.h"
 #include "../../logger/logger.h"
 #include "../metrics.h"
+#include "../../utils/transformation/transformation.h"
 
 #include "../../parser/response_manager.h"
 
@@ -31,19 +32,19 @@ enum manager_state parser_consume(struct response_manager * parser, char * ptrTo
     enum manager_state state = manager_parser_consume(parser, ptrToParse, bytesToParse, ptrFromParse, parsedBytes);
     return state;
 }
-
+/*
 void chunkBytes(char * ptrToChunk, int * bytesToChunk, char * ptrFromChunk, int * chunkedBytes) {
     memcpy(ptrFromChunk, ptrToChunk, *bytesToChunk);
     *chunkedBytes = * bytesToChunk;
 }
-
+*
 int min(int val1, int val2) {
     if(val1 < val2) {
         return val1;
     }
     return val2;
 }
-
+*/
 int isValidTransformation(struct Connection * conn) {
     char c;
     int n = read(conn->readTransformFd, &c, 1);
@@ -63,7 +64,7 @@ int shouldTransform(struct Connection * conn) {
         /* First time, check if media type is in the list and if content-type is valid and transfer-encoding is valid */
         /* If it is */
         //char buff[MAX_MEDIA_TYPE_SIZE_BUFF + 1] = {0};
-        if(hasMediaTypeInList(conn->mediaTypesList, strToMediaType("text/plain")) && isValidTransformation(conn) ) { // CAMBIAR POR LO QUE ME DA EL PARSER
+        if(hasMediaTypeInList(conn->mediaTypesList, strToMediaType("text/html")) && isValidTransformation(conn) ) { // CAMBIAR POR LO QUE ME DA EL PARSER
             conn->transformationType = IS_TRANSFORMING;
         } else {
             conn->transformationType = NO_TRANSFORM;
@@ -177,19 +178,19 @@ enum manager_state copyTempToTransformBuff(struct selector_key * key) {
 int copyTransformToWriteBuffer(struct selector_key * key) {
     struct Connection * conn = DATA_TO_CONN(key);
 	uint8_t * ptrToChunk, * ptrFromChunk;
-	size_t maxTransformBuffSize, maxWriteBuffSize;
-	int  chunkedBytes = 0, bytesToChunk = 0;
+	//size_t maxTransformBuffSize, maxWriteBuffSize;
+	size_t  chunkedBytes = 0, bytesToChunk = 0;
 
     /* chunk string from buffer_read_ptr(&conn->outTransformBuff, &maxTransformBuffSize) */
-    ptrToChunk = buffer_read_ptr(&conn->outTransformBuffer, &maxTransformBuffSize);
+    ptrToChunk = buffer_read_ptr(&conn->outTransformBuffer, &bytesToChunk);
 
     /* leave chunked data in buffer_write_ptr(&conn->writeBuffer, &maxWriteBuffSize) */
-    ptrFromChunk = buffer_write_ptr(&conn->writeBuffer, &maxWriteBuffSize);
+    ptrFromChunk = buffer_write_ptr(&conn->writeBuffer, &chunkedBytes);
 
     /* chunk string size is min(maxTransformBuffSize, maxWriteBuffSize) */
     /* leave amount of bytes chunked in chunkedBytes */
-    bytesToChunk = min(maxTransformBuffSize, maxWriteBuffSize);
-    chunkBytes((char *)ptrToChunk, &bytesToChunk, (char *)ptrFromChunk, &chunkedBytes);
+    //bytesToChunk = min(maxTransformBuffSize, maxWriteBuffSize);
+    chunkBody((char *)ptrToChunk, (int *)&bytesToChunk, (char *)ptrFromChunk, (int *)&chunkedBytes);
 
     /* move temp buffer pointer accoring to chunkedBytes */
     buffer_read_adv(&conn->outTransformBuffer, bytesToChunk);

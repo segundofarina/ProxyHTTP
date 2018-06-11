@@ -23,7 +23,7 @@ typedef enum {FALSE, TRUE} Bool;
 #define DEFAULT_PROXY_HTTP_PORT 8080
 #define DEFAULT_ADMIN_PORT 9090
 
-#define LOGGER_LEVEL PRODUCTION
+#define LOGGER_LEVEL DEBUG
 
 struct serverSettings {
 	uint32_t httpAddr;
@@ -42,6 +42,9 @@ int main(const int argc, char * const * argv) {
 	char * errMsg = NULL;
 	selector_status selectorStatus = SELECTOR_SUCCESS;
     fd_selector selector = NULL;
+
+	/* Start transformation manager */
+	transformationManagerInit();
 
 	getParams(argc, argv, &settings);
 
@@ -86,9 +89,6 @@ int main(const int argc, char * const * argv) {
 
 	/* Start logger */
 	loggerInit(LOGGER_LEVEL, selector);
-
-	/* Start transformation manager */
-	transformationManagerInit();
 
 	/* Listen to clients */
 	if( (serverFd = createPassiveSock(settings.httpAddr, settings.httpPort, IPPROTO_TCP)) < 0 ) {

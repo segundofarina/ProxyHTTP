@@ -1,9 +1,10 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "transformationManager.h"
 
-#define MAX_CMD 255
+#define MAX_CMD 256
 
 struct Transformation {
     char cmd[MAX_CMD + 1];
@@ -37,8 +38,8 @@ int addTransformation(const char * cmd) {
     if(n > MAX_CMD) {
         return 0;
     }
-
-    memcpy(transformation->cmd, cmd, n+1);
+    memcpy(transformation->cmd, cmd, n);
+    transformation->cmd[n] = 0;
 
     return 1;
 }
