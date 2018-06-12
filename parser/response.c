@@ -34,7 +34,7 @@
 
 
 char **headerNamesResponse = (char *[]) {"Content-Length", "Transfer-Encoding", "Content-Encoding", "Connection","Media-Type"};
-int typesResponse[] = {HEADER_CONT_LEN, HEADER_TRANSF_ENC, HEADER_CONT_ENCONDING, HEADER_CONNECTION,HEADER_MEDIA_TYPE};
+enum header_name typesResponse[] = {HEADER_CONT_LEN, HEADER_TRANSF_ENC, HEADER_CONT_ENCONDING, HEADER_CONNECTION,HEADER_MEDIA_TYPE};
 enum header_name ignoeredResponse[] = {HEADER_CONT_LEN, HEADER_CONNECTION,HEADER_TRANSF_ENC};
 #define HEADERS_AMOUNT 5
 #define HEADER_IGNORED 3
@@ -169,7 +169,7 @@ statusLine(const uint8_t c, struct response_parser *p) {
             statusLine_parser_close(p->statusLineParser);
             free(p->statusLineParser);
             p->statusLineParser=NULL;
-            headerGroup_parser_init(p->headerParser,HEADER_NOT_INTERESTED,headerNamesResponse,typesResponse,HEADERS_AMOUNT);
+            headerGroup_parser_init(p->headerParser,HEADER_NOT_INTERESTED,headerNamesResponse,(int *)typesResponse,HEADERS_AMOUNT);
             next = response_headers;
             break;
         default:
