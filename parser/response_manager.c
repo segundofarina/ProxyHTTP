@@ -16,9 +16,18 @@ extern void
 manager_parser_getMediaType(struct response_manager * manager,char * buffer,int max){
 
     char * value = getHeaderValue(manager->parser.headerList,HEADER_MEDIA_TYPE);
+    if(value==NULL){
+        buffer[0]=0;
+        return;
+    }
     int i;
     for(i=0;value[i] && value[i]==' ';i++);
     strncpy(buffer,value+i,max);
+}
+
+extern bool
+manager_parser_isBodyCompressed(struct response_manager * manager){
+    return manager->parser.compresed;
 }
 
 static enum manager_state

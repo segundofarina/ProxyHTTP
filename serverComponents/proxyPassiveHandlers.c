@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include <arpa/inet.h>
 
 #include <sys/stat.h>
@@ -21,6 +22,7 @@
 
 
 #define MAX_POOL 50
+#define LOG_BUFF_SIZE 256
 
 static int poolSize = 0;
 static struct Connection * pool = NULL;
@@ -160,6 +162,18 @@ void destroy_connection(struct selector_key * key) {
 	}
 }
 
+void logNewConnection(struct Connection * conn) {
+    char buff[LOG_BUFF_SIZE + 1] = {0};
+    char addr[INET_ADDRSTRLEN + 1] = {0};
+
+    /* Get addres */
+    inet_ntop(conn->clientAddr.ss_family, &(((struct sockaddr_in *)&conn->clientAddr)->sin_addr), addr, INET_ADDRSTRLEN);
+
+	sprintf(buff, "\x1b[32m[INFO]\x1b[0m New client connection - client: %s\n", addr);
+    loggerWrite(PRODUCTION, buff);
+}
+
+
 void proxyPassiveAccept(struct selector_key *key) {
 	struct sockaddr_storage clientAddr;
     socklen_t clientAddrLen = sizeof(clientAddr);
@@ -208,6 +222,9 @@ void proxyPassiveAccept(struct selector_key *key) {
 			goto handle_errors;
 		}
 	}
+
+	/* Log client connection */
+	logNewConnection(connection);
 
 	return;
 

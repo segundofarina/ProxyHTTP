@@ -28,6 +28,15 @@ void consume_wrapper(struct response_manager * p, char * response,bool transfAct
     printf("parsed headers is\n%s",headers);
 
 
+    char mediaType[1000]={0};
+    manager_parser_getMediaType(p,mediaType,1000);
+
+    printf("Media-Type is: %s\n",mediaType);
+    if(manager_parser_isBodyCompressed(p)){
+        printf("Body is compressed\n");
+    }else{
+        printf("Body is not compressed\n");
+    }
     len2=strlen(response+len);
     manager_parser_setTransformation(p,transfActive);
     manager_parser_consume(p,response+len,&len2,headersAdded,&headersAddedWritten);
@@ -47,6 +56,7 @@ void consume_wrapper(struct response_manager * p, char * response,bool transfAct
 
     free(headers);
     free(body);
+    free(headersAdded);
 }
 
 
@@ -169,7 +179,7 @@ int main(){
                     "Expires: Tue, 03 Jul 2018 04:35:48 GMT\r\n"
                     "Cache-Control: public, max-age=2592000\r\n"
                     "Server: gws\r\n"
-                    "Transfer-Encoding: Chunked\r\n"
+                    "Transfer-Encoding: deflate, Chunked\r\n"
                     "X-XSS-Protection: 1; mode=block\r\n"
                     "X-Frame-Options: SAMEORIGIN\r\n"
                     "\r\n"

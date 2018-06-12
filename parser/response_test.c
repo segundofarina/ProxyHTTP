@@ -9,7 +9,7 @@
 #include "headerGroup.h"
 #include "body.h"
 
-void consume(struct response_parser * p,char * string,){
+void consume(struct response_parser * p,char * string){
     size_t i;
     enum response_state state;
     for(i =0 ; i< strlen(string) ;i++){
@@ -45,13 +45,13 @@ void consume_wrapper(struct response_parser * p, char * response){
 
 
     len =strlen(response);
-    response_parser_consume(p,response,&len,headers,&headersWritten);
+    //response_parser_consume(p,response,&len,headers,&headersWritten);
     printf("headers wirtten bytes is %d\n",headersWritten);
     printf("parsed headers is\n%s",headers);
 
 
     len2=strlen(response+len);
-    response_parser_consume(p,response+len,&len2,body,&bodyWritten);
+    //response_parser_consume(p,response+len,&len2,body,&bodyWritten);
 
     printf("body wirtten bytes is %d\n",bodyWritten);
     body[bodyWritten]=0;

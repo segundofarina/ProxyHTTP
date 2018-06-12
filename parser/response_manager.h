@@ -53,4 +53,7 @@ manager_parser_setTransformation(struct response_manager *m,bool active);
 extern void
 manager_parser_getMediaType(struct response_manager * manager,char * buffer,int max);
 
+extern bool
+manager_parser_isBodyCompressed(struct response_manager * manager);
+
 #endif //PC_2018_04_RESPONSE_MANAGER_H

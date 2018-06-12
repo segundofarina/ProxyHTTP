@@ -33,7 +33,7 @@
 
 
 
-char **headerNamesResponse = (char *[]) {"Content-Length", "Transfer-Encoding", "Content-Encoding", "Connection","Media-Type"};
+char **headerNamesResponse = (char *[]) {"Content-Length", "Transfer-Encoding", "Content-Encoding", "Connection","Content-Type"};
 enum header_name typesResponse[] = {HEADER_CONT_LEN, HEADER_TRANSF_ENC, HEADER_CONT_ENCONDING, HEADER_CONNECTION,HEADER_MEDIA_TYPE};
 enum header_name ignoeredResponse[] = {HEADER_CONT_LEN, HEADER_CONNECTION,HEADER_TRANSF_ENC};
 #define HEADERS_AMOUNT 5
@@ -261,12 +261,14 @@ doneResponse( const uint8_t c,struct response_parser *p) {
 extern void
 response_parser_init(struct response_parser *p, enum request_method method) {
 
-    p->state = response_statusLine;
-    p->statusLineParser = malloc(sizeof(struct statusLine_parser));
-    p->headerParser = malloc(sizeof(struct headerGroup_parser));
-    p->headerList = NULL;
+    p->state              = response_statusLine;
+    p->statusLineParser   = malloc(sizeof(struct statusLine_parser));
+    p->headerParser       = malloc(sizeof(struct headerGroup_parser));
+    p->headerList         = NULL;
     p->shouldKeepLastChar = false;
-    p->method = method;
+    p->method             = method;
+    p->compresed          = false;
+    p->chunked            = false;
     statusLine_parser_init(p->statusLineParser);
 
 }
