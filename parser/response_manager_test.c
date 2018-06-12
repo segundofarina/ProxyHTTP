@@ -28,6 +28,11 @@ void consume_wrapper(struct response_manager * p, char * response,bool transfAct
     printf("parsed headers is\n%s",headers);
 
 
+    char mediaType[1000]={0};
+    manager_parser_getMediaType(p,mediaType,1000);
+
+    printf("Media-Type is: %s\n",mediaType);
+    
     len2=strlen(response+len);
     manager_parser_setTransformation(p,transfActive);
     manager_parser_consume(p,response+len,&len2,headersAdded,&headersAddedWritten);
@@ -47,6 +52,7 @@ void consume_wrapper(struct response_manager * p, char * response,bool transfAct
 
     free(headers);
     free(body);
+    free(headersAdded);
 }
 
 
