@@ -71,13 +71,9 @@ add_executable(proxy
         serverComponents/maxFdHandler.c
         serverComponents/metrics.c
         serverComponents/transformationManager.c
-<<<<<<< HEAD
-        logger/logger.c
-        serverComponents/adminStates/adminParser/processAdminRequest.c)
-=======
+        serverComponents/adminStates/adminParser/processAdminRequest.c
         serverComponents/transErrorManager.c
         logger/logger.c)
->>>>>>> 4bee4ce4320a11a178a7823c73b7ee674f043599
 
 
 add_executable(requestLine
