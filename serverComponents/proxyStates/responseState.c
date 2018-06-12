@@ -62,7 +62,7 @@ int shouldTransform(struct Connection * conn) {
         cleanContentType(buff);
 
         if(hasMediaTypeInList(conn->mediaTypesList, strToMediaType(buff)) &&
-         isValidTransformation(conn) ) { // CAMBIAR POR LO QUE ME DA EL PARSER y chequear content-types...
+         isValidTransformation(conn) ) {
             conn->transformationType = IS_TRANSFORMING;
         } else {
             conn->transformationType = NO_TRANSFORM;
