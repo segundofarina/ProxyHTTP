@@ -8,15 +8,18 @@
 #include "response_manager.h"
 #include "requestLine.h"
 
-void consume_wrapper(struct response_manager * p, char * response){
+void consume_wrapper(struct response_manager * p, char * response,bool transfActive){
     char *headers;
     int headersWritten =1023;
+    char *headersAdded;
+    int headersAddedWritten =1023;
     char *body;
     int bodyWritten=1023;
     int len,len2;
 
     headers = calloc(1024, sizeof(char));
     body= calloc(1024, sizeof(char));
+    headersAdded=calloc(1024, sizeof(char));
 
 
     len =strlen(response);
@@ -26,7 +29,16 @@ void consume_wrapper(struct response_manager * p, char * response){
 
 
     len2=strlen(response+len);
+    manager_parser_setTransformation(p,transfActive);
+    manager_parser_consume(p,response+len,&len2,headersAdded,&headersAddedWritten);
+
+    printf("\nHeaders added bytes is %d\n",headersAddedWritten);
+    headersAdded[headersAddedWritten]=0;
+    printf("added headers are\n%s\n",headersAdded);
+
+    len2=strlen(response+len);
     manager_parser_consume(p,response+len,&len2,body,&bodyWritten);
+
 
     printf("body wirtten bytes is %d\n",bodyWritten);
     body[bodyWritten]=0;
@@ -67,7 +79,7 @@ int main(){
 
     manager_parser_init(&p,METHOD_GET);
 
-    consume_wrapper(&p,r302);
+    consume_wrapper(&p,r302,true);
 
     manager_parser_close(&p);
 
@@ -118,7 +130,7 @@ int main(){
 
     manager_parser_init(&p,METHOD_GET);
 
-    consume_wrapper(&p,r200);
+    consume_wrapper(&p,r200,true);
 
     manager_parser_close(&p);
 
@@ -145,7 +157,7 @@ int main(){
 
     manager_parser_init(&p,METHOD_GET);
 
-    consume_wrapper(&p,r301);
+    consume_wrapper(&p,r301,false);
 
     manager_parser_close(&p);
 
@@ -175,7 +187,7 @@ int main(){
 
     manager_parser_init(&p,METHOD_GET);
 
-    consume_wrapper(&p,chunked);
+    consume_wrapper(&p,chunked,false);
 
     manager_parser_close(&p);
 
