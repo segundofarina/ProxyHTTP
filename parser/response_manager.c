@@ -25,6 +25,11 @@ manager_parser_getMediaType(struct response_manager * manager,char * buffer,int 
     strncpy(buffer,value+i,max);
 }
 
+extern bool
+manager_parser_isBodyCompressed(struct response_manager * manager){
+    return manager->parser.compresed;
+}
+
 static enum manager_state
 statusLine(struct response_manager *manager,const uint8_t c, bool * consumed, char *writebuff, int *written, int maxWrite) {
     enum manager_state next;

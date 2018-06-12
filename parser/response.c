@@ -261,12 +261,14 @@ doneResponse( const uint8_t c,struct response_parser *p) {
 extern void
 response_parser_init(struct response_parser *p, enum request_method method) {
 
-    p->state = response_statusLine;
-    p->statusLineParser = malloc(sizeof(struct statusLine_parser));
-    p->headerParser = malloc(sizeof(struct headerGroup_parser));
-    p->headerList = NULL;
+    p->state              = response_statusLine;
+    p->statusLineParser   = malloc(sizeof(struct statusLine_parser));
+    p->headerParser       = malloc(sizeof(struct headerGroup_parser));
+    p->headerList         = NULL;
     p->shouldKeepLastChar = false;
-    p->method = method;
+    p->method             = method;
+    p->compresed          = false;
+    p->chunked            = false;
     statusLine_parser_init(p->statusLineParser);
 
 }
