@@ -75,14 +75,15 @@ void setTranformationToParser(struct Connection * conn) {
 
 enum manager_state addExtraHeadersToResponse(struct selector_key * key) {
     struct Connection * conn = DATA_TO_CONN(key);
-	uint8_t * writePtr;
+	//uint8_t * writePtr;
 	size_t  count = 0;
     enum manager_state state;
 
-    writePtr = buffer_write_ptr(&conn->writeBuffer, &count);
+    //writePtr = buffer_write_ptr(&conn->writeBuffer, &count);
 
     //state = // agregar headers
-    
+    state = manager_addingHeaders;
+
     buffer_write_adv(&conn->writeBuffer, count);
 
     /* Set interest */
