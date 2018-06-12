@@ -8,15 +8,30 @@ uint32_t getttl(){
     return 5;
 }
 
-uint8_t setTimeOut(char * data){
+uint32_t getbz(){
+    return 5;
+}
+
+void setbz(uint32_t bz){
+    return;
+}
+
+void ttl(uint32_t ttl){
+    return;
+}
+
+int setBufferSize(char  * data){
+    uint32_t bz;
+    memcpy(&bz, data, SIZE_INTEGER);
+    bz = ntohl(bz);
+    setbz(bz);
     return 1;
 }
 
-uint32_t getbz(){
-    return 20;
-}
-
-uint8_t setBufferSize(char * data){
+int setTimeOut(char  * data){
+    uint32_t ttl;
+    memcpy(&ttl, data, SIZE_INTEGER);
+    ttl = ntohl(ttl);
     return 1;
 }
 
@@ -59,11 +74,9 @@ enum admin_error_code getTimeOut(buffer * buff){
 
     buffer_write_adv(buff,responseLen);
 
-
-    ptr = buffer_read_ptr(buff,&aux);
-
     return responseStatus;
 }
+
 
 enum admin_error_code getBufferSize(buffer * buff){
     enum admin_error_code responseStatus = ADMIN_NO_ERROR;
@@ -85,9 +98,6 @@ enum admin_error_code getBufferSize(buffer * buff){
     memcpy(ptr, &size, SIZE_INTEGER);
 
     buffer_write_adv(buff,responseLen);
-
-
-    ptr = buffer_read_ptr(buff,&aux);
 
     return responseStatus;
 }
@@ -136,7 +146,6 @@ enum admin_error_code getMetrics(buffer * buff){
     }
 
     int i = 0;
-
     uint32_t gets = htonl(getAmountOfGet());
     memcpy(ptr+i, &gets, sizeof(gets));
     i+=sizeof(gets);
@@ -188,6 +197,30 @@ enum admin_error_code getMediaTypes(buffer * buff){
     return responseStatus;
 }
 
+int addMediaTypes(char * data,uint8_t len){
+    int ans = 1;
+    int i = 0;
+    while(i<len){
+        if(addMediaType(data[i]) == 0){
+            ans = 0;
+        }
+        i++;
+    }
+    return ans;
+}
+
+int removeMediaTypes(char * data,uint8_t len){
+    int ans = 1;
+    int i = 0;
+    while(i<len){
+        if(removeMediaType(data[i]) == 0){
+            ans = 0;
+        }
+        i++;
+    }
+    return ans;
+}
+
 enum admin_error_code processAdminRequest(buffer * buff) {
     size_t read = 0;
     uint8_t * ptr = buffer_read_ptr(buff,&read);
@@ -219,7 +252,7 @@ enum admin_error_code processAdminRequest(buffer * buff) {
             ans = createResponse(buff,responseStatus,responseLen);
             break;
         case ADD_MEDIA_TYPE:
-            if(addMediaType(data[0]) == 0){
+            if(addMediaTypes(data,len) == 0){
                 responseStatus = ADMIN_REQ_ERR;
             }else{
                 responseStatus = ADMIN_NO_ERROR;
@@ -227,7 +260,7 @@ enum admin_error_code processAdminRequest(buffer * buff) {
             ans = createResponse(buff,responseStatus,responseLen);
             break;
         case REMOVE_MEDIA_TYPE:
-            if(removeMediaType(data[0]) == 0){
+            if(removeMediaTypes(data,len) == 0){
                 responseStatus = ADMIN_REQ_ERR;
             }else{
                 responseStatus = ADMIN_NO_ERROR;
