@@ -4,6 +4,7 @@
 
 #include "multi_parser.h"
 #include "header.h"
+#include "parser_errorCodes.h"
 
 
 #define HEADER_VALUE_LEN 1024
@@ -64,6 +65,7 @@ crlf(const uint8_t c, struct header_parser* p) {
             break;
         default:
             next = header_error;
+            p->errorCode= ERROR_BAD_REQUEST;
             break;
     }
 
@@ -77,6 +79,7 @@ end(const uint8_t c, struct header_parser* p) {
     switch (c) {
         default:
             next = header_error;
+            p->errorCode= ERROR_BAD_REQUEST;
             break;
     }
 

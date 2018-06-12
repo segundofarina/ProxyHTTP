@@ -1,0 +1,304 @@
+Protocol
+
+Acknowledgments
+
+	This memo describe the first version of a protocol. This new protocol stems
+	from active discussions and prototype implementations. The key contributors
+	are: Martin Victory, Segundo Fariña, Florencia Cavallin, and Nicolas
+	Pagannini from the university: Instituto Tecnologico de Buenos Aires.
+
+
+1.	Introduction
+
+	This protocol was born from the need to be able to establish an active
+	connection between a proxy administrator, and a proxy server. The proxy we
+	are trying to connect to with this protocol is a basic http proxy, with no
+	cache, which main feature is to apply a transformations to the body of the
+	http response. The transformation is only applied to those responses that 
+	match one of the preloaded media-types in the proxy. So to manege easyly
+	this feature, we created a protocol where you can modify the transformation
+	type and the media-types without the need to restart the proxy server.
+
+	This protocol also provides the proxy administrator a list of metrics that
+	allows him to handle better the proxy settings, to know all the time the 
+	proxy status and the user load. There exists also a need of basic
+	authentication, to prevent from any user to connect to the proxy and edit
+	it's features.
+
+	The protocol described here is to provide a framework for client-server
+	applications only in SCTP domains. So it so it takes full advantage of the
+	characteristics of this transport type, such as byte orientation.
+
+
+2.	Procedure for client connections
+
+	When a client wishies to establish a connection to the proxy server, it 
+	must open a SCTP connection to the appropiate proxy port, defined by 
+	command line when the proxy is started up. If the connection request
+	succeedes, the client must send a first message with his password so that
+	the proxy server authenticates him, or denies him.
+
+	Unless otherwise noted, the decimal numbers appearing in packet-format 
+	diagrams represent the length of the corresponding field, in octets.  Where
+	a given octet must take on a specific value, the syntax X'hh' is used to
+	denote the value of the single octet in that field. When the word 
+	'Variable' is used, it indicates that the corresponding field has a 
+	variable length defined either by an associated (one or two octet) length 
+	field, or by a data type field.
+
+	The client connects to the proxy and sends the authentication message:
+	
+							+---------+----------+
+							|  LENGTH | PASSWORD |
+							+---------+----------+
+							|    1    | 1 to 255 |
+							+---------+----------+
+
+	The LENGTH field contains the number of bytes that appear in the PASSWORD
+	field.
+
+	The server verifies the provided password and sends a response message 
+	informing its status:
+
+								+---------+
+								| STATUS  |
+								+---------+
+								|    1    |
+								+---------+
+
+	If the STATUS is X'FF', the server got an error, and the client MUST close
+	the connection.
+
+	The values currently defined for STATUS are:
+
+		o  X'00' LOGGED IN
+		o  X'01' LOGIN FAILED
+		o  X'FF' SERVER ERROR
+
+
+3.	Client Request
+
+	Once the authentication has completed, the client sends the request details.
+   	The request is formed as follows:
+
+					+--------+-------------+----------+
+					| METHOD | DATA_LENGTH |   DATA   |
+					+--------+-------------+----------+
+					|    1   |      1      | 1 to 255 |
+					+--------+-------------+----------+
+
+	Where:
+
+		o   METHOD
+			o   X'00' SET TRANSFORMATION
+			o   X'01' ADD MEDIA TYPE
+			o   X'02' REMOVE MEDIA TYPE
+			o   X'03' SET BUFFER SIZE
+			o   X'04' SET TIMEOUT
+			o   X'05' GET METRICS
+			o   X'06' GET TRANSFORMATION
+			o   X'07' GET MEDIA TYPES
+			o   X'08' GET BUFFER_SIZE
+			o   X'09' GET TIMEOUT
+		o   DATA_LENGTH contains the number of bytes that appear in the DATA
+		o   DATA contains the request information for the proxy
+
+	The proxy server will evaluate the request and return one reply message
+	with the corresponding data to the request.
+
+
+4.	Server Response
+
+	The request information is sent by the client as soon as it has established
+	a connection to the proxy server, and completed the authentication 
+	negotiations. The server evaluates the request, and returns a reply formed
+	as follows:
+
+					+--------+-------------+----------+
+					| STATUS | DATA_LENGTH |   DATA   |
+					+--------+-------------+----------+
+					|    1   |      1      | 1 to 255 |
+					+--------+-------------+----------+
+
+	Where:
+
+		o   STATUS:
+			o   X'00' OK
+			o   X'01' ERR
+			o   X'02' NOT SUPPORTED
+			o   X'FF' SERVER ERROR
+		o   DATA_LENGTH contains the number of bytes that appear in the DATA
+		o   DATA contains the response information for the client
+
+	After sending the response, unless the response STATUS is X'FF', where the
+	client MUST close the connection, the server will be waiting another 
+	request from the client as described in 3. Client Request.
+	The client can close the connection if no more request will be sent to the 
+	proxy server.
+
+
+5.	Request and Response specification
+
+Set Transformation
+
+	The client request message will have the specified METHOD in the first
+	field, followed by the amount of bytes that appear in the DATA field, and 
+	the DATA field contains a sequence of characters representing the path to
+	the transformation process to be executed by the proxy server. The max size
+	of the path is 255 characters.
+	If the client wants to remove the current transformation, he has to send
+	this message with the data length in X'00'
+	
+		o   Method:			X'00'
+		o   Data length:	Transformation command length
+		o   Data: 			Transformation command
+
+	The server response message will have the server STATUS as described in
+	4. Server Response, and the DATA LENGTH field in X'00'. The DATA field
+	should be ignored since no data is answered. 
+	
+		o   Status: according to the request
+		o   Data length: X'00'
+
+
+Add Media Type
+
+	The client request message will have the specified METHOD in the first
+	field, followed by the number of media types that appear in the DATA field,
+	and a list of media types in the DATA field. The list of media types is 
+	based on a sequence of bytes, where each byte represents one item of the
+	list . The supported media types are described in Section 6.
+	
+		o   Method:			X'01'
+		o   Data length: 	Number of media types sent in data field
+		o   Data: 			List of media types
+
+	The server response message will have the server STATUS as described in
+	4. Server Response, and the DATA LENGTH field in X'00'. The DATA field
+	should be ignored since no data is answered. 
+	
+		o   Status: according to the request
+		o   Data length: X'00'
+
+
+Remove Media Type
+
+	The client request message will have the specified METHOD in the first
+	field, followed by the number of media types that appear in the DATA field,
+	and a list of media types in the DATA field. The list of media types is 
+	based on a sequence of bytes, where each byte represents one item of the
+	list . The supported media types are described in Section 6.
+	
+		o   Method:			X'02'
+		o   Data length: 	Number of media types sent in data field
+		o   Data: 			List of media types
+
+	The server response message will have the server STATUS as described in
+	4. Server Response, and the DATA LENGTH field in X'00'. The DATA field
+	should be ignored since no data is answered. 
+	
+		o   Status: according to the request
+		o   Data length: X'00'
+
+
+Set Buffer Size
+
+		Client Request:
+			- Method: X'03'
+			- Data length: number size //ESTO HAY QUE ESPECIFICARLO MEJOR
+			- Data: buffer size in big endian?
+
+		Server Response:
+			- Status: according to the request
+			- Data length: X'00'
+
+	5) Set Timeout
+		Client Request:
+			- Method: X'04'
+			- Data length: number size //ESTO HAY QUE ESPECIFICARLO MEJOR
+			- Data: timeout in big endian?
+
+		Server Response:
+			- Status: according to the request
+			- Data length: X'00'
+
+	6) Get Metrics
+		Client Request:
+			- Method: X'05'
+			- Data length: X'00'
+
+		Server Response:
+			- Status: according to the request
+			- Data length: number of metrics
+			- Data: list of metrics according to section 7 of this RFC
+
+	7) Get Transformation
+		Client Request:
+			- Method: X'06'
+			- Data length: X'00'
+
+		Server Response:
+			- Status: according to the request
+			- Data length: contains the transformation command length (max 255), or 0 if setting no transformation
+			- Data: transformation command (max length 255)
+
+	8) Get Media types
+		Client Request:
+			- Method: X'07'
+			- Data length: X'00'
+
+		Server Response:
+			- Status: according to the request
+			- Data length: number of media types sent in data field
+			- Data: list of media types number, according to section 6 of this RFC
+
+	9) Get Buffer Size
+		Client Request:
+			- Method: X'08'
+			- Data length: X'00'
+
+		Server Response:
+			- Status: according to the request
+			- Data length: number size //ESTO HAY QUE ESPECIFICARLO MEJOR
+			- Data: buffer size in big endian?
+
+	10) Get Timeout
+		Client Request:
+			- Method: X'09'
+			- Data length: X'00'
+
+		Server Response:
+			- Status: according to the request
+			- Data length: number size //ESTO HAY QUE ESPECIFICARLO MEJOR
+			- Data: timeout in big endian?
+
+
+
+6. MEDIA TYPES
+We support a limited amount of media types:
+	X'00' text/*
+	X'01' text/plain
+	X'02' text/html
+	X'03' text/css
+	X'04' text/javascript
+	X'05' text/markdown
+	X'06' text/xml
+	X'07' image/*
+	X'08' image/gif
+	X'09' image/jpeg
+	X'0A' image/png
+	X'0B' image/tiff
+	X'0C' application/*
+	X'0D' application/json
+	X'0E' application/javascript
+
+	
+7. METRICS
+The list of metrics is ordered as follow:
+	1) Bytes Read
+	2) Bytes Sent
+	3) Amount of Gets
+	4) Amount of Post
+	5) Amount of Head
+	6) Active clients
+	7) Historic Connections

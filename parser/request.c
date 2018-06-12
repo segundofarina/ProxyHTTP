@@ -11,6 +11,8 @@
 #include "headerGroup.h"
 #include "multi_parser.h"
 #include "request.h"
+#include "parsing_utils.h"
+
 
 enum header_name{
     HEADER_HOST,
@@ -34,7 +36,7 @@ getTransfEncoding(char * value){
         transf_notIntrested,
 
     };
-    char * * transfNames  = ( char *[]){"Chunked"      };
+    char * * transfNames  = ( char *[]){"Chunked",      };
     int      types[] = {            body_type_chunked};
     int len = 1;
     int i;
@@ -101,16 +103,7 @@ getContentLength(struct header_list *list){
     return getContentLength(list->next);
 }
 
-char *
-getHeaderValue(struct header_list * list, enum header_name name){
-    if(list == NULL){
-        return NULL;
-    }
-    if(list->name == name){
-        return list->value;
-    }
-    return getHeaderValue(list->next,name);
-}
+
 
 enum request_state
 requestLine(const uint8_t c,struct request_parser *p) {
@@ -119,9 +112,9 @@ requestLine(const uint8_t c,struct request_parser *p) {
     switch(state){
         case rl_end:
             p->method = p->requestLineParser->method;
-            strcpy(p->requestURI,p->requestLineParser->uri);
+            strncpy(p->requestURI,p->requestLineParser->uri, sizeof(p->requestURI));
 
-            hostData result = requestTarget_marshall(p->requestURI,p->fqdn,0xFF,&(p->port));
+            hostData result = requestTarget_marshall(p->requestURI,p->fqdn,sizeof(p->requestURI),&(p->port));
 
             if(result == ERROR_hostData || result == EMPTY){
                 p->hasDestination = false;

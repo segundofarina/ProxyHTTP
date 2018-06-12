@@ -59,7 +59,8 @@ header(const uint8_t c, struct headerGroup_parser *p) {
             next = headerGroup_init;
             break;
         case header_error:
-            //???que hago??
+            next = headerGroup_error;
+            break;
         default:
             next = headerGroup_header;
 
@@ -172,6 +173,7 @@ header_list_destroy(struct header_list *pList) {
         return;
     }else{
         header_list_destroy(pList->next);
+        pList->next = NULL;
         free(pList->value);
         free(pList);
     }

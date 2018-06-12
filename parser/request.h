@@ -61,6 +61,7 @@ request_state_string(enum request_state state);
 
 enum body_type
 getTransfEncoding(char * value);
+
 #endif //PC_2018_04_HTTPREQUEST_H
 
 
