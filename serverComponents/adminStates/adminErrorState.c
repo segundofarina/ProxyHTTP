@@ -6,6 +6,7 @@
 #include "../admin-structure.h"
 
 unsigned adminErrorWrite(struct selector_key * key) {
+
     struct AdminConn * conn = DATA_TO_ADMIN(key);
 	uint8_t *ptr;
 	size_t count;
@@ -32,6 +33,7 @@ int writeAdminErrorToBuff(uint8_t * ptr, const int count, enum admin_error_code 
 }
 
 unsigned adminSetError(struct selector_key * key, enum admin_error_code error) {
+
     struct AdminConn * conn = DATA_TO_ADMIN(key);
     uint8_t *ptr;
 	size_t count;
@@ -48,6 +50,6 @@ unsigned adminSetError(struct selector_key * key, enum admin_error_code error) {
     buffer_write_adv(&conn->buff, n);
 
     selector_set_interest(key->s, conn->adminFd, OP_WRITE);
-    
+
     return ADMIN_ERROR;
 }

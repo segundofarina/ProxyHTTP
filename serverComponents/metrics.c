@@ -66,7 +66,7 @@ void addClient() {
 }
 
 void removeClient() {
-    if(metrics.activeClients == 0) {
+    if (metrics.activeClients == 0) {
         return;
     }
     metrics.activeClients -= 1;

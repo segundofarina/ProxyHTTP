@@ -33,7 +33,7 @@ int forkTransformation(int * readTransformFd, int * writeTransformFd/* , transfo
     }
 
     if(pid == 0) {
-        runChildCode(readPipe, writePipe, getTransformation());
+        runChildCode(readPipe, writePipe, getCurrentTransformation());
         exit(0);
     }
 
