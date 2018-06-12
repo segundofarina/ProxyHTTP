@@ -450,6 +450,7 @@ shell(int proxy){
         }else if(strcmp("rmtransf",command)==0){
             setTransformation(proxy,parameter);
         }else if(strcmp("addmediatype",command)==0){
+            printf("%s\n", parameter);
             addMediaType(proxy,parameter);
         }else if(strcmp("addmediatypes",command)==0){
             addMediaTypes(proxy,parameter);
