@@ -8,15 +8,30 @@ uint32_t getttl(){
     return 5;
 }
 
-uint8_t setTimeOut(char * data){
+uint32_t getbz(){
+    return 5;
+}
+
+void setbz(uint32_t bz){
+    return;
+}
+
+void ttl(uint32_t ttl){
+    return;
+}
+
+int setBufferSize(uint8_t  * data){
+    uint32_t bz;
+    memcpy(&bz, data, SIZE_INTEGER);
+    bz = ntohl(bz);
+    setbz(bz);
     return 1;
 }
 
-uint32_t getbz(){
-    return 20;
-}
-
-uint8_t setBufferSize(char * data){
+int setTimeOut(uint8_t  * data){
+    uint32_t ttl;
+    memcpy(&ttl, data, SIZE_INTEGER);
+    ttl = ntohl(ttl);
     return 1;
 }
 
@@ -59,11 +74,9 @@ enum admin_error_code getTimeOut(buffer * buff){
 
     buffer_write_adv(buff,responseLen);
 
-
-    ptr = buffer_read_ptr(buff,&aux);
-
     return responseStatus;
 }
+
 
 enum admin_error_code getBufferSize(buffer * buff){
     enum admin_error_code responseStatus = ADMIN_NO_ERROR;
@@ -85,9 +98,6 @@ enum admin_error_code getBufferSize(buffer * buff){
     memcpy(ptr, &size, SIZE_INTEGER);
 
     buffer_write_adv(buff,responseLen);
-
-
-    ptr = buffer_read_ptr(buff,&aux);
 
     return responseStatus;
 }

@@ -62,7 +62,11 @@ help(){
     printf("         sets the transformation to the one passed by parameter\n");
     printf("- addmediatype <string>\n");
     printf("          \n");
+    printf("- addmediatypes <string>, <string>, <string>, <string>, ...\n");
+    printf("          \n");
     printf("- rmmediatype <string>\n");
+    printf("          \n");
+    printf("-rmmediatypes <string>, <string>, <string>, <string>, ...\n");
     printf("          \n");
     printf("- setbuffsize <string>\n");
     printf("          sets buffer size for future connections\n");
@@ -86,10 +90,6 @@ help(){
 
 void
 setTransformation(int proxy, uint8_t * parameter){
-    // if(isValidTranformation(parameter)==1){
-    //     printf("%s is not a valid transformation\n",parameter);
-    //     return;
-    // }
     sendRequest(proxy,SET_TRANSFORMATION,strlen((char *)parameter),parameter);
     uint8_t response[MAX_SERVER_RESPONSE] = {0};
     receiveResponse(proxy,3,response);
@@ -253,22 +253,18 @@ setTimeOut(int proxy, uint8_t * parameter){
 
 void
 printTimeOut(uint8_t * data, uint8_t len){
-    if(len == 1) {
         uint32_t ttl;
         memcpy(&ttl, data, SIZE_INTEGER);
         ttl = ntohl(ttl);
         printf("The current time out is: %i\n", ttl);
-    }
 }
 
 void
 printBufferSize(uint8_t * data, uint8_t len){
-    if(len == 1) {
         uint32_t bz;
         memcpy(&bz, data, SIZE_INTEGER);
         bz = ntohl(bz);
         printf("The current buffer size is: %i\n", bz);
-    }
 }
 
 void
@@ -460,7 +456,7 @@ shell(int proxy){
         }else if(strcmp("rmmediatype",command)==0){
             removeMediaType(proxy,parameter);
         }else if(strcmp("rmmediatypes",command)==0){
-            removeMediaType(proxy,parameter);
+            removeMediaTypes(proxy,parameter);
         }else if(strcmp("setbuffsize",command)==0){
             setBufferSize(proxy,parameter);
         }else if(strcmp("settimeout",command)==0) {
