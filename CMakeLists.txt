@@ -6,6 +6,16 @@ project(pc_2018_04 C)
 
 set(CMAKE_C_FLAGS    "-g -fsanitize=address -fno-omit-frame-pointer --std=c99 -pthread -pedantic -pedantic-errors -Wall -Wextra -Werror -Wno-unused-parameter -Wno-implicit-fallthrough -D_POSIX_C_SOURCE=200112L ")
 
+set(CLANG_TIDY_CHECKS *
+   -boost-*
+   -mpi-*
+   -llvm-*
+   -cppcoreguidelines-*
+   -clang-analyzer-osx.*
+   -cert-*-cpp
+   -misc-unused-parameters,
+   -clang-diagnostic-missing-declarations)
+string(REPLACE ";" "," CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS}")
 
 if(CMAKE_C_COMPILER_ID MATCHES "Clang")
     find_program(CLANGTIDY NAMES clang-tidy)
@@ -29,7 +39,6 @@ add_executable(proxy
         parser/header.c
         parser/headerGroup.c
         parser/body.c
-        parser/method.c
         parser/requestLine.c
         parser/request.c
         parser/identity.c
@@ -37,6 +46,8 @@ add_executable(proxy
         parser/chunk.c
         parser/statusLine.c
         parser/response.c
+        parser/parsing_utils.c
+        parser/response_manager.c
         server.c
         serverComponents/proxyActiveHandlers.c
         serverComponents/proxyPassiveHandlers.c
@@ -44,6 +55,7 @@ add_executable(proxy
         utils/buffer/buffer.c
         utils/selector/selector.c
         utils/stm/stm.c
+        utils/transformation/transformation.c
         serverComponents/proxyStates/requestState.c
         serverComponents/proxyStates/responseState.c
         serverComponents/transformationFork.c
@@ -59,11 +71,12 @@ add_executable(proxy
         serverComponents/maxFdHandler.c
         serverComponents/metrics.c
         serverComponents/transformationManager.c
+        serverComponents/transErrorManager.c
         logger/logger.c)
 
 
 add_executable(requestLine
-        parser/method.c
+        parser/multi_parser.c
         parser/parser.c
         parser/parser_utils.c
         parser/requestLine.c
@@ -105,13 +118,13 @@ add_executable(request
         parser/header.c
         parser/headerGroup.c
         parser/body.c
-        parser/method.c
         parser/requestLine.c
         parser/request.c
         parser/request_test.c
         parser/identity.c
         parser/chunkGroup.c
-        parser/chunk.c)
+        parser/chunk.c
+        parser/parsing_utils.c)
 
 add_executable(response
         parser/parser.c
@@ -120,13 +133,30 @@ add_executable(response
         parser/header.c
         parser/headerGroup.c
         parser/body.c
-        parser/method.c
         parser/statusLine.c
         parser/response.c
         parser/response_test.c
         parser/identity.c
         parser/chunkGroup.c
-        parser/chunk.c)
+        parser/chunk.c
+        parser/parsing_utils.c)
+
+
+add_executable(manager
+        parser/parser.c
+        parser/parser_utils.c
+        parser/multi_parser.c
+        parser/header.c
+        parser/headerGroup.c
+        parser/body.c
+        parser/statusLine.c
+        parser/response.c
+        parser/response_manager.c
+        parser/response_manager_test.c
+        parser/identity.c
+        parser/chunkGroup.c
+        parser/chunk.c
+        parser/parsing_utils.c)
 
 
 add_executable(parserHostreqline

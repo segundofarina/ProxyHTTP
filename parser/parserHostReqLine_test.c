@@ -8,6 +8,21 @@
 
 #include "parserHostReqLine.h"
 
+
+
+
+
+
+
+//  DEPRECATED due to state machine & structs changes!
+
+
+
+
+
+
+
+
 int main(void) {
 
     int i /*,errCode*/;

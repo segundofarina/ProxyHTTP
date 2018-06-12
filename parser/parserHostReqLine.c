@@ -182,11 +182,7 @@ hostData processHost(char * fqdn, char * result, uint16_t resultLen, uint16_t * 
 		return ERROR_hostData;
 	}
 
-	if(j >= resultLen) {
-		return ERROR_hostData;
-	} else {
-		return ans;
-	}
+	return j >= resultLen? ERROR_hostData : ans;
 }
 
 /**
@@ -284,17 +280,18 @@ hostData requestTarget_marshall(char * buffer, char * result, uint16_t resultLen
  *	Uses function inet_pton to turn the char* host into sockaddr_in[6] as required.
  */
 int fillRequestData_marshall(hostData addressType, char * host, uint16_t port, struct requestData * rdStruct) {
-	int i, errCode;
+	int i, errCode = -1;
 
 	switch(addressType) {
 		case ERROR_hostData:
-			return -1;
+			return errCode;
 			break;
 		case EMPTY:
 			if(port != (uint16_t)DEFAULT_HTTP_PORT) {
 				rdStruct->destPort = port;
 			}
 			rdStruct->destAddrType = DOMAIN;
+			errCode = 1;
 			break;
 		case DOMAIN_HOST:
 			rdStruct->destAddrType = DOMAIN;
@@ -302,6 +299,7 @@ int fillRequestData_marshall(hostData addressType, char * host, uint16_t port, s
 				rdStruct->destAddr.fqdn[i] = host[i];
 			}
 			rdStruct->destPort = (uint16_t)DEFAULT_HTTP_PORT;
+			errCode = 1;
 			break;
 		case DOMAIN_HOST_PORT:
 			rdStruct->destAddrType = DOMAIN;
@@ -309,6 +307,7 @@ int fillRequestData_marshall(hostData addressType, char * host, uint16_t port, s
 				rdStruct->destAddr.fqdn[i] = host[i];
 			}
 			rdStruct->destPort = port;
+			errCode = 1;
 			break;
 		case IPV4:
 			rdStruct->destAddrType = IPv4;
@@ -329,29 +328,16 @@ int fillRequestData_marshall(hostData addressType, char * host, uint16_t port, s
 	}
 
 	if(addressType == IPV4 || addressType == IPV4_PORT) {
-		// aux4 = malloc();
-		// aux4.sin_family = AF_INET;
-		// aux4.sin_port = htons(port);
-		// errCode = inet_pton(AF_INET, host, &(aux4.sin_addr.s_addr));
-		// rdStruct.destAddr.ipv4 = aux4;
 		rdStruct->destAddr.ipv4.sin_family = AF_INET;
 		rdStruct->destAddr.ipv4.sin_port = htons(port);
-		//errCode = inet_pton(AF_INET, host, &aux4);
 		errCode = inet_pton(AF_INET, host, &(rdStruct->destAddr.ipv4.sin_addr.s_addr));
-		//memcpy(&aux4, rdStruct->destAddr.ipv4.sin_addr, sizeof(struct in_addr));
 	}
 	if(addressType == IPV6 || addressType == IPV6_PORT) {
-		// rdStruct->destAddr->ipv6 = (struct sockaddr_in6 *)((*res)->ai_addr);	// makes errors/conflicts with these casts
-		// aux6 = malloc();
-		// aux6.sin_family = AF_INET6;
-		// aux6.sin_port = htons(port);
 		rdStruct->destAddr.ipv6.sin6_family = AF_INET6;
 		rdStruct->destAddr.ipv6.sin6_port = htons(port);
 		rdStruct->destAddr.ipv6.sin6_flowinfo = (uint32_t) 0;	// IPv6 flow information
-		// errCode = inet_pton(AF_INET6, host, &aux6);
 		errCode = inet_pton(AF_INET, host, &(rdStruct->destAddr.ipv6.sin6_addr.s6_addr));
 		rdStruct->destAddr.ipv6.sin6_scope_id = (uint32_t) 0;
-		// memcpy(&aux6, rdStruct->destAddr.ipv6.sin6_addr, sizeof(struct in6_addr));
 	}
 
 	rdStruct->destPort = htons(rdStruct->destPort);

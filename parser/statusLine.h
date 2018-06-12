@@ -10,6 +10,8 @@
 #include <stdbool.h>
 
 enum statusLine_state {
+    sl_version,
+    sl_code,
     sl_extra,
     sl_clrf,
     sl_end,
@@ -19,6 +21,7 @@ enum statusLine_state {
 
 struct statusLine_parser {
     enum statusLine_state state;
+    int code;
 };
 
 /** inicializa el parser */

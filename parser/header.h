@@ -7,6 +7,7 @@
 
 
 #include <stdint.h>
+#include "parser_errorCodes.h"
 
 
 //https://tools.ietf.org/html/rfc2616#section-4.2
@@ -32,6 +33,7 @@ enum header_state{
 struct header_parser{
     struct multi_parser * nameParser;
     enum header_state state;
+    enum parser_errorCode errorCode;
     uint32_t name;
     char * value;
     int len;
