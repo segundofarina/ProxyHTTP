@@ -32,19 +32,7 @@ enum manager_state parser_consume(struct response_manager * parser, char * ptrTo
     enum manager_state state = manager_parser_consume(parser, ptrToParse, bytesToParse, ptrFromParse, parsedBytes);
     return state;
 }
-/*
-void chunkBytes(char * ptrToChunk, int * bytesToChunk, char * ptrFromChunk, int * chunkedBytes) {
-    memcpy(ptrFromChunk, ptrToChunk, *bytesToChunk);
-    *chunkedBytes = * bytesToChunk;
-}
-*
-int min(int val1, int val2) {
-    if(val1 < val2) {
-        return val1;
-    }
-    return val2;
-}
-*/
+
 int isValidTransformation(struct Connection * conn) {
     char c;
     int n = read(conn->readTransformFd, &c, 1);

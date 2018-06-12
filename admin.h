@@ -21,27 +21,9 @@
 #include <arpa/inet.h>
 
 #define MAX_SERVER_RESPONSE 255
+#define MAX_ADMIN_REQUEST 255
 #define SIZE_CHAR sizeof(uint8_t)
 #define SIZE_INTEGER 4*SIZE_CHAR
-
-enum MediaType {
-    MT_NONE=0xFF,                        // default value for error
-    MT_TEXT_ALL=0x00,                    // text/*
-    MT_TEXT_PLAIN=0x01,                  // text/plain
-    MT_TEXT_HTML=0x02,                   // text/html
-    MT_TEXT_CSS=0x03,                    // text/css
-    MT_TEXT_JAVASCRIPT=0x04,             // text/javascript
-    MT_TEXT_MARKDOWN=0x05,               // text/markdown
-    MT_TEXT_XML=0x06,                    // text/xml
-    MT_IMAGE_ALL=0x07,                   // image/*
-    MT_IMAGE_GIF=0x08,                   // image/gif 
-    MT_IMAGE_JPEG=0x09,                  // image/jpeg
-    MT_IMAGE_PNG=0x0A,                   // image/png
-    MT_IMAGE_TIFF=0x0B,                  // image/tiff
-    MT_APPLICATION_ALL=0x0C,             // application/*
-    MT_APPLICATION_JSON=0x0D,            // application/json
-    MT_APPLICATION_JAVASCRIPT=0x0E       // application/javascript
-};
 
 enum auth_response{
     LOGGED_IN=0x00,
@@ -65,22 +47,6 @@ enum client_request{
     GET_BUFFER_SIZE=0x08,
     GET_TIMEOUT=0x09
 };
-enum media_type{
-    TEXT_ALL=0x00,
-    TEXT_PLAIN=0x01,
-    TEXT_HTML=0x02,
-    TEXT_CSS=0x03,
-    TEXT_JAVASCRIPT=0x04,
-    TEXT_MARKDOWN=0x05,
-    TEXT_XML=0x06,
-    IMAGE_ALL=0x07,
-    IMAGE_GIF=0x08,
-    IMAGE_JPEG=0x09,
-    IMAGE_PNG=0x0A,
-    IMAGE_TIFF=0x0B,
-    APPLICATION_ALL=0x0C,
-    APPLICATION_JSON=0x0D,
-    APPLICATION_JAVASCRIPT=0x0E
-};
+
 
 #endif //PC_2018_04_ADMIN_H

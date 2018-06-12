@@ -4,6 +4,22 @@
 #include <stdio.h>
 #include "processAdminRequest.h"
 
+uint32_t getttl(){
+    return 5;
+}
+
+uint8_t setTimeOut(char * data){
+    return 1;
+}
+
+uint32_t getbz(){
+    return 20;
+}
+
+uint8_t setBufferSize(char * data){
+    return 1;
+}
+
 enum admin_error_code createResponse(buffer * buff,enum admin_error_code code, uint8_t len) {
     size_t i = 0;
     buffer_reset(buff);
@@ -20,6 +36,60 @@ enum admin_error_code createResponse(buffer * buff,enum admin_error_code code, u
     buffer_write_adv(buff,REQUEST_DATA);
     return code;
 
+}
+
+enum admin_error_code getTimeOut(buffer * buff){
+    enum admin_error_code responseStatus = ADMIN_NO_ERROR;
+    uint32_t ttl = htonl(getttl());
+    size_t responseLen = SIZE_INTEGER;
+    size_t aux = 0;
+    enum admin_error_code ans = createResponse(buff,responseStatus,responseLen);
+
+    if(ans == ADMIN_REQ_ERR){
+        return ans;
+    }
+
+    uint8_t * ptr = buffer_write_ptr(buff,&aux);
+
+    if(aux < responseLen){
+        return ADMIN_REQ_ERR;
+    }
+
+    memcpy(ptr, &ttl, SIZE_INTEGER);
+
+    buffer_write_adv(buff,responseLen);
+
+
+    ptr = buffer_read_ptr(buff,&aux);
+
+    return responseStatus;
+}
+
+enum admin_error_code getBufferSize(buffer * buff){
+    enum admin_error_code responseStatus = ADMIN_NO_ERROR;
+    uint32_t size = htonl(getbz());
+    size_t responseLen = SIZE_INTEGER;
+    size_t aux = 0;
+    enum admin_error_code ans = createResponse(buff,responseStatus,responseLen);
+
+    if(ans == ADMIN_REQ_ERR){
+        return ans;
+    }
+
+    uint8_t * ptr = buffer_write_ptr(buff,&aux);
+
+    if(aux < responseLen){
+        return ADMIN_REQ_ERR;
+    }
+
+    memcpy(ptr, &size, SIZE_INTEGER);
+
+    buffer_write_adv(buff,responseLen);
+
+
+    ptr = buffer_read_ptr(buff,&aux);
+
+    return responseStatus;
 }
 
 enum admin_error_code getTransformation(buffer * buff){
@@ -44,15 +114,6 @@ enum admin_error_code getTransformation(buffer * buff){
 
 
     ptr = buffer_read_ptr(buff,&aux);
-
-    printf("Server response\n");
-
-    for (size_t i = 0; i < aux; i++) {
-        printf("0x%x ", (unsigned)*(ptr + i));
-    }
-
-    printf("\n");
-
 
     return responseStatus;
 
@@ -174,10 +235,20 @@ enum admin_error_code processAdminRequest(buffer * buff) {
             ans = createResponse(buff,responseStatus,responseLen);
             break;
         case SET_BUFFER_SIZE:
-            //HACER
+            if(setBufferSize(data) == 0){
+                responseStatus = ADMIN_REQ_ERR;
+            }else{
+                responseStatus = ADMIN_NO_ERROR;
+            }
+            ans = createResponse(buff,responseStatus,responseLen);
             break;
         case SET_TIMEOUT:
-            //HACER
+            if(setTimeOut(data) == 0){
+                responseStatus = ADMIN_REQ_ERR;
+            }else{
+                responseStatus = ADMIN_NO_ERROR;
+            }
+            ans = createResponse(buff,responseStatus,responseLen);
             break;
         case GET_METRICS:
             ans = getMetrics(buff);
@@ -189,10 +260,10 @@ enum admin_error_code processAdminRequest(buffer * buff) {
             ans = getMediaTypes(buff);
             break;
         case GET_BUFFER_SIZE:
-            //HACER
+            ans = getBufferSize(buff);
             break;
         case GET_TIMEOUT:
-            //HACER
+            ans = getTimeOut(buff);
             break;
         default:
             responseStatus = ADMIN_NOT_SUPPORTED_ERROR;
