@@ -400,8 +400,6 @@ unsigned writeToTransformation(struct selector_key * key) {
 
     /* Send bufferd data to the client */
 	ptr = buffer_read_ptr(&conn->inTransformBuffer, &count);
-	n = send(key->fd, ptr, count, MSG_NOSIGNAL);
-    printf("count is: %d\n", (int) count);
     n = write(key->fd, ptr, count);
 	if(n <= 0) { // transformation closed connection
 
