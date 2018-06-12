@@ -56,4 +56,7 @@ manager_parser_getMediaType(struct response_manager * manager,char * buffer,int 
 extern bool
 manager_parser_isBodyCompressed(struct response_manager * manager);
 
+extern char *
+manager_state_string(enum manager_state state);
+
 #endif //PC_2018_04_RESPONSE_MANAGER_H
