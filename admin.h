@@ -20,6 +20,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#define QUANTITY_MEDIATYPES 15
+#define MT_MAX_LONG 50
 #define MAX_SERVER_RESPONSE 255
 #define MAX_ADMIN_REQUEST 255
 #define SIZE_CHAR sizeof(uint8_t)

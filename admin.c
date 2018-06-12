@@ -124,18 +124,40 @@ addMediaType(int proxy, uint8_t * parameter){
 
 void
 addMediaTypes(int proxy, uint8_t * parameter){
-    uint8_t i = 0;
-    while(parameter[i] != '\n' && parameter[i] != ' '){
+
+    uint8_t mt[QUANTITY_MEDIATYPES] = {0};
+    uint8_t auxmt[MT_MAX_LONG] = {0};
+    int i = 0, j = 0, h = 0;
+    while(parameter[i] != 0){
+        if(parameter[i] == ','){
+            memset(auxmt,0,MT_MAX_LONG);
+            memcpy(auxmt,parameter+j,i-j);
+            mt[h] =strToMediaType((char *)(auxmt));
+            h++;
+            j = i+1;
+        }
         i++;
     }
-    uint8_t mt[MAX_ADMIN_REQUEST] = {0};
-    memcpy(mt,parameter,i);
-    addMediaType(proxy,mt);
-    if(parameter[i] == '\n'){
-        return;
+
+    if(parameter[i] == 0){
+        memset(auxmt,0,MT_MAX_LONG);
+        memcpy(auxmt,parameter+j,i-j);
+        mt[h] =strToMediaType((char *)(auxmt));
+        h++;
     }
-    addMediaTypes(proxy,parameter+i);
+    sendRequest(proxy,ADD_MEDIA_TYPE,h,mt);
+    uint8_t response[MAX_SERVER_RESPONSE] = {0};
+    receiveResponse(proxy,3,response);
+    switch(response[0]){
+        case OK:
+            printf("The media types typed have been added\n");
+            break;
+        default:
+            printf("Something went wrong and the media types typed have not been added\n");
+    }
 }
+
+
 void
 removeMediaType(int proxy, uint8_t * parameter){
     uint8_t mt[2] = {0};
@@ -153,6 +175,41 @@ removeMediaType(int proxy, uint8_t * parameter){
             break;
         default:
             printf("The media type %s has not been added\n",parameter);
+    }
+}
+
+void
+removeMediaTypes(int proxy, uint8_t * parameter){
+
+    uint8_t mt[QUANTITY_MEDIATYPES] = {0};
+    uint8_t auxmt[MT_MAX_LONG] = {0};
+    int i = 0, j = 0, h = 0;
+    while(parameter[i] != 0){
+        if(parameter[i] == ','){
+            memset(auxmt,0,MT_MAX_LONG);
+            memcpy(auxmt,parameter+j,i-j);
+            mt[h] =strToMediaType((char *)(auxmt));
+            h++;
+            j = i+1;
+        }
+        i++;
+    }
+
+    if(parameter[i] == 0){
+        memset(auxmt,0,MT_MAX_LONG);
+        memcpy(auxmt,parameter+j,i-j);
+        mt[h] =strToMediaType((char *)(auxmt));
+        h++;
+    }
+    sendRequest(proxy,REMOVE_MEDIA_TYPE,h,mt);
+    uint8_t response[MAX_SERVER_RESPONSE] = {0};
+    receiveResponse(proxy,3,response);
+    switch(response[0]){
+        case OK:
+            printf("The media types typed have been removed\n");
+            break;
+        default:
+            printf("Something went wrong and the media types typed have not been removed\n");
     }
 }
 
@@ -398,7 +455,11 @@ shell(int proxy){
             setTransformation(proxy,parameter);
         }else if(strcmp("addmediatype",command)==0){
             addMediaType(proxy,parameter);
+        }else if(strcmp("addmediatypes",command)==0){
+            addMediaTypes(proxy,parameter);
         }else if(strcmp("rmmediatype",command)==0){
+            removeMediaType(proxy,parameter);
+        }else if(strcmp("rmmediatypes",command)==0){
             removeMediaType(proxy,parameter);
         }else if(strcmp("setbuffsize",command)==0){
             setBufferSize(proxy,parameter);
