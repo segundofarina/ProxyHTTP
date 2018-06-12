@@ -78,6 +78,7 @@ authenticate(int proxy){
     }
 }
 
+
 void
 sendRequest(int proxy, uint8_t method,uint8_t len, uint8_t * data ){
     int i = 0;
