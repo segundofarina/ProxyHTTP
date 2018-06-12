@@ -32,19 +32,7 @@ enum manager_state parser_consume(struct response_manager * parser, char * ptrTo
     enum manager_state state = manager_parser_consume(parser, ptrToParse, bytesToParse, ptrFromParse, parsedBytes);
     return state;
 }
-/*
-void chunkBytes(char * ptrToChunk, int * bytesToChunk, char * ptrFromChunk, int * chunkedBytes) {
-    memcpy(ptrFromChunk, ptrToChunk, *bytesToChunk);
-    *chunkedBytes = * bytesToChunk;
-}
-*
-int min(int val1, int val2) {
-    if(val1 < val2) {
-        return val1;
-    }
-    return val2;
-}
-*/
+
 int isValidTransformation(struct Connection * conn) {
     char c;
     int n = read(conn->readTransformFd, &c, 1);
@@ -63,8 +51,8 @@ int shouldTransform(struct Connection * conn) {
     if(conn->transformationType == TRANSFORM) {
         /* First time, check if media type is in the list and if content-type is valid and transfer-encoding is valid */
         /* If it is */
-        //schar buff[MAX_MEDIA_TYPE_SIZE_BUFF + 1] = {0};
-        if(hasMediaTypeInList(conn->mediaTypesList, strToMediaType("text/html")) && isValidTransformation(conn) ) { // CAMBIAR POR LO QUE ME DA EL PARSER
+        //char buff[MAX_MEDIA_TYPE_SIZE_BUFF + 1] = {0};
+        if(hasMediaTypeInList(conn->mediaTypesList, strToMediaType("text/html")) && isValidTransformation(conn) ) { // CAMBIAR POR LO QUE ME DA EL PARSER y chequear content-types...
             conn->transformationType = IS_TRANSFORMING;
         } else {
             conn->transformationType = NO_TRANSFORM;
@@ -75,6 +63,40 @@ int shouldTransform(struct Connection * conn) {
         return 1;
     }
     return 0;
+}
+
+void setTranformationToParser(struct Connection * conn) {
+    if(shouldTransform(conn)) {
+        // le pongo al parser que transforme
+    } else {
+        // le pongo al parser que no transforme
+    }
+}
+
+enum manager_state addExtraHeadersToResponse(struct selector_key * key) {
+    struct Connection * conn = DATA_TO_CONN(key);
+	uint8_t * writePtr;
+	size_t  count = 0;
+    enum manager_state state;
+
+    writePtr = buffer_write_ptr(&conn->writeBuffer, &count);
+
+    //state = // agregar headers
+    
+    buffer_write_adv(&conn->writeBuffer, count);
+
+    /* Set interest */
+    /* If I wrote to writeBuffer, clientFd OP_WRITE */
+    fd_interest interest = OP_NOOP;
+    if(buffer_can_read(&conn->writeBuffer)) {
+        /* Write response to client */
+        interest = OP_WRITE;
+    }
+    if(selector_set_interest(key->s, conn->clientFd, interest) != SELECTOR_SUCCESS) {
+        return manager_error;
+    }
+
+    return state;
 }
 
 enum manager_state copyTempToWriteBuff(struct selector_key * key) {
@@ -249,11 +271,24 @@ unsigned readFromOrigin(struct selector_key * key) {
 
     /* If im not in body write to writeBuffer */
     /* Always write to writeBuffer if there is no transformation */
-    if(!shouldTransform(conn) || state == manager_statusLine || state == manager_headers || state == manager_addingHeaders) {
+    if(state == manager_statusLine || state == manager_headers) {
         state = copyTempToWriteBuff(key);
         if(state == manager_error) {
             return setError(key, INTERNAL_SERVER_ERR_500);
         }
+        
+        /* If switch state check transformation and inform it */
+        if(state == manager_addingHeaders) {
+            setTranformationToParser(conn);
+        }
+    }
+
+    /* If I need to add headers add them */
+    if(state == manager_addingHeaders) {
+        state = addExtraHeadersToResponse(key);
+        if(state == manager_error) {
+            return setError(key, INTERNAL_SERVER_ERR_500);
+        } 
     }
 
     /* If im in body write to inTransformBuffer */
@@ -341,33 +376,43 @@ unsigned writeToClient(struct selector_key * key) {
 	}
     buffer_read_adv(&conn->writeBuffer, n);
 
-    /* Save value for metrics */
-    addBytesSent(n);
-
     /* Copy from temp if it's on headers or no transformation */
-    if(!shouldTransform(conn) || state == manager_headers || state == manager_statusLine || state == manager_addingHeaders) {
+    if(state == manager_headers || state == manager_statusLine) {
         state = copyTempToWriteBuff(key);
+        if(state == manager_error) {
+            return setError(key, INTERNAL_SERVER_ERR_500);
+        }
+
+        /* If switch state check transformation and inform it */
+        if(state == manager_addingHeaders) {
+            setTranformationToParser(conn);
+        }
+    }
+
+    /* Add headers */
+    if(state == manager_addingHeaders) {
+        state = addExtraHeadersToResponse(key);
         if(state == manager_error) {
             return setError(key, INTERNAL_SERVER_ERR_500);
         }
     }
 
     /* I have not enterd in the above if and I'm in the body */
-    if(shouldTransform(conn) && originalState == manager_body) {
+    if(originalState == manager_body && shouldTransform(conn)) {
         if(!copyTransformToWriteBuffer(key)) {
             return setError(key, INTERNAL_SERVER_ERR_500);
         }
     }
 
-    /* If the parser changed state to body and there is no transformation */
+    /* If the parser changed state to body and there is no transformation *
     if(shouldTransform(conn) && originalState != manager_body && state == manager_body) {
         if(copyTempToTransformBuff(key) == manager_error) {
             return setError(key, INTERNAL_SERVER_ERR_500);
         }
-    }
+    }*/
 
     /* Fix parser stop reading when changing to body */
-    if(!shouldTransform(conn) && state == manager_body) {
+    if(state == manager_body && !shouldTransform(conn)) {
         if(copyTempToWriteBuff(key) == manager_error) {
             return setError(key, INTERNAL_SERVER_ERR_500);
         }
