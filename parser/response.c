@@ -31,27 +31,30 @@
    include a message body, although the body might be of zero length."
    */
 
-enum header_name {
-    HEADER_CONT_LEN,
-    HEADER_TRANSF_ENC,
-    HEADER_NOT_INTERESTED,
-    HEADER_CONT_ENCONDING,
-    HEADER_CONNECTION,
-    HEADER_MEDIA_TYPE
 
-};
 
 char **headerNamesResponse = (char *[]) {"Content-Length", "Transfer-Encoding", "Content-Encoding", "Connection","Media-Type"};
-int typesResponse[] = {HEADER_CONT_LEN, HEADER_TRANSF_ENC, HEADER_CONT_ENCONDING, HEADER_CONNECTION,HEADER_MEDIA_TYPE};
+enum header_name typesResponse[] = {HEADER_CONT_LEN, HEADER_TRANSF_ENC, HEADER_CONT_ENCONDING, HEADER_CONNECTION,HEADER_MEDIA_TYPE};
 enum header_name ignoeredResponse[] = {HEADER_CONT_LEN, HEADER_CONNECTION,HEADER_TRANSF_ENC};
 #define HEADERS_AMOUNT 5
 #define HEADER_IGNORED 3
 
+
+
 extern char *
-getMediaType(struct response_parser * p){
-    return getHeaderValue(p->headerList,HEADER_MEDIA_TYPE);
+getHeaderName(enum header_name name){
+    for(int i =0; i< HEADERS_AMOUNT;i++){
+        if(typesResponse[i]== name){
+            return headerNamesResponse[i];
+        }
+    }
+    return NULL;
 }
 
+enum header_name * getIgnoredHeaders(int * quantity){
+    *quantity=HEADER_IGNORED;
+    return ignoeredResponse;
+}
 
 
 
@@ -80,67 +83,66 @@ expectsBody(int statusCode, enum request_method method){
 
 
 
-enum body_type
-getTransfEncodingResponse(char * value){
+
+
+
+void
+getTransfEncodingResponse(char * value, bool * chunked, bool * compressed){
 
     struct multi_parser p;
     enum transf_types {
         transf_chunk,
-        transf_notIntrested,
+        transf_compress,
+        transf_deflate,
+        transf_gzip,
+        transf_compress_chunk,
+        transf_deflate_chunk,
+        transf_gzip_chunk,
+        transf_compressed_chunk,
+        transf_notUnkown,
 
     };
-    char **transfNames = (char *[]) {"Chunked"};
-    int types[] = {body_type_chunked};
-    int len = 1;
+    char **transfNames = (char *[]) {"chunked","compress","deflate","gzip","compress, chunked","deflate, chunked"
+                                                                                               ,"gzip, chunked"};
+    int types[] = {transf_chunk,transf_compress,transf_deflate,transf_gzip,transf_compress_chunk,transf_deflate_chunk
+            ,transf_gzip_chunk};
+    int len = 7;
     int i;
 
     for (i = 0; value[i] != 0 && value[i] == ' '; i++);
 
-    multi_parser_init(&p, body_type_identity, transfNames, types, len);
+    multi_parser_init(&p, transf_notUnkown, transfNames, types, len);
 
-    enum body_type result = multi_parser_consume(value + i, &p);
+    enum transf_types result = multi_parser_consume(value + i, &p);
 
     multi_parser_close(&p);
 
-    return result;
+    if(result == transf_chunk || result ==transf_compress_chunk ||result == transf_deflate_chunk ||result == transf_gzip_chunk ){
+        *chunked=true;
+    }else{
+        *chunked=false;
+    }
+
+    if(result ==transf_compress_chunk ||result == transf_deflate_chunk ||result == transf_gzip_chunk || result ==transf_compress
+       ||result == transf_deflate || result ==transf_gzip){
+        *compressed =true;
+    }else{
+        *compressed = false;
+    }
+
 }
 
 
-int parseIntResponse(const char * b){
-    int num = -1;
-    int i = 0;
-
-    if (b == NULL) {
-        return -1;
-    }
-
-    while (b[i] != 0) {
-        if (isdigit(b[i])) {
-            if (num == -1) {
-                num = 0;
-            }
-            num = num * 10 + b[i] - '0';
-        } else if (b[i] != ' ') {
-            return -1;
-        }
-        i++;
-    }
-
-    return num;
-
-}
-
-enum body_type
-getBodyTypeResponse(struct header_list * list){
+bool
+getBodyEncoding(struct header_list * list,bool * chunked, bool * compressed){
     if (list == NULL) {
-        return body_type_error;
+        return false;
     }
     if (list->name == HEADER_TRANSF_ENC) {
-        return getTransfEncodingResponse(list->value);
-    } else if (list->name == HEADER_CONT_ENCONDING) {
-        return getTransfEncodingResponse(list->value);
+        getTransfEncodingResponse(list->value,chunked,compressed);
+        return true;
     }
-    return getBodyTypeResponse(list->next);
+    return getBodyEncoding(list->next,chunked,compressed);
 }
 
 /* Searches in header_list for header Content-Length
@@ -167,7 +169,7 @@ statusLine(const uint8_t c, struct response_parser *p) {
             statusLine_parser_close(p->statusLineParser);
             free(p->statusLineParser);
             p->statusLineParser=NULL;
-            headerGroup_parser_init(p->headerParser,HEADER_NOT_INTERESTED,headerNamesResponse,typesResponse,HEADERS_AMOUNT);
+            headerGroup_parser_init(p->headerParser,HEADER_NOT_INTERESTED,headerNamesResponse,(int *)typesResponse,HEADERS_AMOUNT);
             next = response_headers;
             break;
         default:
@@ -190,9 +192,12 @@ headersResponse(const uint8_t c,struct response_parser *p){
 
 
             if(expectsBody(p->statusCode,p->method)){
-                int type = getBodyTypeResponse(p->headerList);
+                bool encondingPresent = getBodyEncoding(p->headerList,&p->chunked,&p->compresed);
                 int len = getContentLengthResponse(p->headerList);
-                if(type == body_type_chunked || len >0){
+
+                enum body_type type = (p->chunked ? body_type_chunked: body_type_identity);
+
+                if( (encondingPresent && p->chunked) || len >0){
 
                     p->bodyParser = malloc(sizeof(struct body_parser));
                     body_parser_init(p->bodyParser, type, len);
@@ -259,7 +264,6 @@ response_parser_init(struct response_parser *p, enum request_method method) {
     p->state = response_statusLine;
     p->statusLineParser = malloc(sizeof(struct statusLine_parser));
     p->headerParser = malloc(sizeof(struct headerGroup_parser));
-
     p->headerList = NULL;
     p->shouldKeepLastChar = false;
     p->method = method;

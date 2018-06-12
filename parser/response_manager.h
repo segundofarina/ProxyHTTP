@@ -21,13 +21,17 @@ struct response_manager{
     enum manager_state state;
     enum manager_state prevState;
     struct response_parser parser;
+    bool transfActive;
+
+
 
     char headerNameBuffer[maxNameBuffer];
     bool hasBeenDumped;
     int headerBufferLen;
 
     int addHeadersIndex;
-
+    char * headersAdd;
+    int headersAddLen;
 };
 
 
@@ -42,5 +46,11 @@ manager_parser_feed(struct response_manager *manager,const uint8_t c, bool * con
 
 extern void
 manager_parser_close(struct response_manager *manager);
+
+extern void
+manager_parser_setTransformation(struct response_manager *m,bool active);
+
+extern void
+manager_parser_getMediaType(struct response_manager * manager,char * buffer,int max);
 
 #endif //PC_2018_04_RESPONSE_MANAGER_H
