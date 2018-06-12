@@ -23,7 +23,7 @@ typedef enum {FALSE, TRUE} Bool;
 #define DEFAULT_PROXY_HTTP_PORT 8080
 #define DEFAULT_ADMIN_PORT 9090
 
-#define LOGGER_LEVEL DEBUG
+#define LOGGER_LEVEL PRODUCTION
 
 struct serverSettings {
 	uint32_t httpAddr;

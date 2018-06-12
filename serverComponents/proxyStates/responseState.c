@@ -68,9 +68,7 @@ int shouldTransform(struct Connection * conn) {
             conn->transformationType = NO_TRANSFORM;
         }
     }
-printf("exit should transform\n");
     if(conn->transformationType == IS_TRANSFORMING) {
-        printf("is transform\n");
         return 1;
     }
     return 0;
@@ -139,7 +137,6 @@ enum manager_state copyTempToWriteBuff(struct selector_key * key) {
     /* If I wrote to writeBuffer, clientFd OP_WRITE */
     fd_interest interest = OP_NOOP;
     if(buffer_can_read(&conn->writeBuffer)) {
-        printf("wirte buff not empty\n");
         /* Write response to client */
         interest = OP_WRITE;
     }
@@ -245,7 +242,7 @@ int copyTransformToWriteBuffer(struct selector_key * key) {
         /* Write response to transform */
         interest = OP_WRITE;
     }
-    printf("set interest to writeBuff form transformation\n");
+
     if(selector_set_interest(key->s, conn->clientFd, interest) != SELECTOR_SUCCESS) {
         return 0;
     }
@@ -293,17 +290,13 @@ unsigned readFromOrigin(struct selector_key * key) {
     if(state == manager_statusLine || state == manager_headers) {
         state = copyTempToWriteBuff(key);
         if(state == manager_error) {
-            printf("parser error\n");
             return setError(key, INTERNAL_SERVER_ERR_500);
         }
         
         /* If switch state check transformation and inform it */
         if(state == manager_addingHeaders) {
-            printf("switch to adding headers\n");
             setTranformationToParser(conn);
-            printf("setting client to NOOP\n");
         }
-        printf("in read\n");
     }
 
     /* If I need to add headers add them */
@@ -321,14 +314,11 @@ unsigned readFromOrigin(struct selector_key * key) {
 
     /* If im in body write to inTransformBuffer */
     if(state == manager_body) {
-        printf("recv body\n");
         if(!shouldTransform(conn)) {
-            printf("tempt to write buff\n");
             state = copyTempToWriteBuff(key);
         } else {
             state = copyTempToTransformBuff(key);
         }
-        printf("after should transorm\n");
         if(state == manager_error) {
             return setError(key, INTERNAL_SERVER_ERR_500);
         }

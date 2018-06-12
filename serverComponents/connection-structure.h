@@ -56,11 +56,11 @@ struct Connection {
 
 
 	/* general io buffers for client */
-	uint8_t rawBuff_a[2048], rawBuff_b[2048];
+	uint8_t rawBuff_a[204800], rawBuff_b[204800];
     buffer readBuffer, writeBuffer;
 
     /* response buffers */
-    uint8_t rawBuff_c[2048], rawBuff_d[2048], rawBuff_e[2048];
+    uint8_t rawBuff_c[204800], rawBuff_d[204800], rawBuff_e[204800];
     buffer respTempBuffer, inTransformBuffer, outTransformBuffer;
 
     /* transformation details */
