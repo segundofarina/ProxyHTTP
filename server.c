@@ -8,7 +8,7 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <signal.h>
-
+#include "utils/mediaTypes/mediatypes.c"
 #include "utils/selector/selector.h"
 #include "serverComponents/proxyPassiveHandlers.h"
 #include "serverComponents/adminPassiveHandlers.h"

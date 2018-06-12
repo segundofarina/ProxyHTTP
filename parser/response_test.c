@@ -9,7 +9,7 @@
 #include "headerGroup.h"
 #include "body.h"
 
-void consume(char * string, struct response_parser * p){
+void consume(struct response_parser * p,char * string,){
     size_t i;
     enum response_state state;
     for(i =0 ; i< strlen(string) ;i++){
@@ -92,7 +92,7 @@ int main(){
 
     response_parser_init(&p,METHOD_GET);
 
-    consume_wrapper(&p,r302);
+    consume(&p,r302);
 
     response_parser_close(&p);
 
@@ -143,7 +143,7 @@ int main(){
 
     response_parser_init(&p,METHOD_GET);
 
-    consume_wrapper(&p,r200);
+    consume(&p,r200);
 
     response_parser_close(&p);
 
@@ -170,7 +170,7 @@ int main(){
 
     response_parser_init(&p,METHOD_GET);
 
-    consume_wrapper(&p,r301);
+    consume(&p,r301);
 
     response_parser_close(&p);
 
@@ -200,7 +200,7 @@ int main(){
 
     response_parser_init(&p,METHOD_GET);
 
-    consume_wrapper(&p,chunked);
+    consume(&p,chunked);
 
     response_parser_close(&p);
 

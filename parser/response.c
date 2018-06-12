@@ -169,7 +169,7 @@ statusLine(const uint8_t c, struct response_parser *p) {
             statusLine_parser_close(p->statusLineParser);
             free(p->statusLineParser);
             p->statusLineParser=NULL;
-            headerGroup_parser_init(p->headerParser,HEADER_NOT_INTERESTED,headerNamesResponse,typesResponse,HEADERS_AMOUNT);
+            headerGroup_parser_init(p->headerParser,HEADER_NOT_INTERESTED,headerNamesResponse,(int *)typesResponse,HEADERS_AMOUNT);
             next = response_headers;
             break;
         default:
