@@ -1,120 +1,134 @@
 //
 // Created by Florencia Cavallin on 10/6/18.
 //
-
+#include <stdio.h>
 #include "processAdminRequest.h"
 
-int createResponse(buffer * buff,enum admin_error_code code, uint8_t len) {
-    int i = 0;
+enum admin_error_code createResponse(buffer * buff,enum admin_error_code code, uint8_t len) {
+    size_t i = 0;
     buffer_reset(buff);
     uint8_t  * msg = buffer_write_ptr(buff,&i);
 
-    if((len+REQUEST_DATA) > i){
-        return 0;
+    size_t aux = len+REQUEST_DATA;
+    if( aux > i){
+        return ADMIN_REQ_ERR;
     }
+    i = 0;
     msg[i++] = code;
     msg[i++] = len;
 
     buffer_write_adv(buff,REQUEST_DATA);
-    return 1;
+    return code;
 
 }
 
-int getTransformation(buffer * buff){
+enum admin_error_code getTransformation(buffer * buff){
     enum admin_error_code responseStatus = ADMIN_NO_ERROR;
     char * t = getCurrentTransformation();
-    uint8_t responseLen = strlen(t);
-    uint8_t aux = 0;
-    int ans = createResponse(buff,responseStatus,responseLen);
+    size_t responseLen = strlen(t);
+    size_t aux = 0;
+    enum admin_error_code ans = createResponse(buff,responseStatus,responseLen);
 
-    if(ans == 0){
-        return 0;
+    if(ans == ADMIN_REQ_ERR){
+        return ans;
     }
 
     uint8_t * ptr = buffer_write_ptr(buff,&aux);
 
     if(aux < responseLen){
-        return 0;
+        return ADMIN_REQ_ERR;
     }
-    memcpy(ptr,t,aux);
+    memcpy(ptr,t,responseLen);
+    ptr[responseLen] = 0;
     buffer_write_adv(buff,responseLen);
 
-    return aux;
+
+    ptr = buffer_read_ptr(buff,&aux);
+
+    printf("Server response\n");
+
+    for (size_t i = 0; i < aux; i++) {
+        printf("0x%x ", (unsigned)*(ptr + i));
+    }
+
+    printf("\n");
+
+
+    return responseStatus;
 
 }
 
-int getMetrics(buffer * buff){
+enum admin_error_code getMetrics(buffer * buff){
 
     enum admin_error_code responseStatus = ADMIN_NO_ERROR;
-    uint8_t responseLen = QUANTITY_METRICS;
-    uint8_t aux = 0;
-    int ans = createResponse(buff,responseStatus,responseLen);
+    size_t aux = 0;
+    enum admin_error_code ans = createResponse(buff,responseStatus,QUANTITY_METRICS);
 
-    if(ans == 0){
-        return 0;
+     if(ans == ADMIN_REQ_ERR){
+        return ans;
     }
 
     uint8_t * ptr = buffer_write_ptr(buff,&aux);
 
-    if(aux < responseLen){
-        return 0;
+     if(aux < QUANTITY_METRICS*SIZE_INTEGER){
+        return ADMIN_REQ_ERR;
     }
 
     int i = 0;
 
     uint32_t gets = htonl(getAmountOfGet());
-    memcpy(ptr+i, &gets, SIZE_INTEGER);
-    i+=SIZE_INTEGER;
+    memcpy(ptr+i, &gets, sizeof(gets));
+    i+=sizeof(gets);
 
     uint32_t posts = htonl(getAmountOfPost());
-    memcpy(ptr+i, &posts, SIZE_INTEGER);
-    i+=SIZE_INTEGER;
+    memcpy(ptr+i, &posts, sizeof(posts));
+    i+=sizeof(posts);
 
     uint32_t heads = htonl(getAmountOfHead());
-    memcpy(ptr+i, &heads, SIZE_INTEGER);
-    i+=SIZE_INTEGER;
+    memcpy(ptr+i, &heads,  sizeof(heads));
+    i+=sizeof(heads);
 
     uint32_t clients = htonl(getActiveClients());
-    memcpy(ptr+i, &clients, SIZE_INTEGER);
-    i+=SIZE_INTEGER;
+    memcpy(ptr+i, &clients,  sizeof(clients));
+    i+=sizeof(clients);
 
     uint32_t historicClients = htonl(getHistoricClients());
-    memcpy(ptr+i, &historicClients, SIZE_INTEGER);
-    i+=SIZE_INTEGER;
+    memcpy(ptr+i, &historicClients, sizeof(historicClients));
+    i+=sizeof(historicClients);
 
     buffer_write_adv(buff,i);
 
-    return i;
+    return responseStatus;
 }
 
-int getMediaTypes(buffer * buff){
+enum admin_error_code getMediaTypes(buffer * buff){
 
     enum admin_error_code responseStatus = ADMIN_NO_ERROR;
-    uint8_t responseLen = QUANTITY_MEDIATYPES;
-    uint8_t aux = 0;
-    int ans = createResponse(buff,responseStatus,responseLen);
+    size_t i = 0;
+    uint8_t * ptr = buffer_write_ptr(buff,&i);
 
-    if(ans == 0){
-        return 0;
-    }
-
-    uint8_t * ptr = buffer_write_ptr(buff,&aux);
-
-    if(aux < responseLen){
-        return 0;
-    }
-
-    int i = 0;
+    i = 2;
     struct mediaTypesNode * node = getMediaTypesList();
     while(node != NULL){
         ptr[i++] = node->mediaType;
         node = node->next;
     }
-    return i;
+
+    size_t responseLen = i-2;
+    
+    int ans = createResponse(buff,responseStatus,responseLen);
+
+    if(ans == ADMIN_REQ_ERR){
+        return ans;
+    }
+    
+    buffer_write_adv(buff,responseLen);
+
+    return responseStatus;
 }
 
 enum admin_error_code processAdminRequest(buffer * buff) {
-    int read = 0;
+    size_t read = 0;
     uint8_t * ptr = buffer_read_ptr(buff,&read);
 
     if(read < REQUEST_DATA){
@@ -122,19 +136,20 @@ enum admin_error_code processAdminRequest(buffer * buff) {
     }
 
     uint8_t method = ptr[REQUEST_METHOD];
-    uint8_t len = ptr[REQUEST_LENGTH_DATA];
-    uint8_t data[MAX_DATA+1] = {0};
+
+    size_t len = ptr[REQUEST_LENGTH_DATA];
+
+    char data[MAX_DATA+1] = {0};
     memcpy(data,ptr+REQUEST_DATA,len);
     buffer_read_adv(buff,REQUEST_DATA+len);
 
     enum admin_error_code responseStatus;
-    uint8_t responseLen = 0;
+    size_t responseLen = 0;
 
-    int ans;
+    enum admin_error_code ans;
 
     switch(method) {
         case SET_TRANSFORMATION:
-            data[len] = 0;
             if(addTransformation(data) == 0){
                 responseStatus = ADMIN_REQ_ERR;
             }else{
@@ -184,12 +199,12 @@ enum admin_error_code processAdminRequest(buffer * buff) {
             ans = createResponse(buff,responseStatus,responseLen);
     }
 
-   if(ans==0){
-        return  ADMIN_NO_ERROR;
-    }else{
-       return ADMIN_INTERNAL_SERVER_ERR;
+    switch(ans){
+        case ADMIN_NO_ERROR:
+            return ans;
+        default:
+            return ADMIN_INTERNAL_SERVER_ERR;
     }
-
 }
 
 

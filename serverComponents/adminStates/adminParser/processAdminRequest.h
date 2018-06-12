@@ -4,17 +4,14 @@
 
 #ifndef PC_2018_04_PROCESSADMINREQUEST_H
 #define PC_2018_04_PROCESSADMINREQUEST_H
-
-#include "../../../utils/buffer/buffer.h"
 #include <stdint.h>
-#include <memory.h>
 #include "../../../utils/buffer/buffer.h"
+#include <memory.h>
 #include "../adminReadState.h"
 #include "../adminErrorState.h"
 #include "../../transformationManager.h"
 #include "../../metrics.h"
 #include <arpa/inet.h>
-#include <zconf.h>
 
 #define MAX_DATA 256
 #define QUANTITY_METRICS 5
