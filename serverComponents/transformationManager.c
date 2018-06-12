@@ -29,7 +29,7 @@ int hasTransformation() {
     return transformation->cmd[0] != 0;
 }
 
-char * getTransformation() {
+char * getCurrentTransformation() {
     return transformation->cmd;
 }
 
@@ -166,65 +166,37 @@ int hasMediaTypeInList(const struct mediaTypesNode * list, const enum MediaType 
 }
 
 enum MediaType strToMediaType(const char * str) {
+
     if(strcmp("text/*", str) == 0) {
         return MT_TEXT_ALL;
-    }
-
-    if(strcmp("text/plain", str) == 0) {
+    }else if(strcmp("text/plain", str) == 0){
         return MT_TEXT_PLAIN;
-    }
-
-    if(strcmp("text/html", str) == 0) {
-        return MT_TEXT_HTML;
-    }
-
-    if(strcmp("text/css", str) == 0) {
+    }else if(strcmp("text/html", str) == 0){
+        return  MT_TEXT_HTML;
+    }else if(strcmp("text/css", str) == 0){
         return MT_TEXT_CSS;
-    }
-
-    if(strcmp("text/javascript", str) == 0) {
+    }else if(strcmp("text/javascript", str) == 0){
         return MT_TEXT_JAVASCRIPT;
-    }
-
-    if(strcmp("text/markdown", str) == 0) {
+    }else if(strcmp("text/markdown", str) == 0){
         return MT_TEXT_MARKDOWN;
-    }
-
-    if(strcmp("text/xml", str) == 0) {
+    }else if(strcmp("text/xml", str) == 0){
         return MT_TEXT_XML;
-    }
-
-    if(strcmp("image/*", str) == 0) {
+    }else if(strcmp("image/*", str) == 0){
         return MT_IMAGE_ALL;
-    }
-
-    if(strcmp("image/gif", str) == 0) {
+    }else if(strcmp("image/gif ", str) == 0){
         return MT_IMAGE_GIF;
-    }
-
-    if(strcmp("image/jpeg", str) == 0) {
+    }else if(strcmp("image/jpeg", str) == 0){
         return MT_IMAGE_JPEG;
-    }
-
-    if(strcmp("image/png", str) == 0) {
+    }else if(strcmp("image/png", str) == 0){
         return MT_IMAGE_PNG;
-    }
-
-    if(strcmp("image/tiff", str) == 0) {
+    }else if(strcmp("image/tiff", str) == 0){
         return MT_IMAGE_TIFF;
-    }
-
-    if(strcmp("application/*", str) == 0) {
+    }else if(strcmp("application/*", str) == 0){
         return MT_APPLICATION_ALL;
-    }
-
-    if(strcmp("application/json", str) == 0) {
+    }else if(strcmp("application/json", str) == 0){
         return MT_APPLICATION_JSON;
-    }
-
-    if(strcmp("application/javascript", str) == 0) {
+    }else if(strcmp("application/javascript", str) == 0){
         return MT_APPLICATION_JAVASCRIPT;
     }
-
     return MT_NONE;
 }

@@ -23,7 +23,7 @@ unsigned adminWrite(struct selector_key * key) {
         /* Admin closed connection */
         return ADMIN_FATAL_ERROR;
     }
-    buffer_write_adv(&conn->buff, n);
+    buffer_read_adv(&conn->buff, n);
 
     if(selector_set_interest_key(key, OP_READ) != SELECTOR_SUCCESS) {
         return ADMIN_ERROR;

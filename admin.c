@@ -1,57 +1,43 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <limits.h>
-#include <errno.h>
-#include <signal.h>
-#include <ctype.h>
-#include <stdbool.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
+#include "admin.h"
 
-#define MAX_SERVER_RESPONSE 258
 
-enum auth_response{
-    LOGGED_IN=0x00,
-    LOGIN_FAILED=0x01
-};
-enum server_response{
-    OK=0x00,
-    ERR=0x01,
-    NOT_SUPPORTED=0x02
-};
-enum client_request{
-    SET_TRANSFORMATION=0x00,
-    ADD_MEDIA_TYPE=0x01,
-    REMOVE_MEDIA_TYPE=0x02,
-    SET_BUFFER_SIZE=0x03,
-    SET_TIMEOUT=0x04,
-    GET_METRICS=0x05,
-    GET_TRANSFORMATION=0x06,
-    GET_MEDIA_TYPES=0x07,
-    GET_BUFFER_SIZE=0x08,
-    GET_TIMEOUT=0x09
-};
-enum media_type{
-    TEXT_ALL=0x00,
-    TEXT_PLAIN=0x01,
-    TEXT_HTML=0x02,
-    TEXT_CSS=0x03,
-    TEXT_JAVASCRIPT=0x04,
-    TEXT_MARKDOWN=0x05,
-    TEXT_XML=0x06,
-    IMAGE_ALL=0x07,
-    IMAGE_GIF=0x08,
-    IMAGE_JPEG=0x09,
-    IMAGE_PNG=0x0A,
-    IMAGE_TIFF=0x0B,
-    APPLICATION_ALL=0x0C,
-    APPLICATION_JSON=0x0D,
-    APPLICATION_JAVASCRIPT=0x0E
-};
+enum MediaType strToMediaType(const char * str) {
+
+    if(strcmp("text/*", str) == 0) {
+        return MT_TEXT_ALL;
+    }else if(strcmp("text/plain", str) == 0){
+        return MT_TEXT_PLAIN;
+    }else if(strcmp("text/html", str) == 0){
+        return  MT_TEXT_HTML;
+    }else if(strcmp("text/css", str) == 0){
+        return MT_TEXT_CSS;
+    }else if(strcmp("text/javascript", str) == 0){
+        return MT_TEXT_JAVASCRIPT;
+    }else if(strcmp("text/markdown", str) == 0){
+        return MT_TEXT_MARKDOWN;
+    }else if(strcmp("text/xml", str) == 0){
+        return MT_TEXT_XML;
+    }else if(strcmp("image/*", str) == 0){
+        return MT_IMAGE_ALL;
+    }else if(strcmp("image/gif ", str) == 0){
+        return MT_IMAGE_GIF;
+    }else if(strcmp("image/jpeg", str) == 0){
+        return MT_IMAGE_JPEG;
+    }else if(strcmp("image/png", str) == 0){
+        return MT_IMAGE_PNG;
+    }else if(strcmp("image/tiff", str) == 0){
+        return MT_IMAGE_TIFF;
+    }else if(strcmp("application/*", str) == 0){
+        return MT_APPLICATION_ALL;
+    }else if(strcmp("application/json", str) == 0){
+        return MT_APPLICATION_JSON;
+    }else if(strcmp("application/javascript", str) == 0){
+        return MT_APPLICATION_JAVASCRIPT;
+    }
+
+    return MT_NONE;
+}
+
 
 long
 validateLong(uint8_t * num){
@@ -72,42 +58,34 @@ validateLong(uint8_t * num){
 void
 authenticate(int proxy){
 
-    bool loggedIn        = false;
-    uint8_t buffer[0xFF] = {0};
-    uint8_t i            = 1;
-    int c                = 0;
+    uint8_t password[0xFF] = {0};
+    int i = 1;
+    int c = 0;
 
-    while(!loggedIn){
-        printf("Please insert admin password\n");
-        while((c = tolower(getchar())) != '\n' && i < 0xFF) {
-            buffer[i++] = c;
-        }
-        buffer[0] = i-1;
-        send(proxy,buffer,i,0);
-        recv(proxy, &c, 1, 0);
-        c =LOGGED_IN;
-        if(c ==LOGGED_IN){
-            printf("Login succesful\n");
-            loggedIn =true;
-        }else if(c == LOGIN_FAILED){
-            printf("Incorrect password please try again\n");
-        }else {
-            printf("Server error\n");
-            exit(1);
-        }
+    printf("Please insert admin password\n");
+    while((c = getchar()) != '\n' && i < 0xFF) {
+        password[i++] = c;
+    }
+    password[0] = i-1;
+    send(proxy,password,i,0);
+    recv(proxy, &c, 1, 0);
 
-
+    if(c == LOGGED_IN){
+        printf("Login successful\n");
+    }else {
+        printf("Server error\n");
+        exit(1);
     }
 }
 
 void
 sendRequest(int proxy, uint8_t method,uint8_t len, uint8_t * data ){
-    
-    uint8_t * msg = malloc(sizeof(uint8_t)*(len+2));
-    msg[0] = method;
-    msg[1] = len;
-    memcpy(msg+2,data,len);
-    send(proxy,msg,len,0);
+    int i = 0;
+    uint8_t msg[0xFF] = {0};
+    msg[i++] = method;
+    msg[i++] = len;
+    memcpy(msg+i,data,len);
+    send(proxy,msg,len+i,0);
 }
 
 void
@@ -146,24 +124,48 @@ help(){
 
 void
 setTransformation(int proxy, uint8_t * parameter){
-    if(validateLong(parameter) == -1){
-        printf("'%s' is an invalid parameter for this command",parameter);
-        return;
-    }
-    printf("Transformation will be set to: %s\n",parameter);
+    
     sendRequest(proxy,SET_TRANSFORMATION,strlen((char *)parameter),parameter);
-
+    uint8_t response[MAX_SERVER_RESPONSE] = {0};
+    receiveResponse(proxy,3,response);
+    switch(response[0]){
+        case OK:
+            printf("Transformation has been set to: %s\n",parameter);
+            break;
+        default:
+            printf("Something went wrong and the transformation has not been set to: %s\n",parameter);
+    }
 }
 
 void
 addMediaType(int proxy, uint8_t * parameter){
-    printf("The media type %s will be added\n",parameter);
-    sendRequest(proxy,ADD_MEDIA_TYPE,strlen((char *)parameter),parameter);
+    uint8_t mt[2] = {0};
+    mt[0] = strToMediaType((char *)parameter);
+    sendRequest(proxy,ADD_MEDIA_TYPE,1,mt);
+    uint8_t response[MAX_SERVER_RESPONSE] = {0};
+    receiveResponse(proxy,3,response);
+    switch(response[0]){
+        case OK:
+            printf("The media type %s has been added\n",parameter);
+            break;
+        default:
+            printf("Something went wrong and the media type %s has not been added\n",parameter);
+    }
 }
 void
 removeMediaType(int proxy, uint8_t * parameter){
-    printf("The media type %s will be removed\n",parameter);
-    sendRequest(proxy,REMOVE_MEDIA_TYPE,strlen((char *)parameter),parameter);
+    uint8_t mt[2] = {0};
+    mt[0] = strToMediaType((char *)parameter);
+    sendRequest(proxy,REMOVE_MEDIA_TYPE,1,mt);
+    uint8_t response[MAX_SERVER_RESPONSE] = {0};
+    receiveResponse(proxy,3,response);
+    switch(response[0]){
+        case OK:
+            printf("The media type %s has been removed\n",parameter);
+            break;
+        default:
+            printf("Something went wrong and the media type %s has not been removed\n",parameter);
+    }
 }
 
 void
@@ -172,8 +174,16 @@ setBufferSize(int proxy, uint8_t * parameter){
         printf("'%s' is not a valid parameter for this command\n",parameter);
         return;
     }
-    printf("The buffer size will be set to %s\n",parameter);
     sendRequest(proxy,SET_BUFFER_SIZE,strlen((char *)parameter),parameter);
+    uint8_t response[MAX_SERVER_RESPONSE] = {0};
+    receiveResponse(proxy,3,response);
+    switch(response[0]){
+        case OK:
+            printf("The buffer size has been set to %s\n",parameter);
+            break;
+        default:
+            printf("Something went wrong and the buffer size has not been set to %s\n",parameter);
+    }
 }
 
 void
@@ -182,8 +192,16 @@ setTimeOut(int proxy, uint8_t * parameter){
         printf("'%s' is not a valid parameter for this command\n",parameter);
         return;
     }
-    printf("The time out will be set to %s\n",parameter);
     sendRequest(proxy,SET_TIMEOUT,strlen((char *)parameter),parameter);
+    uint8_t response[MAX_SERVER_RESPONSE] = {0};
+    receiveResponse(proxy,3,response);
+    switch(response[0]){
+        case OK:
+            printf("The time out has been set to %s\n",parameter);
+            break;
+        default:
+            printf("Something went wrong and the time out has not been set to %s\n",parameter);
+    }
 }
 
 void
@@ -202,7 +220,11 @@ printBufferSize(uint8_t * data, uint8_t len){
 
 void
 printMediaTypes(uint8_t * data, uint8_t len){
-    printf("Media types supported:\n");
+    if(len == 0){
+        printf("There are not media types added\n");
+        return;
+    }
+    printf("The media types added are:\n");
     int i = 0;
     while(i<len){
         printf("%i) ",i);
@@ -253,12 +275,43 @@ printTransformation(uint8_t * data, uint8_t len){
 
 void
 printMetrics(uint8_t * data, uint8_t len){
+
     int i = 0;
-    printf("Amount of GET's: %i\n",data[i++]);
-    printf("Amount of POST's's: %i\n",data[i++]);
-    printf("Amount of HEAD's: %i\n",data[i++]);
-    printf("Active clients: %i\n",data[i++]);
-    printf("Historic connections: %i\n",data[i]);
+
+    uint32_t gets;
+    memcpy(&gets, data+i, SIZE_INTEGER);
+    gets = ntohl(gets);
+    
+    i+=SIZE_INTEGER;
+
+
+    uint32_t posts;
+    memcpy(&posts, data+i, SIZE_INTEGER);
+    posts = ntohl(posts);
+    
+    i+=SIZE_INTEGER;
+
+    uint32_t heads;
+    memcpy(&heads, data+i, SIZE_INTEGER);
+    heads = ntohl(heads);
+    
+    i+=SIZE_INTEGER;
+
+    uint32_t clients;
+     memcpy(&clients, data+i, SIZE_INTEGER);
+    clients = ntohl(clients);
+   
+    i+=SIZE_INTEGER;
+
+    uint32_t historicConnections;
+    memcpy(&historicConnections, data+i, SIZE_INTEGER);
+    historicConnections = ntohl(historicConnections);
+
+    printf("Amount of GET's: %d\n",gets);
+    printf("Amount of POST's's: %d\n",posts);
+    printf("Amount of HEAD's: %d`\n",heads);
+    printf("Active clients: %d\n",clients);
+    printf("Historic connections: %d\n",historicConnections);
 }
 
 void
@@ -266,7 +319,7 @@ getProperties(int proxy,enum client_request command){
 
     sendRequest(proxy,command,0,0);
     uint8_t data[MAX_SERVER_RESPONSE] = {0};
-    receiveResponse(proxy,(uint8_t)MAX_SERVER_RESPONSE,data);
+    receiveResponse(proxy,MAX_SERVER_RESPONSE,data);
 
     int i          = 0;
     uint8_t status = data[i++];
@@ -375,7 +428,7 @@ connectToProxy(char * host, int port,char ** errMsg){
     addr.sin_family = AF_INET;
     addr.sin_port   = htons(port);
 
-    const int proxy = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    const int proxy = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP);
     if(proxy < 0) {
         *errMsg = "Unable to create socket";
         return -1;
@@ -398,8 +451,7 @@ connectToProxy(char * host, int port,char ** errMsg){
 }
 
 int
-main(int argc, char ** argv)
-{
+main(int argc, char ** argv){
     int port;
 
     if(argc == 3) {
@@ -422,3 +474,4 @@ main(int argc, char ** argv)
     }
     shell(proxy);
 }
+

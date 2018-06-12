@@ -7,8 +7,9 @@
 
 enum admin_error_code {
     ADMIN_NO_ERROR = 0x00,
-    ADMIN_INTERNAL_SERVER_ERR = 0xFF,
-    ADMIN_REQ_ERR = 0x01
+    ADMIN_REQ_ERR = 0x01,
+    ADMIN_NOT_SUPPORTED_ERROR = 0x02,
+    ADMIN_INTERNAL_SERVER_ERR = 0xFF
 };
 
 unsigned adminErrorWrite(struct selector_key * key);
