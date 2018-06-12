@@ -37,3 +37,4 @@ enum MediaType strToMediaType(const char * str) {
 
     return MT_NONE;
 }
+

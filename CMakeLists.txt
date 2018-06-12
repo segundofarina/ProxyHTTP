@@ -83,6 +83,13 @@ add_executable(requestLine
         parser/requestLine.c
         parser/requestLine_test.c)
 
+add_executable(statusLine
+        parser/multi_parser.c
+        parser/parser.c
+        parser/parser_utils.c
+        parser/statusLine.c
+        parser/statusLine_test.c)
+
 add_executable(multiParser
         parser/parser.c
         parser/parser_utils.c

@@ -31,9 +31,9 @@ code(const uint8_t c, struct statusLine_parser* p) {
         default:
             if(isdigit(c)){
                 p->code = p->code*10+(c-'0');
-                next = sl_error;
-            }else{
                 next = sl_code;
+            }else{
+                next = sl_error;
             }
     }
     return next;
@@ -111,7 +111,7 @@ statusLine_parser_feed ( const uint8_t c,struct statusLine_parser* p) {
 
 extern void
 statusLine_parser_init (struct statusLine_parser *p){
-    p->state = sl_extra;
+    p->state = sl_version;
     p->code =0;
 
 }

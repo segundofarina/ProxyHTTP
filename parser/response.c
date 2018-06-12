@@ -167,6 +167,7 @@ statusLine(const uint8_t c, struct response_parser *p) {
         case sl_end:
 
             statusLine_parser_close(p->statusLineParser);
+            p->statusCode=p->statusLineParser->code;
             free(p->statusLineParser);
             p->statusLineParser=NULL;
             headerGroup_parser_init(p->headerParser,HEADER_NOT_INTERESTED,headerNamesResponse,(int *)typesResponse,HEADERS_AMOUNT);
@@ -198,7 +199,6 @@ headersResponse(const uint8_t c,struct response_parser *p){
                 enum body_type type = (p->chunked ? body_type_chunked: body_type_identity);
 
                 if( (encondingPresent && p->chunked) || len >0){
-
                     p->bodyParser = malloc(sizeof(struct body_parser));
                     body_parser_init(p->bodyParser, type, len);
 

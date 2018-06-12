@@ -147,7 +147,12 @@ addingHeaders(struct response_manager *manager,const uint8_t c, bool * consumed,
     *consumed=false;
     manager->addHeadersIndex+=toWrite;
     if(manager->addHeadersIndex == manager->headersAddLen){
-        next = manager_body;
+        if(manager->parser.state == response_done){
+            next = manager_done;
+        }else{
+            next = manager_body;
+        }
+
     }else{
         next = manager_addingHeaders;
     }
@@ -306,4 +311,33 @@ manager_parser_close(struct response_manager *manager){
     }
 
     manager->headersAdd=NULL;
+}
+
+extern char *
+manager_state_string(enum manager_state state) {
+    char *resp;
+    switch (state) {
+        case manager_statusLine:
+            resp = "Status Line";
+            break;
+        case manager_headers:
+            resp = "Headers";
+            break;
+        case manager_addingHeaders:
+            resp = "Adding Headers";
+            break;
+        case manager_body:
+            resp = "Body";
+            break;
+        case manager_done:
+            resp = "Done";
+            break;
+        case manager_error:
+            resp = "Error";
+            break;
+        default:
+            resp = "Unkown";
+            break;
+    }
+    return resp;
 }
