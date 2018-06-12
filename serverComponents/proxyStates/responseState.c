@@ -225,7 +225,12 @@ int copyTransformToWriteBuffer(struct selector_key * key) {
     /* chunk string size is min(maxTransformBuffSize, maxWriteBuffSize) */
     /* leave amount of bytes chunked in chunkedBytes */
     //bytesToChunk = min(maxTransformBuffSize, maxWriteBuffSize);
-    chunkBody((char *)ptrToChunk, (int *)&bytesToChunk, (char *)ptrFromChunk, (int *)&chunkedBytes);
+    if(bytesToChunk != 0 && chunkedBytes != 0) {
+        chunkBody((char *)ptrToChunk, (int *)&bytesToChunk, (char *)ptrFromChunk, (int *)&chunkedBytes);
+    } else {
+        bytesToChunk = 0;
+        chunkedBytes = 0;
+    }
 
     /* move temp buffer pointer accoring to chunkedBytes */
     buffer_read_adv(&conn->outTransformBuffer, bytesToChunk);
