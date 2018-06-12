@@ -28,9 +28,7 @@ int pareserResponseIsDone(struct response_manager parser) {
 }
 
 enum manager_state parser_consume(struct response_manager * parser, char * ptrToParse, int * bytesToParse, char * ptrFromParse, int * parsedBytes) {
-    
-    enum manager_state state = manager_parser_consume(parser, ptrToParse, bytesToParse, ptrFromParse, parsedBytes);
-    return state;
+    return manager_parser_consume(parser, ptrToParse, bytesToParse, ptrFromParse, parsedBytes); 
 }
 
 int isValidTransformation(struct Connection * conn) {
@@ -47,12 +45,24 @@ int isValidTransformation(struct Connection * conn) {
     return 0;
 }
 
+void cleanContentType(char * str) {
+    int i = 0;
+    for(i = 0; i < MAX_MEDIA_TYPE_SIZE_BUFF && str[i] != ';'; i++) {
+        str[i] = tolower(str[i]);
+    }
+    str[i] = 0;
+}
+
 int shouldTransform(struct Connection * conn) {
     if(conn->transformationType == TRANSFORM) {
         /* First time, check if media type is in the list and if content-type is valid and transfer-encoding is valid */
         /* If it is */
-        //char buff[MAX_MEDIA_TYPE_SIZE_BUFF + 1] = {0};
-        if(hasMediaTypeInList(conn->mediaTypesList, strToMediaType("text/html")) && isValidTransformation(conn) ) { // CAMBIAR POR LO QUE ME DA EL PARSER y chequear content-types...
+        char buff[MAX_MEDIA_TYPE_SIZE_BUFF + 1] = {0};
+        manager_parser_getMediaType(&conn->responseParser, buff, MAX_MEDIA_TYPE_SIZE_BUFF);
+        cleanContentType(buff);
+
+        if(hasMediaTypeInList(conn->mediaTypesList, strToMediaType(buff)) &&
+         isValidTransformation(conn) ) { // CAMBIAR POR LO QUE ME DA EL PARSER y chequear content-types...
             conn->transformationType = IS_TRANSFORMING;
         } else {
             conn->transformationType = NO_TRANSFORM;
@@ -67,22 +77,22 @@ int shouldTransform(struct Connection * conn) {
 
 void setTranformationToParser(struct Connection * conn) {
     if(shouldTransform(conn)) {
-        // le pongo al parser que transforme
+        manager_parser_setTransformation(&conn->responseParser, true);
     } else {
-        // le pongo al parser que no transforme
+        manager_parser_setTransformation(&conn->responseParser, false);
     }
 }
 
 enum manager_state addExtraHeadersToResponse(struct selector_key * key) {
     struct Connection * conn = DATA_TO_CONN(key);
-	//uint8_t * writePtr;
+	uint8_t * writePtr;
 	size_t  count = 0;
+    int def = 0;
     enum manager_state state;
 
-    //writePtr = buffer_write_ptr(&conn->writeBuffer, &count);
+    writePtr = buffer_write_ptr(&conn->writeBuffer, &count);
 
-    //state = // agregar headers
-    state = manager_addingHeaders;
+    state = parser_consume(&conn->responseParser, (char *)writePtr, &def, (char *)writePtr, (int *)&count);
 
     buffer_write_adv(&conn->writeBuffer, count);
 
