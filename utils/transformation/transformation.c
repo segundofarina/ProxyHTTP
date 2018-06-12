@@ -6,6 +6,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "transformation.h"
+
 char hexadecimal(int i) {
     char ans = 0;
     if(i>=0 && i<10){

@@ -13,21 +13,6 @@
 #include "adminErrorState.h"
 #include "adminReadState.h"
 
-enum auth_response createResponseAuth(buffer * buff,enum auth_response code) {
-    size_t i = 0;
-    buffer_reset(buff);
-    uint8_t  * msg = buffer_write_ptr(buff,&i);
-
-    if(i == 0){
-        return LOGIN_FAILED;
-    }
-
-    msg[0] = code;
-    buffer_write_adv(buff,1);
-    return code;
-
-}
-
 enum auth_response processAuthentication(buffer * buff) {
 
     size_t i = 0;

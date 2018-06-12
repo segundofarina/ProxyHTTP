@@ -1,9 +1,10 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "transformationManager.h"
 
-#define MAX_CMD 255
+#define MAX_CMD 256
 
 struct Transformation {
     char cmd[MAX_CMD + 1];
@@ -37,8 +38,8 @@ int addTransformation(const char * cmd) {
     if(n > MAX_CMD) {
         return 0;
     }
-
-    memcpy(transformation->cmd, cmd, n+1);
+    memcpy(transformation->cmd, cmd, n);
+    transformation->cmd[n] = 0;
 
     return 1;
 }
@@ -81,6 +82,10 @@ void freeMediaTypeList(struct mediaTypesNode * list) {
 }
 
 int addMediaType(enum MediaType mediaType) {
+    if(hasMediaTypeInList(transformation->firstNode, mediaType)) {
+        return 1;
+    }
+
     struct mediaTypesNode * node = malloc(sizeof(*node));
     if(node == NULL) {
         return 0;
@@ -125,11 +130,34 @@ void transformationManagerDestroy() {
     free(transformation);
 }
 
+int matchAllMediaType(const enum MediaType allMediaType, const enum MediaType mediaType) {
+    if(allMediaType == MT_TEXT_ALL) {
+        if(mediaType == MT_TEXT_PLAIN || mediaType == MT_TEXT_HTML ||
+            mediaType == MT_TEXT_CSS || mediaType == MT_TEXT_JAVASCRIPT ||
+            mediaType == MT_TEXT_MARKDOWN || mediaType == MT_TEXT_XML) {
+            return 1;
+        }
+    }
+
+    if(allMediaType == MT_IMAGE_ALL) {
+        if(mediaType == MT_IMAGE_GIF || mediaType == MT_IMAGE_JPEG || 
+            mediaType == MT_IMAGE_PNG || mediaType == MT_IMAGE_TIFF) {
+            return 1;
+        }
+    }
+
+    if(allMediaType == MT_APPLICATION_ALL) {
+        if(mediaType == MT_APPLICATION_JSON || mediaType == MT_APPLICATION_JAVASCRIPT) {
+            return 1;
+        }
+    }
+    return 0;
+}
 
 int hasMediaTypeInList(const struct mediaTypesNode * list, const enum MediaType mediaType) {
     const struct mediaTypesNode * current = list;
     while(current != NULL) {
-        if(current->mediaType == mediaType) {
+        if(current->mediaType == mediaType || matchAllMediaType(current->mediaType, mediaType)) {
             return 1;
         }
         current = current->next;
@@ -171,5 +199,60 @@ enum MediaType strToMediaType(const char * str) {
         return MT_APPLICATION_JAVASCRIPT;
     }
 
+<<<<<<< HEAD
+=======
+    if(strcmp("text/html", str) == 0) {
+        return MT_TEXT_HTML;
+    }
+
+    if(strcmp("text/css", str) == 0) {
+        return MT_TEXT_CSS;
+    }
+
+    if(strcmp("text/javascript", str) == 0) {
+        return MT_TEXT_JAVASCRIPT;
+    }
+
+    if(strcmp("text/markdown", str) == 0) {
+        return MT_TEXT_MARKDOWN;
+    }
+
+    if(strcmp("text/xml", str) == 0) {
+        return MT_TEXT_XML;
+    }
+
+    if(strcmp("image/*", str) == 0) {
+        return MT_IMAGE_ALL;
+    }
+
+    if(strcmp("image/gif", str) == 0) {
+        return MT_IMAGE_GIF;
+    }
+
+    if(strcmp("image/jpeg", str) == 0) {
+        return MT_IMAGE_JPEG;
+    }
+
+    if(strcmp("image/png", str) == 0) {
+        return MT_IMAGE_PNG;
+    }
+
+    if(strcmp("image/tiff", str) == 0) {
+        return MT_IMAGE_TIFF;
+    }
+
+    if(strcmp("application/*", str) == 0) {
+        return MT_APPLICATION_ALL;
+    }
+
+    if(strcmp("application/json", str) == 0) {
+        return MT_APPLICATION_JSON;
+    }
+
+    if(strcmp("application/javascript", str) == 0) {
+        return MT_APPLICATION_JAVASCRIPT;
+    }
+
+>>>>>>> 4bee4ce4320a11a178a7823c73b7ee674f043599
     return MT_NONE;
 }

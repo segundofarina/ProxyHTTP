@@ -10,7 +10,7 @@
 #include "../utils/buffer/buffer.h"
 #include "../utils/stm/stm.h"
 #include "../parser/request.h"
-#include "../parser/response.h"
+#include "../parser/response_manager.h"
 #include "transformationManager.h"
 #include "proxyStates/errorState.h"
 
@@ -52,7 +52,7 @@ struct Connection {
 
     /* parsers */
     struct httpRequestParser requestParser;
-    struct response_parser responseParser;
+    struct response_manager responseParser;
 
 
 	/* general io buffers for client */

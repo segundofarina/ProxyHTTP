@@ -12,12 +12,12 @@ int main(){
 
     requestLine_parser_init(p);
 
-    char * string = "POhjsdhjdsST google.com HTTP/1.1\r\n";
+    char * string = "HEAd google.com HTTP/1.1\r\n";
 
 
     enum requestLine_state state =requestLine_parser_consume(string,strlen(string),p,NULL);
 
-    printf("state: %s method: %s uri: %s",requestLine_state_toString(state),methodToString(p->method),p->uri);
+    printf("state: %s method: %s uri: %s",requestLine_state_toString(state),method_string(p->method),p->uri);
     
     requestLine_parser_close(p);
 }
