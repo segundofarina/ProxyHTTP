@@ -19,7 +19,7 @@ enum MediaType strToMediaType(const char * str) {
         return MT_TEXT_XML;
     }else if(strcmp("image/*", str) == 0){
         return MT_IMAGE_ALL;
-    }else if(strcmp("image/gif ", str) == 0){
+    }else if(strcmp("image/gif", str) == 0){
         return MT_IMAGE_GIF;
     }else if(strcmp("image/jpeg", str) == 0){
         return MT_IMAGE_JPEG;
