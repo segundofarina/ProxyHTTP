@@ -31,27 +31,30 @@
    include a message body, although the body might be of zero length."
    */
 
-enum header_name {
-    HEADER_CONT_LEN,
-    HEADER_TRANSF_ENC,
-    HEADER_NOT_INTERESTED,
-    HEADER_CONT_ENCONDING,
-    HEADER_CONNECTION,
-    HEADER_MEDIA_TYPE
 
-};
 
 char **headerNamesResponse = (char *[]) {"Content-Length", "Transfer-Encoding", "Content-Encoding", "Connection","Media-Type"};
-int typesResponse[] = {HEADER_CONT_LEN, HEADER_TRANSF_ENC, HEADER_CONT_ENCONDING, HEADER_CONNECTION,HEADER_MEDIA_TYPE};
+enum header_name typesResponse[] = {HEADER_CONT_LEN, HEADER_TRANSF_ENC, HEADER_CONT_ENCONDING, HEADER_CONNECTION,HEADER_MEDIA_TYPE};
 enum header_name ignoeredResponse[] = {HEADER_CONT_LEN, HEADER_CONNECTION,HEADER_TRANSF_ENC};
 #define HEADERS_AMOUNT 5
 #define HEADER_IGNORED 3
 
+
+
 extern char *
-getMediaType(struct response_parser * p){
-    return getHeaderValue(p->headerList,HEADER_MEDIA_TYPE);
+getHeaderName(enum header_name name){
+    for(int i =0; i< HEADERS_AMOUNT;i++){
+        if(typesResponse[i]== name){
+            return headerNamesResponse[i];
+        }
+    }
+    return NULL;
 }
 
+enum header_name * getIgnoredHeaders(int * quantity){
+    *quantity=HEADER_IGNORED;
+    return ignoeredResponse;
+}
 
 
 
@@ -126,7 +129,7 @@ getTransfEncodingResponse(char * value, bool * chunked, bool * compressed){
     }else{
         *compressed = false;
     }
-    
+
 }
 
 
@@ -138,7 +141,7 @@ getBodyEncoding(struct header_list * list,bool * chunked, bool * compressed){
     if (list->name == HEADER_TRANSF_ENC) {
         getTransfEncodingResponse(list->value,chunked,compressed);
         return true;
-    } 
+    }
     return getBodyEncoding(list->next,chunked,compressed);
 }
 
@@ -166,7 +169,7 @@ statusLine(const uint8_t c, struct response_parser *p) {
             statusLine_parser_close(p->statusLineParser);
             free(p->statusLineParser);
             p->statusLineParser=NULL;
-            headerGroup_parser_init(p->headerParser,HEADER_NOT_INTERESTED,headerNamesResponse,typesResponse,HEADERS_AMOUNT);
+            headerGroup_parser_init(p->headerParser,HEADER_NOT_INTERESTED,headerNamesResponse,(int *)typesResponse,HEADERS_AMOUNT);
             next = response_headers;
             break;
         default:
@@ -191,9 +194,9 @@ headersResponse(const uint8_t c,struct response_parser *p){
             if(expectsBody(p->statusCode,p->method)){
                 bool encondingPresent = getBodyEncoding(p->headerList,&p->chunked,&p->compresed);
                 int len = getContentLengthResponse(p->headerList);
-                
+
                 enum body_type type = (p->chunked ? body_type_chunked: body_type_identity);
-                
+
                 if( (encondingPresent && p->chunked) || len >0){
 
                     p->bodyParser = malloc(sizeof(struct body_parser));
@@ -261,7 +264,6 @@ response_parser_init(struct response_parser *p, enum request_method method) {
     p->state = response_statusLine;
     p->statusLineParser = malloc(sizeof(struct statusLine_parser));
     p->headerParser = malloc(sizeof(struct headerGroup_parser));
-
     p->headerList = NULL;
     p->shouldKeepLastChar = false;
     p->method = method;

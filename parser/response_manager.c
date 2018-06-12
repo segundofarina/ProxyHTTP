@@ -9,8 +9,17 @@
 #include "response_manager.h"
 
 
-char * headersAdd = {"Transfer-Encoding: Chunked\r\nConnection: close\r\n\r\n"};
+char * headersAdd = "Transfer-Encoding: Chunked\r\nConnection: close\r\n\r\n";
 
+
+extern void
+manager_parser_getMediaType(struct response_manager * manager,char * buffer,int max){
+
+    char * value = getHeaderValue(manager->parser.headerList,HEADER_MEDIA_TYPE);
+    int i;
+    for(i=0;value[i] && value[i]==' ';i++);
+    strncpy(buffer,value+i,max);
+}
 
 static enum manager_state
 statusLine(struct response_manager *manager,const uint8_t c, bool * consumed, char *writebuff, int *written, int maxWrite) {
@@ -117,19 +126,18 @@ headers(struct response_manager *manager,const uint8_t c, bool * consumed, char 
 static enum manager_state
 addingHeaders(struct response_manager *manager,const uint8_t c, bool * consumed, char *writebuff, int *written, int maxWrite){
     enum manager_state next;
-    int addlen= strlen(headersAdd);
     int toWrite;
-    if(maxWrite >= addlen-manager->addHeadersIndex){
-        toWrite = addlen-manager->addHeadersIndex;
+    if(maxWrite >= manager->headersAddLen  -  manager->addHeadersIndex){
+        toWrite  = manager->headersAddLen  -  manager->addHeadersIndex;
     } else{
         toWrite = maxWrite;
     }
 
-    memcpy(writebuff,headersAdd+manager->addHeadersIndex, toWrite);
+    memcpy(writebuff,manager->headersAdd+manager->addHeadersIndex, toWrite);
     *written=toWrite;
     *consumed=false;
     manager->addHeadersIndex+=toWrite;
-    if(manager->addHeadersIndex == addlen){
+    if(manager->addHeadersIndex == manager->headersAddLen){
         next = manager_body;
     }else{
         next = manager_addingHeaders;
@@ -156,7 +164,7 @@ body(struct response_manager *manager,const uint8_t c, bool * consumed, char *wr
             next =manager_error;
             break;
     }
-    if (manager->parser.shouldKeepLastChar) {
+    if (!manager->transfActive || manager->parser.shouldKeepLastChar) {
         writebuff[0]=c;
         *written=1;
     }else{
@@ -205,7 +213,40 @@ manager_parser_feed(struct response_manager *manager,const uint8_t c, bool * con
     return manager->state = next;
 }
 
+extern void
+manager_parser_setTransformation(struct response_manager *m,bool active){
+    m->transfActive=active;
+    if(active){
+        m->headersAdd=headersAdd;
+    }else{
+        int len=0;
+        enum header_name * list = getIgnoredHeaders(&len);
+        m->headersAddLen=0;
+        m->headersAdd=NULL;
+        for(int i=0;i<len;i++){
+            char * value = getHeaderValue(m->parser.headerList,list[i]);
 
+            if(value!=NULL){
+                int valueLen=strlen(value);
+                char *name = getHeaderName(list[i]);
+                int nameLen = strlen(name);
+                m->headersAdd=realloc(m->headersAdd,(m->headersAddLen+valueLen+nameLen+3)* sizeof(char));
+
+                memcpy(m->headersAdd+m->headersAddLen,name,nameLen);
+                m->headersAddLen+=nameLen;
+                m->headersAdd[m->headersAddLen++]=':';
+                memcpy(m->headersAdd+m->headersAddLen,value,valueLen);
+                m->headersAddLen+=valueLen;
+                m->headersAdd[m->headersAddLen++]='\r';
+                m->headersAdd[m->headersAddLen++]='\n';
+            }
+        }
+        m->headersAdd=realloc(m->headersAdd,(m->headersAddLen+2)* sizeof(char));
+        m->headersAdd[m->headersAddLen++]='\r';
+        m->headersAdd[m->headersAddLen++]='\n';
+    }
+    m->addHeadersIndex=0;
+}
 
 extern enum manager_state
 manager_parser_consume(struct response_manager *manager, char *readBuff, int *read, char *writeBuff, int *written) {
@@ -242,10 +283,18 @@ manager_parser_init(struct response_manager *manager, enum request_method method
     manager->state= manager_statusLine;
     manager->hasBeenDumped = false;
     manager->addHeadersIndex=0;
+    manager->transfActive=true;
+    manager->headersAdd=headersAdd;
+    manager->headersAddLen=strlen(headersAdd);
     response_parser_init(&manager->parser,method);
 }
 
 extern void
 manager_parser_close(struct response_manager *manager){
     response_parser_close(&manager->parser);
+    if(manager->headersAdd!=headersAdd){
+        free(manager->headersAdd);
+    }
+
+    manager->headersAdd=NULL;
 }
