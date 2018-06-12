@@ -24,6 +24,16 @@ enum response_state {
     response_error
 };
 
+enum header_name {
+    HEADER_CONT_LEN,
+    HEADER_TRANSF_ENC,
+    HEADER_NOT_INTERESTED,
+    HEADER_CONT_ENCONDING,
+    HEADER_CONNECTION,
+    HEADER_MEDIA_TYPE
+
+};
+
 struct response_parser {
     enum response_state state;
     enum parser_errorCode errorCode;
@@ -45,6 +55,8 @@ struct response_parser {
 
 
 
+
+
 extern void
 response_parser_init(struct response_parser *p, enum request_method method);
 
@@ -60,6 +72,12 @@ response_parser_close(struct response_parser *p);
 
 char *
 response_state_string(enum response_state state);
+
+extern char *
+getHeaderName(enum header_name name);
+
+extern enum header_name *
+getIgnoredHeaders(int * quantity);
 
 
 extern bool
